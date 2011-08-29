@@ -1037,20 +1037,20 @@ void drawMenuBackground(video::IVideoDriver* driver)
 			driver->getTexture(getTexturePath("mud.png").c_str());
 	if(bgtexture)
 	{
-		s32 texturesize = 128;
-		s32 tiled_y = screensize.Height / texturesize + 1;
-		s32 tiled_x = screensize.Width / texturesize + 1;
-		
-		for(s32 y=0; y<tiled_y; y++)
-		for(s32 x=0; x<tiled_x; x++)
-		{
-			core::rect<s32> rect(0,0,texturesize,texturesize);
-			rect += v2s32(x*texturesize, y*texturesize);
-			driver->draw2DImage(bgtexture, rect,
-				core::rect<s32>(core::position2d<s32>(0,0),
-				core::dimension2di(bgtexture->getSize())),
-				NULL, NULL, true);
-		}
+		s32 scaledsize = 128;
+
+		// The important difference between destsize and screensize is
+		// that destsize is rounded to whole scaled pixels.
+		// These formulas use component-wise multiplication and division.
+		core::vector2d<u32> texturesize = bgtexture->getSize();
+		core::vector2d<u32> sourcesize = texturesize * screensize / scaledsize + core::vector2d<u32>(1,1);
+		core::vector2d<u32> destsize = scaledsize * sourcesize / texturesize;
+
+		// Default texture wrapping mode in Irrlicht is ETC_REPEAT.
+		driver->draw2DImage(bgtexture,
+			core::rect<s32>(0, 0, destsize.X, destsize.Y),
+			core::rect<s32>(0, 0, sourcesize.X, sourcesize.Y),
+			NULL, NULL, true);
 	}
 	
 	video::ITexture *logotexture =
