@@ -1041,10 +1041,10 @@ void drawMenuBackground(video::IVideoDriver* driver)
 
 		// The important difference between destsize and screensize is
 		// that destsize is rounded to whole scaled pixels.
-		// These formulas use component-wise multiplication and division.
-		core::vector2d<u32> texturesize = bgtexture->getSize();
-		core::vector2d<u32> sourcesize = texturesize * screensize / scaledsize + core::vector2d<u32>(1,1);
-		core::vector2d<u32> destsize = scaledsize * sourcesize / texturesize;
+		// These formulas use component-wise multiplication and division of v2u32.
+		v2u32 texturesize = bgtexture->getSize();
+		v2u32 sourcesize = texturesize * screensize / scaledsize + v2u32(1,1);
+		v2u32 destsize = scaledsize * sourcesize / texturesize;
 
 		// Default texture wrapping mode in Irrlicht is ETC_REPEAT.
 		driver->draw2DImage(bgtexture,
