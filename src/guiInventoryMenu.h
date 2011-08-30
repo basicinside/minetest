@@ -123,7 +123,6 @@ public:
 		m_init_draw_spec = init_draw_spec;
 	}
 
-	void removeChildren();
 	/*
 		Remove and re-add (or reposition) stuff
 	*/

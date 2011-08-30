@@ -81,7 +81,6 @@ public:
 			IGameCallback *gamecallback);
 	~GUIMainMenu();
 	
-	void removeChildren();
 	/*
 		Remove and re-add (or reposition) stuff
 	*/

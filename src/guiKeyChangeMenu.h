@@ -57,7 +57,6 @@ public:
 			s32 id, IMenuManager *menumgr);
 	~GUIKeyChangeMenu();
 
-	void removeChildren();
 	/*
 	 Remove and re-add (or reposition) stuff
 	 */

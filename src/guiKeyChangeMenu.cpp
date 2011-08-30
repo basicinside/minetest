@@ -38,22 +38,6 @@ GUIKeyChangeMenu::~GUIKeyChangeMenu()
 	removeChildren();
 }
 
-void GUIKeyChangeMenu::removeChildren()
-{
-	const core::list<gui::IGUIElement*> &children = getChildren();
-	core::list<gui::IGUIElement*> children_copy;
-	for (core::list<gui::IGUIElement*>::ConstIterator i = children.begin(); i
-			!= children.end(); i++)
-	{
-		children_copy.push_back(*i);
-	}
-	for (core::list<gui::IGUIElement*>::Iterator i = children_copy.begin(); i
-			!= children_copy.end(); i++)
-	{
-		(*i)->remove();
-	}
-}
-
 void GUIKeyChangeMenu::regenerateGui(v2u32 screensize)
 {
 	/*
