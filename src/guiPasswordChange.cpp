@@ -44,30 +44,6 @@ GUIPasswordChange::~GUIPasswordChange()
 	removeChildren();
 }
 
-void GUIPasswordChange::removeChildren()
-{
-	{
-		gui::IGUIElement *e = getElementFromId(ID_oldPassword);
-		if(e != NULL)
-			e->remove();
-	}
-	{
-		gui::IGUIElement *e = getElementFromId(ID_newPassword1);
-		if(e != NULL)
-			e->remove();
-	}
-	{
-		gui::IGUIElement *e = getElementFromId(ID_newPassword2);
-		if(e != NULL)
-			e->remove();
-	}
-	{
-		gui::IGUIElement *e = getElementFromId(ID_change);
-		if(e != NULL)
-			e->remove();
-	}
-}
-
 void GUIPasswordChange::regenerateGui(v2u32 screensize)
 {
 	/*

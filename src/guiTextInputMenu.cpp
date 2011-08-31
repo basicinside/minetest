@@ -43,20 +43,6 @@ GUITextInputMenu::~GUITextInputMenu()
 		delete m_dest;
 }
 
-void GUITextInputMenu::removeChildren()
-{
-	{
-		gui::IGUIElement *e = getElementFromId(256);
-		if(e != NULL)
-			e->remove();
-	}
-	{
-		gui::IGUIElement *e = getElementFromId(257);
-		if(e != NULL)
-			e->remove();
-	}
-}
-
 void GUITextInputMenu::regenerateGui(v2u32 screensize)
 {
 	std::wstring text;

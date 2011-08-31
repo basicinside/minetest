@@ -40,7 +40,6 @@ public:
 			IMenuManager *menumgr);
 	~GUIPauseMenu();
 	
-	void removeChildren();
 	/*
 		Remove and re-add (or reposition) stuff
 	*/

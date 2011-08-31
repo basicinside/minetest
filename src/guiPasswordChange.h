@@ -34,7 +34,6 @@ public:
 			Client* client);
 	~GUIPasswordChange();
 	
-	void removeChildren();
 	/*
 		Remove and re-add (or reposition) stuff
 	*/

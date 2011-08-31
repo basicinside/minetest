@@ -40,40 +40,6 @@ GUIPauseMenu::~GUIPauseMenu()
 	removeChildren();
 }
 
-void GUIPauseMenu::removeChildren()
-{
-	{
-		gui::IGUIElement *e = getElementFromId(256);
-		if(e != NULL)
-			e->remove();
-	}
-	{
-		gui::IGUIElement *e = getElementFromId(257);
-		if(e != NULL)
-			e->remove();
-	}
-	{
-		gui::IGUIElement *e = getElementFromId(258);
-		if(e != NULL)
-			e->remove();
-	}
-	{
-		gui::IGUIElement *e = getElementFromId(259);
-		if(e != NULL)
-			e->remove();
-	}
-	{
-		gui::IGUIElement *e = getElementFromId(260);
-		if(e != NULL)
-			e->remove();
-	}
-	{
-		gui::IGUIElement *e = getElementFromId(261);
-		if(e != NULL)
-			e->remove();
-	}
-}
-
 void GUIPauseMenu::regenerateGui(v2u32 screensize)
 {
 	/*

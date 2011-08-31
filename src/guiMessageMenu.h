@@ -34,7 +34,6 @@ public:
 			std::wstring message_text);
 	~GUIMessageMenu();
 	
-	void removeChildren();
 	/*
 		Remove and re-add (or reposition) stuff
 	*/

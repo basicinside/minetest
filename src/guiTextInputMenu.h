@@ -40,7 +40,6 @@ public:
 			std::wstring initial_text);
 	~GUITextInputMenu();
 	
-	void removeChildren();
 	/*
 		Remove and re-add (or reposition) stuff
 	*/

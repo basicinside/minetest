@@ -40,20 +40,6 @@ GUIMessageMenu::~GUIMessageMenu()
 	removeChildren();
 }
 
-void GUIMessageMenu::removeChildren()
-{
-	{
-		gui::IGUIElement *e = getElementFromId(256);
-		if(e != NULL)
-			e->remove();
-	}
-	{
-		gui::IGUIElement *e = getElementFromId(257);
-		if(e != NULL)
-			e->remove();
-	}
-}
-
 void GUIMessageMenu::regenerateGui(v2u32 screensize)
 {
 	/*
