@@ -20,6 +20,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "guiChatConsole.h"
 #include "debug.h"
 #include "gettime.h"
+#include "keycode.h"
 #include "tile.h"
 #include <cmath>
 #include <string>
@@ -29,10 +30,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 // TODO lines management
 // TODO text display
 // TODO text input
-// TODO focus management
-// TODO console open/close key should be configurable
-// TODO default console open/close key should be `
-// TODO other menus should cancel the console
 // TODO test setCursor()
 
 GUIChatConsole::GUIChatConsole(gui::IGUIEnvironment* env,
@@ -46,6 +43,7 @@ GUIChatConsole::GUIChatConsole(gui::IGUIEnvironment* env,
 	m_height_changed(true),
 	m_desired_height_fraction(0.0),
 	m_height_speed(1.5),
+	m_open_inhibited(0),
 	m_cursor_blink(0.0),
 	m_cursor_blink_speed(0.0),
 	m_cursor_height(0.0),
@@ -63,6 +61,11 @@ GUIChatConsole::~GUIChatConsole()
 void GUIChatConsole::openConsole(f32 height)
 {
 	m_desired_height_fraction = height;
+}
+
+bool GUIChatConsole::isOpenInhibited() const
+{
+	return m_open_inhibited > 0;
 }
 
 void GUIChatConsole::closeConsole()
@@ -185,6 +188,12 @@ void GUIChatConsole::animate(u32 msec)
 			blink_increase = 1;
 		m_cursor_blink = ((m_cursor_blink + blink_increase) & 0xffff);
 	}
+
+	// decrease open inhibit counter
+	if (m_open_inhibited > msec)
+		m_open_inhibited -= msec;
+	else
+		m_open_inhibited = 0;
 }
 
 void GUIChatConsole::drawBackground()
@@ -221,31 +230,80 @@ void GUIChatConsole::drawCursor()
 
 bool GUIChatConsole::OnEvent(const SEvent& event)
 {
-	if(event.EventType==EET_KEY_INPUT_EVENT)
+	if(event.EventType==EET_KEY_INPUT_EVENT && event.KeyInput.PressedDown)
 	{
-		if(event.KeyInput.Char == L'~' && event.KeyInput.PressedDown)
+		// Key input
+		if(KeyPress(event.KeyInput) == getKeySetting("keymap_console"))
 		{
 			closeConsole();
+			Environment->removeFocus(this);
+
+			// inhibit open so the_game doesn't reopen immediately
+			m_open_inhibited = 50;
 			return true;
 		}
-		if(event.KeyInput.Key == KEY_RETURN && event.KeyInput.PressedDown)
+		if(event.KeyInput.Key == KEY_ESCAPE)
 		{
+			closeConsoleAtOnce();
+			Environment->removeFocus(this);
+			// the_game will open the pause menu
+			return true;
+		}
+		if(event.KeyInput.Key == KEY_RETURN)
+		{
+			dstream<<"GUIChatConsole: Enter pressed"<<std::endl;
 			// TODO: submit message
 			return true;
 		}
-	}
-	if(event.EventType==EET_GUI_EVENT)
-	{
-		if(event.GUIEvent.EventType==gui::EGET_ELEMENT_FOCUS_LOST
-				&& isVisible())
+		if(event.KeyInput.Key == KEY_BACK)
 		{
-			if(!canTakeFocus(event.GUIEvent.Element))
+			if(event.KeyInput.Control)
 			{
-				dstream<<"GUIChatConsole: Not allowing focus change."
-						<<std::endl;
-				// Returning true disables focus change
-				return true;
+				dstream<<"GUIChatConsole: Ctrl-Backspace pressed"<<std::endl;
+				// TODO: backspace word
 			}
+			else
+			{
+				dstream<<"GUIChatConsole: Backspace pressed"<<std::endl;
+				// TODO: backspace
+			}
+			return true;
+		}
+		if(event.KeyInput.Key == KEY_DELETE)
+		{
+			if(event.KeyInput.Control)
+			{
+				dstream<<"GUIChatConsole: Ctrl-Delete pressed"<<std::endl;
+				// TODO: delete word
+			}
+			else
+			{
+				dstream<<"GUIChatConsole: Delete pressed"<<std::endl;
+				// TODO: delete
+			}
+			return true;
+		}
+		if(event.KeyInput.Key == KEY_KEY_U && event.KeyInput.Control)
+		{
+
+			if(event.KeyInput.Control)
+			{
+				dstream<<"GUIChatConsole: Ctrl-Delete pressed"<<std::endl;
+				// TODO: delete word
+			}
+			else
+			{
+				dstream<<"GUIChatConsole: Delete pressed"<<std::endl;
+				// TODO: delete
+			}
+			return true;
+		}
+		if(event.KeyInput.Char != 0 && !event.KeyInput.Control)
+		{
+			// TODO: input text
+			wchar_t ch = event.KeyInput.Char;
+			dstream<<"GUIChatConsole: input "<<ch<<std::endl;
+			return true;
 		}
 	}
 

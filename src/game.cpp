@@ -1311,8 +1311,10 @@ void the_game(
 			Direct handling of user input
 		*/
 		
-		// Reset input if window not active or some menu is active
-		if(device->isWindowActive() == false || noMenuActive() == false)
+		// Reset input if window not active or some menu or the console is active
+		if(device->isWindowActive() == false ||
+				noMenuActive() == false ||
+				guienv->hasFocus(gui_chat_console))
 		{
 			input->clear();
 		}
@@ -1378,14 +1380,11 @@ void the_game(
 		}
 		else if(input->wasKeyDown(getKeySetting("keymap_console")))
 		{
-			if(gui_chat_console->getDesiredHeight() == 0.0)
+			if (!gui_chat_console->isOpenInhibited())
 			{
 				// Open up to half of screen
 				gui_chat_console->openConsole(0.5);
-			}
-			else
-			{
-				gui_chat_console->closeConsole();
+				guienv->setFocus(gui_chat_console);
 			}
 		}
 		else if(input->wasKeyDown(getKeySetting("keymap_freemove")))

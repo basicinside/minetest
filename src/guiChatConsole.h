@@ -31,7 +31,11 @@ public:
 
 	// Open the console (height = desired fraction of screen size)
 	// This doesn't open immediately but initiates an animation.
+	// You should call isOpenInhibited() before this.
 	void openConsole(f32 height);
+	// Check if the console should not be opened at the moment
+	// This is to avoid reopening the console immediately after closing
+	bool isOpenInhibited() const;
 	// Close the console, equivalent to openConsole(0).
 	// This doesn't close immediately but initiates an animation.
 	void closeConsole();
@@ -79,6 +83,8 @@ private:
 	f32 m_desired_height_fraction;
 	// console open/close animation speed [screen height fraction / second]
 	f32 m_height_speed;
+	// if nonzero, opening the console is inhibited [milliseconds]
+	u32 m_open_inhibited;
 
 	// cursor blink frame (16-bit value)
 	// cursor is off during [0,32767] and on during [32768,65535]
