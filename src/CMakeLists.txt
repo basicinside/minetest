@@ -147,6 +147,7 @@ set(minetest_SRCS
 	guiMainMenu.cpp
 	guiKeyChangeMenu.cpp
 	guiMessageMenu.cpp
+	guiChatConsole.cpp
 	guiTextInputMenu.cpp
 	guiInventoryMenu.cpp
 	guiPauseMenu.cpp

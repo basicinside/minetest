@@ -21,6 +21,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "game.h"
 #include "client.h"
 #include "server.h"
+#include "guiChatConsole.h"
 #include "guiPauseMenu.h"
 #include "guiPasswordChange.h"
 #include "guiInventoryMenu.h"
@@ -1031,6 +1032,9 @@ void the_game(
 	//guitext_chat->setBackgroundColor(video::SColor(96,0,0,0));
 	core::list<ChatLine> chat_lines;
 	
+	// Chat console
+	GUIChatConsole *gui_chat_console = new GUIChatConsole(guienv, guienv->getRootGUIElement(), -1);
+
 	/*GUIQuickInventory *quick_inventory = new GUIQuickInventory
 			(guienv, NULL, v2s32(10, 70), 5, &local_inventory);*/
 	/*GUIQuickInventory *quick_inventory = new GUIQuickInventory
@@ -1371,6 +1375,18 @@ void the_game(
 			(new GUITextInputMenu(guienv, guiroot, -1,
 					&g_menumgr, dest,
 					L"/"))->drop();
+		}
+		else if(input->wasKeyDown(getKeySetting("keymap_console")))
+		{
+			if(gui_chat_console->getDesiredHeight() == 0.0)
+			{
+				// Open up to half of screen
+				gui_chat_console->openConsole(0.5);
+			}
+			else
+			{
+				gui_chat_console->closeConsole();
+			}
 		}
 		else if(input->wasKeyDown(getKeySetting("keymap_freemove")))
 		{
@@ -2417,6 +2433,8 @@ void the_game(
 	*/
 	if(clouds)
 		clouds->drop();
+	if(gui_chat_console)
+		gui_chat_console->drop();
 	
 	/*
 		Draw a "shutting down" screen, which will be shown while the map
