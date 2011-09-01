@@ -52,7 +52,7 @@ GUIChatConsole::GUIChatConsole(gui::IGUIEnvironment* env,
 	m_background(NULL)
 {
 	m_animate_time_old = getTimeMs();
-	m_background = env->getVideoDriver()->getTexture(getTexturePath("background_chat.png").c_str());
+	m_background = env->getVideoDriver()->getTexture(getTexturePath("background_chat.jpg").c_str());
 	setCursor(true);
 }
 
@@ -190,7 +190,7 @@ void GUIChatConsole::animate(u32 msec)
 void GUIChatConsole::drawBackground()
 {
 	video::IVideoDriver* driver = Environment->getVideoDriver();
-	core::dimension2d<u32> texturesize = m_background->getSize();
+	//core::dimension2d<u32> texturesize = m_background->getSize();
 	core::rect<s32> sourcerect(0, -m_height, m_screensize.X, 0);
 	driver->draw2DImage(
 		m_background,
