@@ -182,18 +182,44 @@ std::string FurnaceNodeMetadata::infoText()
 		assert(src_list);
 		const InventoryItem *src_item = src_list->getItem(0);
 
-		if(src_item)
+		if(src_item) {
+			InventoryList *dst_list = m_inventory->getList("dst");
+			if(!dst_list->roomForCookedItem(src_item))
+				return "Furnace is overloaded";
 			return "Furnace is out of fuel";
+		}
 		else
 			return "Furnace is inactive";
 	}
 	else
 	{
-		std::string s = "Furnace is active (";
-		s += itos(m_fuel_time/m_fuel_totaltime*100);
-		s += "%)";
+		std::string s = "Furnace is active";
+		// Do this so it doesn't always show (0%) for weak fuel
+		if(m_fuel_totaltime > 3) {
+			s += " (";
+			s += itos(m_fuel_time/m_fuel_totaltime*100);
+			s += "%)";
+		}
 		return s;
 	}
+}
+bool FurnaceNodeMetadata::nodeRemovalDisabled()
+{
+	/*
+		Disable removal if furnace is not empty
+	*/
+	InventoryList *list[3] = {m_inventory->getList("src"),
+	m_inventory->getList("dst"), m_inventory->getList("fuel")};
+	
+	for(int i = 0; i < 3; i++) {
+		if(list[i] == NULL)
+			continue;
+		if(list[i]->getUsedSlots() == 0)
+			continue;
+		return true;
+	}
+	return false;
+	
 }
 void FurnaceNodeMetadata::inventoryModified()
 {
@@ -221,9 +247,14 @@ bool FurnaceNodeMetadata::step(float dtime)
 		assert(src_list);
 		const InventoryItem *src_item = src_list->getItem(0);
 		
+		bool room_available = false;
+		
+		if(src_item && src_item->isCookable())
+			room_available = dst_list->roomForCookedItem(src_item);
+		
 		// Start only if there are free slots in dst, so that it can
 		// accomodate any result item
-		if(dst_list->getFreeSlots() > 0 && src_item && src_item->isCookable())
+		if(room_available)
 		{
 			m_src_totaltime = 3;
 		}
@@ -252,13 +283,18 @@ bool FurnaceNodeMetadata::step(float dtime)
 				m_src_totaltime = 0;
 			}
 			changed = true;
-			continue;
+			
+			// Fall through if the fuel item was used up this step
+			if(m_fuel_time < m_fuel_totaltime)
+				continue;
 		}
 		
 		/*
-			If there is no source item or source item is not cookable, stop loop.
+			If there is no source item or source item is not cookable,
+			or furnace became overloaded, stop loop.
 		*/
-		if(src_item == NULL || m_src_totaltime < 0.001)
+		if((m_fuel_time < m_fuel_totaltime || (src_item && dst_list->roomForCookedItem(src_item) == false))
+			&& (src_item == NULL || m_src_totaltime < 0.001))
 		{
 			m_step_accumulator = 0;
 			break;
