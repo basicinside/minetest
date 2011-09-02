@@ -21,12 +21,15 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #define GUICHATCONSOLE_HEADER
 
 #include "common_irrlicht.h"
+#include "chat.h"
 
 class GUIChatConsole : public gui::IGUIElement
 {
 public:
 	GUIChatConsole(gui::IGUIEnvironment* env,
-			gui::IGUIElement* parent, s32 id);
+			gui::IGUIElement* parent,
+			s32 id,
+			ChatBackend* backend);
 	virtual ~GUIChatConsole();
 
 	// Open the console (height = desired fraction of screen size)
@@ -69,6 +72,9 @@ private:
 	void drawCursor();
 
 private:
+	// pointer to the chat backend
+	ChatBackend* m_chat_backend;
+
 	// current screen size
 	v2u32 m_screensize;
 

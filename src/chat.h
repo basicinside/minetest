@@ -129,7 +129,39 @@ private:
 	core::array<ChatFormattedLine> m_formatted;
 	// Empty formatted line, for error returns
 	ChatFormattedLine m_empty_formatted_line;
+};
 
+
+class ChatBackend
+{
+public:
+	ChatBackend();
+	~ChatBackend();
+
+	// Add chat message
+	void addMessage(const std::wstring& name, const std::wstring& text);
+
+	// Parse and add legacy preformatted chat message
+	void addLegacyMessage(const std::wstring& line);
+
+	// Get the console buffer
+	ChatBuffer& getConsoleBuffer();
+
+	// Get the recent messages buffer
+	ChatBuffer& getRecentBuffer();
+
+	// Concatenate all recent messages
+	std::wstring getRecentChat();
+
+	// Reformat all buffers
+	void reformat(u32 rows, u32 cols);
+
+	// Age recent messages
+	void step(float dtime);
+
+private:
+	ChatBuffer m_console_buffer;
+	ChatBuffer m_recent_buffer;
 };
 
 #endif

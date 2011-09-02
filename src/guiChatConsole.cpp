@@ -28,16 +28,19 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 #include "gettext.h"
 
-// TODO lines management
 // TODO text display
 // TODO text input
 // TODO test setCursor()
 
-GUIChatConsole::GUIChatConsole(gui::IGUIEnvironment* env,
-		gui::IGUIElement* parent, s32 id
+GUIChatConsole::GUIChatConsole(
+		gui::IGUIEnvironment* env,
+		gui::IGUIElement* parent,
+		s32 id,
+		ChatBackend* backend
 ):
 	IGUIElement(gui::EGUIET_ELEMENT, env, parent, id,
 			core::rect<s32>(0,0,100,100)),
+	m_chat_backend(backend),
 	m_screensize(v2u32(0,0)),
 	m_animate_time_old(0),
 	m_height(0),
@@ -72,15 +75,15 @@ GUIChatConsole::GUIChatConsole(gui::IGUIEnvironment* env,
 		m_fontsize.Y = 1;
 
 	// set default cursor options
-	setCursor(true);
+	setCursor(true, true, 0.5, 0.1);
 
 	// TODO remove the ChatBuffer test
 	dstream << "*** ChatBuffer test ***" << std::endl;
 	ChatBuffer buf(500);
+	buf.reformat(3, 80);
 	buf.addLine(std::wstring(L""), std::wstring(L"# Server version 0.2.20110731_3"));
 	buf.addLine(std::wstring(L""), std::wstring(L"# MOTD"));
 	buf.addLine(std::wstring(L"kahrl"), std::wstring(L"Hello world! Lorem ipsum dolor sit amet, consectetuer adipisicing elit. Lorem ipsum dolor sit amet, consectetuer adipisicing elit. Lorem ipsum dolor sit amet, consectetuer adipisicing elit. Lorem ipsum dolor sit amet, consectetuer adipisicing elit. LOLHAXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX!!!!!!!!!!!!!!!!!!!!!!!!!1111111111111111 ftw!"));
-	buf.reformat(3, 80);
 	buf.scrollTop();
 	buf.scroll(1);
 
@@ -175,6 +178,9 @@ void GUIChatConsole::draw()
 		if (m_screensize.Y != 0)
 			m_height = m_height * screensize.Y / m_screensize.Y;
 		m_screensize = screensize;
+
+		// recompute console size
+
 	}
 
 	// Animation

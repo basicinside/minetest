@@ -53,13 +53,13 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 MapDrawControl draw_control;
 
 // Chat data
-struct ChatLine
+struct OldChatLine
 {
-	ChatLine():
+	OldChatLine():
 		age(0.0)
 	{
 	}
-	ChatLine(const std::wstring &a_text):
+	OldChatLine(const std::wstring &a_text):
 		age(0.0),
 		text(a_text)
 	{
@@ -1030,10 +1030,11 @@ void the_game(
 			//false, false); // Disable word wrap as of now
 			false, true);
 	//guitext_chat->setBackgroundColor(video::SColor(96,0,0,0));
-	core::list<ChatLine> chat_lines;
+	core::list<OldChatLine> chat_lines;
 	
-	// Chat console
-	GUIChatConsole *gui_chat_console = new GUIChatConsole(guienv, guienv->getRootGUIElement(), -1);
+	// Chat backend and console
+	ChatBackend chat_backend;
+	GUIChatConsole *gui_chat_console = new GUIChatConsole(guienv, guienv->getRootGUIElement(), -1, &chat_backend);
 
 	/*GUIQuickInventory *quick_inventory = new GUIQuickInventory
 			(guienv, NULL, v2s32(10, 70), 5, &local_inventory);*/
@@ -1392,12 +1393,12 @@ void the_game(
 			if(g_settings.getBool("free_move"))
 			{
 				g_settings.set("free_move","false");
-				chat_lines.push_back(ChatLine(L"free_move disabled"));
+				chat_lines.push_back(OldChatLine(L"free_move disabled"));
 			}
 			else
 			{
 				g_settings.set("free_move","true");
-				chat_lines.push_back(ChatLine(L"free_move enabled"));
+				chat_lines.push_back(OldChatLine(L"free_move enabled"));
 			}
 		}
 		else if(input->wasKeyDown(getKeySetting("keymap_fastmove")))
@@ -1405,12 +1406,12 @@ void the_game(
 			if(g_settings.getBool("fast_move"))
 			{
 				g_settings.set("fast_move","false");
-				chat_lines.push_back(ChatLine(L"fast_move disabled"));
+				chat_lines.push_back(OldChatLine(L"fast_move disabled"));
 			}
 			else
 			{
 				g_settings.set("fast_move","true");
-				chat_lines.push_back(ChatLine(L"fast_move enabled"));
+				chat_lines.push_back(OldChatLine(L"fast_move enabled"));
 			}
 		}
 		else if(input->wasKeyDown(getKeySetting("keymap_frametime_graph")))
@@ -1418,12 +1419,12 @@ void the_game(
 			if(g_settings.getBool("frametime_graph"))
 			{
 				g_settings.set("frametime_graph","false");
-				chat_lines.push_back(ChatLine(L"frametime_graph disabled"));
+				chat_lines.push_back(OldChatLine(L"frametime_graph disabled"));
 			}
 			else
 			{
 				g_settings.set("frametime_graph","true");
-				chat_lines.push_back(ChatLine(L"frametime_graph enabled"));
+				chat_lines.push_back(OldChatLine(L"frametime_graph enabled"));
 			}
 		}
 		else if(input->wasKeyDown(getKeySetting("keymap_screenshot")))
@@ -1438,7 +1439,7 @@ void the_game(
 					std::wstringstream sstr;
 					sstr<<"Saved screenshot to '"<<filename<<"'";
 					dstream<<"Saved screenshot to '"<<filename<<"'"<<std::endl;
-					chat_lines.push_back(ChatLine(sstr.str()));
+					chat_lines.push_back(OldChatLine(sstr.str()));
 				} else{
 					dstream<<"Failed to save screenshot '"<<filename<<"'"<<std::endl;
 				}
@@ -2183,10 +2184,10 @@ void the_game(
 			std::wstring message;
 			while(client.getChatMessage(message))
 			{
-				chat_lines.push_back(ChatLine(message));
+				chat_lines.push_back(OldChatLine(message));
 				/*if(chat_lines.size() > 6)
 				{
-					core::list<ChatLine>::Iterator
+					core::list<OldChatLine>::Iterator
 							i = chat_lines.begin();
 					chat_lines.erase(i);
 				}*/
@@ -2199,7 +2200,7 @@ void the_game(
 			s16 line_number = chat_lines.size();
 			// Count of messages to be removed from the top
 			u16 to_be_removed_count = 0;
-			for(core::list<ChatLine>::Iterator
+			for(core::list<OldChatLine>::Iterator
 					i = chat_lines.begin();
 					i != chat_lines.end(); i++)
 			{
@@ -2222,7 +2223,7 @@ void the_game(
 			}
 			for(u16 i=0; i<to_be_removed_count; i++)
 			{
-				core::list<ChatLine>::Iterator
+				core::list<OldChatLine>::Iterator
 						it = chat_lines.begin();
 				chat_lines.erase(it);
 			}

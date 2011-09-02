@@ -21,6 +21,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "debug.h"
 #include <cassert>
 #include <cctype>
+#include <sstream>
 
 ChatBuffer::ChatBuffer(u32 scrollback):
 	m_scrollback(scrollback),
@@ -366,4 +367,84 @@ s32 ChatBuffer::getBottomScrollPos() const
 		return 0;
 	else
 		return formatted_count - rows;
+}
+
+
+ChatBackend::ChatBackend():
+	m_console_buffer(500),
+	m_recent_buffer(6)
+{
+}
+
+ChatBackend::~ChatBackend()
+{
+}
+
+void ChatBackend::addMessage(const std::wstring& name, const std::wstring& text)
+{
+	m_console_buffer.addLine(name, text);
+	m_recent_buffer.addLine(name, text);
+}
+
+void ChatBackend::addLegacyMessage(const std::wstring& message)
+{
+	// FIXME: Don't use legacy messages anymore.
+	// They fail miserably with player names that contain '>' symbols.
+
+	if (message.size() >= 2 && message[0] == L'<')
+	{
+		std::size_t closing = message.find_first_of(L'>', 1);
+		if (closing != std::wstring::npos &&
+				closing + 2 <= message.size() &&
+				message[closing+1] == L' ')
+		{
+			std::wstring name = message.substr(1, closing - 1);
+			std::wstring text = message.substr(closing + 2);
+			addMessage(name, text);
+		}
+	}
+
+	// Unable to parse, probably a server message.
+	addMessage(L"", message);
+}
+
+ChatBuffer& ChatBackend::getConsoleBuffer()
+{
+	return m_console_buffer;
+}
+
+ChatBuffer& ChatBackend::getRecentBuffer()
+{
+	return m_recent_buffer;
+}
+
+std::wstring ChatBackend::getRecentChat()
+{
+	std::wostringstream stream;
+	for (u32 i = 0; i < m_recent_buffer.getLineCount(); ++i)
+	{
+		const ChatLine& line = m_recent_buffer.getLine(i);
+		if (i != 0)
+			stream << L"\n";
+		if (!line.name.empty())
+			stream << L"<" << line.name << L"> ";
+		stream << line.text;
+	}
+	return stream.str();
+}
+
+void ChatBackend::reformat(u32 rows, u32 cols)
+{
+	m_console_buffer.reformat(rows, cols);
+
+	// no need to reformat m_recent_buffer, its formatted lines
+	// are not used
+}
+
+void ChatBackend::step(float dtime)
+{
+	m_recent_buffer.step(dtime);
+	m_recent_buffer.deleteByAge(m_recent_buffer.getLineCount() * 60.0);
+
+	// no need to age messages in anything but m_recent_buffer
 }
