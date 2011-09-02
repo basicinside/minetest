@@ -61,7 +61,6 @@ GUIChatConsole::GUIChatConsole(
 	m_cursor_height(0.0),
 	m_background(NULL),
 	m_background_color(255, 0, 0, 0),
-	m_background_alpha(255),
 	m_font(NULL),
 	m_fontsize(0, 0)
 {
@@ -73,10 +72,9 @@ GUIChatConsole::GUIChatConsole(
 	s32 console_alpha = g_settings.getS32("console_alpha");
 
 	// load the background texture depending on settings
-	m_background_alpha = clamp_u8(console_alpha);
+	m_background_color.setAlpha(clamp_u8(console_alpha));
 	if (console_color_set)
 	{
-		m_background_color.setAlpha(m_background_alpha);
 		m_background_color.setRed(clamp_u8(round(console_color.X)));
 		m_background_color.setGreen(clamp_u8(round(console_color.Y)));
 		m_background_color.setBlue(clamp_u8(round(console_color.Z)));
@@ -84,6 +82,9 @@ GUIChatConsole::GUIChatConsole(
 	else
 	{
 		m_background = env->getVideoDriver()->getTexture(getTexturePath("background_chat.jpg").c_str());
+		m_background_color.setRed(255);
+		m_background_color.setGreen(255);
+		m_background_color.setBlue(255);
 	}
 
 	// load the font
@@ -200,7 +201,6 @@ void GUIChatConsole::reformatConsole()
 {
 	s32 cols = m_screensize.X / m_fontsize.X - 2; // make room for a margin (looks better)
 	s32 rows = m_desired_height / m_fontsize.Y - 1; // make room for the input prompt
-	dstream << "GUIChatConsole: reformat cols " << cols << " rows " << rows << std::endl;
 	if (cols <= 0 || rows <= 0)
 		cols = rows = 0;
 	m_chat_backend->reformat(cols, rows);
@@ -270,7 +270,7 @@ void GUIChatConsole::drawBackground()
 			v2s32(0, 0),
 			sourcerect,
 			&AbsoluteClippingRect,
-			video::SColor(m_background_alpha, 255, 255, 255),
+			m_background_color,
 			false);
 	}
 	else
