@@ -401,6 +401,7 @@ void ChatBackend::addLegacyMessage(const std::wstring& message)
 			std::wstring name = message.substr(1, closing - 1);
 			std::wstring text = message.substr(closing + 2);
 			addMessage(name, text);
+			return;
 		}
 	}
 
