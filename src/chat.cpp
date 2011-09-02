@@ -234,7 +234,7 @@ u32 ChatBuffer::formatChatLine(const ChatLine& line, u32 cols,
 	u32 in_pos = 0;
 	u32 hanging_indentation = 0;
 
-	// Format the sender name
+	// Format the sender name and produce fragments
 	if (!line.name.empty())
 	{
 		temp_frag.text = L"<";
@@ -371,9 +371,192 @@ s32 ChatBuffer::getBottomScrollPos() const
 }
 
 
+
+ChatPrompt::ChatPrompt(std::wstring prompt, u32 history_limit):
+	m_prompt(prompt),
+	m_line(L""),
+	m_history(),
+	m_history_index(0),
+	m_history_limit(history_limit),
+	m_cols(0),
+	m_view(0),
+	m_cursor(0)
+{
+}
+
+ChatPrompt::~ChatPrompt()
+{
+}
+
+void ChatPrompt::input(wchar_t ch)
+{
+	m_line.insert(m_cursor, 1, ch);
+	m_cursor++;
+	clampView();
+}
+
+std::wstring ChatPrompt::submit()
+{
+	std::wstring line = m_line;
+	m_line.clear();
+	if (!line.empty())
+		m_history.push_back(line);
+	if (m_history.size() > m_history_limit)
+		m_history.erase(0);
+	m_history_index = m_history.size();
+	m_view = 0;
+	m_cursor = 0;
+	return line;
+}
+
+void ChatPrompt::clear()
+{
+	m_line.clear();
+	m_view = 0;
+	m_cursor = 0;
+}
+
+void ChatPrompt::replace(const std::wstring& line)
+{
+	m_line =  line;
+	m_view = m_cursor = line.size();
+	clampView();
+}
+
+void ChatPrompt::historyPrev()
+{
+	if (m_history_index != 0)
+	{
+		--m_history_index;
+		replace(m_history[m_history_index]);
+	}
+}
+
+void ChatPrompt::historyNext()
+{
+	if (m_history_index + 1 >= m_history.size())
+	{
+		m_history_index = m_history.size();
+		replace(L"");
+	}
+	else
+	{
+		++m_history_index;
+		replace(m_history[m_history_index]);
+	}
+}
+
+void ChatPrompt::reformat(u32 cols)
+{
+	if (cols <= m_prompt.size())
+	{
+		m_cols = 0;
+		m_view = m_cursor;
+	}
+	else
+	{
+		s32 length = m_line.size();
+		bool was_at_end = (m_view + m_cols >= length + 1);
+		m_cols = cols - m_prompt.size();
+		if (was_at_end)
+			m_view = length;
+		clampView();
+	}
+}
+
+std::wstring ChatPrompt::getVisiblePortion() const
+{
+	return m_prompt + m_line.substr(m_view, m_cols);
+}
+
+s32 ChatPrompt::getVisibleCursorPosition() const
+{
+	return m_cursor - m_view + m_prompt.size();
+}
+
+void ChatPrompt::cursorOperation(CursorOp op, CursorOpDir dir, CursorOpScope scope)
+{
+	s32 old_cursor = m_cursor;
+	s32 new_cursor = m_cursor;
+
+	s32 length = m_line.size();
+	s32 increment = (dir == CURSOROP_DIR_RIGHT) ? 1 : -1;
+
+	if (scope == CURSOROP_SCOPE_CHARACTER)
+	{
+		new_cursor += increment;
+	}
+	else if (scope == CURSOROP_SCOPE_WORD)
+	{
+		if (increment > 0)
+		{
+			// skip one word to the right
+			while (new_cursor < length && isspace(m_line[new_cursor]))
+				new_cursor++;
+			while (new_cursor < length && !isspace(m_line[new_cursor]))
+				new_cursor++;
+			while (new_cursor < length && isspace(m_line[new_cursor]))
+				new_cursor++;
+		}
+		else
+		{
+			// skip one word to the left
+			while (new_cursor >= 1 && isspace(m_line[new_cursor - 1]))
+				new_cursor--;
+			while (new_cursor >= 1 && !isspace(m_line[new_cursor - 1]))
+				new_cursor--;
+		}
+	}
+	else if (scope == CURSOROP_SCOPE_LINE)
+	{
+		new_cursor += increment * length;
+	}
+
+	new_cursor = MYMAX(MYMIN(new_cursor, length), 0);
+
+	if (op == CURSOROP_MOVE)
+	{
+		m_cursor = new_cursor;
+	}
+	else if (op == CURSOROP_DELETE)
+	{
+		if (new_cursor < old_cursor)
+		{
+			m_line.erase(new_cursor, old_cursor - new_cursor);
+			m_cursor = new_cursor;
+		}
+		else if (new_cursor > old_cursor)
+		{
+			m_line.erase(old_cursor, new_cursor - old_cursor);
+			m_cursor = old_cursor;
+		}
+	}
+
+	clampView();
+}
+
+void ChatPrompt::clampView()
+{
+	s32 length = m_line.size();
+	if (length + 1 <= m_cols)
+	{
+		m_view = 0;
+	}
+	else
+	{
+		m_view = MYMIN(m_view, length + 1 - m_cols);
+		m_view = MYMIN(m_view, m_cursor);
+		m_view = MYMAX(m_view, m_cursor - m_cols + 1);
+		m_view = MYMAX(m_view, 0);
+	}
+}
+
+
+
 ChatBackend::ChatBackend():
 	m_console_buffer(500),
-	m_recent_buffer(6)
+	m_recent_buffer(6),
+	m_prompt(L"]", 500)
 {
 }
 
@@ -383,7 +566,7 @@ ChatBackend::~ChatBackend()
 
 void ChatBackend::addMessage(const std::wstring& name, const std::wstring& text)
 {
-	// NOTE: A message may consist of multiple lines, for example the MOTD.
+	// Note: A message may consist of multiple lines, for example the MOTD.
 	WStrfnd fnd(text);
 	while (!fnd.atend())
 	{
@@ -441,12 +624,20 @@ std::wstring ChatBackend::getRecentChat()
 	return stream.str();
 }
 
+ChatPrompt& ChatBackend::getPrompt()
+{
+	return m_prompt;
+}
+
+
 void ChatBackend::reformat(u32 cols, u32 rows)
 {
 	m_console_buffer.reformat(cols, rows);
 
 	// no need to reformat m_recent_buffer, its formatted lines
 	// are not used
+
+	m_prompt.reformat(cols);
 }
 
 void ChatBackend::step(float dtime)

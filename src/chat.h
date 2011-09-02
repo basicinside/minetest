@@ -132,6 +132,93 @@ private:
 };
 
 
+class ChatPrompt
+{
+public:
+	ChatPrompt(std::wstring prompt, u32 history_limit);
+	~ChatPrompt();
+
+	// Input character
+	void input(wchar_t ch);
+
+	// Submit, clear and return current line
+	std::wstring submit();
+
+	// Clear the current line
+	void clear();
+
+	// Replace the current line with the given text
+	void replace(const std::wstring& line);
+
+	// Select previous command from history
+	void historyPrev();
+	// Select next command from history
+	void historyNext();
+
+	// Update console size and reformat the visible portion of the prompt
+	void reformat(u32 cols);
+	// Get visible portion of the prompt.
+	std::wstring getVisiblePortion() const;
+	// Get cursor position (relative to visible portion). -1 if invalid
+	s32 getVisibleCursorPosition() const;
+
+	// Cursor operations
+	enum CursorOp {
+		CURSOROP_MOVE,
+		CURSOROP_DELETE
+	};
+
+	// Cursor operation direction
+	enum CursorOpDir {
+		CURSOROP_DIR_LEFT,
+		CURSOROP_DIR_RIGHT
+	};
+
+	// Cursor operation scope
+	enum CursorOpScope {
+		CURSOROP_SCOPE_CHARACTER,
+		CURSOROP_SCOPE_WORD,
+		CURSOROP_SCOPE_LINE
+	};
+
+	// Cursor operation
+	// op specifies whether it's a move or delete operation
+	// dir specifies whether the operation goes left or right
+	// scope specifies how far the operation will reach (char/word/line)
+	// Examples:
+	//   cursorOperation(CURSOROP_MOVE, CURSOROP_DIR_RIGHT, CURSOROP_SCOPE_LINE)
+	//     moves the cursor to the end of the line.
+	//   cursorOperation(CURSOROP_DELETE, CURSOROP_DIR_LEFT, CURSOROP_SCOPE_WORD)
+	//     deletes the word to the left of the cursor.
+	void cursorOperation(CursorOp op, CursorOpDir dir, CursorOpScope scope);
+
+protected:
+	// set m_view to ensure that 0 <= m_view <= m_cursor < m_view + m_cols
+	// if line can be fully shown, set m_view to zero
+	// else, also ensure m_view <= m_line.size() + 1 - m_cols
+	void clampView();
+
+private:
+	// Prompt prefix
+	std::wstring m_prompt;
+	// Currently edited line
+	std::wstring m_line;
+	// History buffer
+	core::array<std::wstring> m_history;
+	// History index (0 <= m_history_index <= m_history.size()) 
+	u32 m_history_index;
+	// Maximum number of history entries
+	u32 m_history_limit;
+
+	// Number of columns excluding columns reserved for the prompt
+	s32 m_cols;
+	// Start of visible portion (index into m_line)
+	s32 m_view;
+	// Cursor (index into m_line)
+	s32 m_cursor;
+};
+
+
 class ChatBackend
 {
 public:
@@ -149,6 +236,8 @@ public:
 	ChatBuffer& getRecentBuffer();
 	// Concatenate all recent messages
 	std::wstring getRecentChat();
+	// Get the console prompt
+	ChatPrompt& getPrompt();
 
 	// Reformat all buffers
 	void reformat(u32 cols, u32 rows);
@@ -164,6 +253,7 @@ public:
 private:
 	ChatBuffer m_console_buffer;
 	ChatBuffer m_recent_buffer;
+	ChatPrompt m_prompt;
 };
 
 #endif

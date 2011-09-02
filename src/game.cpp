@@ -1016,7 +1016,7 @@ void the_game(
 	
 	// Chat backend and console
 	ChatBackend chat_backend;
-	GUIChatConsole *gui_chat_console = new GUIChatConsole(guienv, guienv->getRootGUIElement(), -1, &chat_backend);
+	GUIChatConsole *gui_chat_console = new GUIChatConsole(guienv, guienv->getRootGUIElement(), -1, &chat_backend, new TextDestChat(&client));
 
 	/*GUIQuickInventory *quick_inventory = new GUIQuickInventory
 			(guienv, NULL, v2s32(10, 70), 5, &local_inventory);*/
@@ -1365,8 +1365,8 @@ void the_game(
 		{
 			if (!gui_chat_console->isOpenInhibited())
 			{
-				// Open up to half of screen
-				gui_chat_console->openConsole(0.5);
+				// Open up to over half of the screen
+				gui_chat_console->openConsole(0.6);
 				guienv->setFocus(gui_chat_console);
 			}
 		}
