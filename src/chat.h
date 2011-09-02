@@ -84,12 +84,12 @@ public:
 	// Delete lines older than maxAge.
 	void deleteByAge(f32 maxAge);
 
-	// Get number of rows, 0 if reformat has not been called yet.
-	u32 getRows() const;
 	// Get number of columns, 0 if reformat has not been called yet.
 	u32 getColumns() const;
+	// Get number of rows, 0 if reformat has not been called yet.
+	u32 getRows() const;
 	// Update console size and reformat all formatted lines.
-	void reformat(u32 rows, u32 cols);
+	void reformat(u32 cols, u32 rows);
 	// Get formatted line for a given row (0 is top of screen).
 	// Only valid after reformat has been called at least once
 	const ChatFormattedLine& getFormattedLine(u32 row) const;
@@ -119,10 +119,10 @@ private:
 	// Array of unformatted chat lines
 	core::array<ChatLine> m_unformatted;
 	
-	// Number of character rows in console
-	u32 m_rows;
 	// Number of character columns in console
 	u32 m_cols;
+	// Number of character rows in console
+	u32 m_rows;
 	// Scroll position (console's top line index into m_formatted)
 	s32 m_scroll;
 	// Array of formatted lines
@@ -140,24 +140,26 @@ public:
 
 	// Add chat message
 	void addMessage(const std::wstring& name, const std::wstring& text);
-
 	// Parse and add legacy preformatted chat message
 	void addLegacyMessage(const std::wstring& line);
 
 	// Get the console buffer
 	ChatBuffer& getConsoleBuffer();
-
 	// Get the recent messages buffer
 	ChatBuffer& getRecentBuffer();
-
 	// Concatenate all recent messages
 	std::wstring getRecentChat();
 
 	// Reformat all buffers
-	void reformat(u32 rows, u32 cols);
+	void reformat(u32 cols, u32 rows);
 
 	// Age recent messages
 	void step(float dtime);
+
+	// Scrolling
+	void scroll(s32 rows);
+	void scrollPageDown();
+	void scrollPageUp();
 
 private:
 	ChatBuffer m_console_buffer;

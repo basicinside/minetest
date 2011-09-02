@@ -19,6 +19,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 #include "chat.h"
 #include "debug.h"
+#include "utility.h"
 #include <cassert>
 #include <cctype>
 #include <sstream>
@@ -26,8 +27,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ChatBuffer::ChatBuffer(u32 scrollback):
 	m_scrollback(scrollback),
 	m_unformatted(),
-	m_rows(0),
 	m_cols(0),
+	m_rows(0),
 	m_scroll(0),
 	m_formatted(),
 	m_empty_formatted_line()
@@ -120,27 +121,27 @@ void ChatBuffer::deleteByAge(f32 maxAge)
 	deleteOldest(count);
 }
 
-u32 ChatBuffer::getRows() const
-{
-	return m_rows;
-}
-
 u32 ChatBuffer::getColumns() const
 {
 	return m_cols;
 }
 
-void ChatBuffer::reformat(u32 rows, u32 cols)
+u32 ChatBuffer::getRows() const
 {
-	if (rows == 0 || cols == 0)
+	return m_rows;
+}
+
+void ChatBuffer::reformat(u32 cols, u32 rows)
+{
+	if (cols == 0 || rows == 0)
 	{
 		// Clear formatted buffer
-		m_rows = 0;
 		m_cols = 0;
+		m_rows = 0;
 		m_scroll = 0;
 		m_formatted.clear();
 	}
-	else if (rows != m_rows || cols != m_cols)
+	else if (cols != m_cols || rows != m_rows)
 	{
 		// TODO: Avoid reformatting ALL lines (even inivisble ones)
 		// each time the console size changes.
@@ -171,8 +172,8 @@ void ChatBuffer::reformat(u32 rows, u32 cols)
 		}
 
 		// Update the console size
-		m_rows = rows;
 		m_cols = cols;
+		m_rows = rows;
 
 		// Restore the scroll position
 		if (at_bottom)
@@ -382,8 +383,14 @@ ChatBackend::~ChatBackend()
 
 void ChatBackend::addMessage(const std::wstring& name, const std::wstring& text)
 {
-	m_console_buffer.addLine(name, text);
-	m_recent_buffer.addLine(name, text);
+	// NOTE: A message may consist of multiple lines, for example the MOTD.
+	WStrfnd fnd(text);
+	while (!fnd.atend())
+	{
+		std::wstring line = fnd.next(L"\n");
+		m_console_buffer.addLine(name, line);
+		m_recent_buffer.addLine(name, line);
+	}
 }
 
 void ChatBackend::addLegacyMessage(const std::wstring& message)
@@ -434,9 +441,9 @@ std::wstring ChatBackend::getRecentChat()
 	return stream.str();
 }
 
-void ChatBackend::reformat(u32 rows, u32 cols)
+void ChatBackend::reformat(u32 cols, u32 rows)
 {
-	m_console_buffer.reformat(rows, cols);
+	m_console_buffer.reformat(cols, rows);
 
 	// no need to reformat m_recent_buffer, its formatted lines
 	// are not used
@@ -448,4 +455,19 @@ void ChatBackend::step(float dtime)
 	m_recent_buffer.deleteByAge(m_recent_buffer.getLineCount() * 60.0);
 
 	// no need to age messages in anything but m_recent_buffer
+}
+
+void ChatBackend::scroll(s32 rows)
+{
+	m_console_buffer.scroll(rows);
+}
+
+void ChatBackend::scrollPageDown()
+{
+	m_console_buffer.scroll(m_console_buffer.getRows());
+}
+
+void ChatBackend::scrollPageUp()
+{
+	m_console_buffer.scroll(-m_console_buffer.getRows());
 }

@@ -64,6 +64,9 @@ public:
 	virtual bool OnEvent(const SEvent& event);
 
 private:
+	void reformatConsole();
+	void recalculateConsolePosition();
+
 	// These methods are called by draw
 	void animate(u32 msec);
 	void drawBackground();
@@ -81,10 +84,10 @@ private:
 	// used to compute how much time passed since last animate()
 	u32 m_animate_time_old;
 
+	// should the console be opened or closed?
+	bool m_open;
 	// current console height [pixels]
 	s32 m_height;
-	// if true, force next animate() to resize the GUI element
-	bool m_height_changed;
 	// desired height [pixels]
 	f32 m_desired_height;
 	// desired height [screen height fraction]
