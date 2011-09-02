@@ -54,7 +54,7 @@ GUIChatConsole::GUIChatConsole(
 	m_height(0),
 	m_desired_height(0),
 	m_desired_height_fraction(0.0),
-	m_height_speed(1.5),
+	m_height_speed(3.0),
 	m_open_inhibited(0),
 	m_cursor_blink(0.0),
 	m_cursor_blink_speed(0.0),
