@@ -144,6 +144,7 @@ set(minetest_SRCS
 	keycode.cpp
 	clouds.cpp
 	clientobject.cpp
+	chat.cpp
 	guiMainMenu.cpp
 	guiKeyChangeMenu.cpp
 	guiMessageMenu.cpp

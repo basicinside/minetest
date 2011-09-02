@@ -18,6 +18,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 */
 
 #include "guiChatConsole.h"
+#include "chat.h"
 #include "debug.h"
 #include "gettime.h"
 #include "keycode.h"
@@ -52,6 +53,27 @@ GUIChatConsole::GUIChatConsole(gui::IGUIEnvironment* env,
 	m_animate_time_old = getTimeMs();
 	m_background = env->getVideoDriver()->getTexture(getTexturePath("background_chat.jpg").c_str());
 	setCursor(true);
+
+	// TODO remove the ChatBuffer test
+	dstream << "*** ChatBuffer test ***" << std::endl;
+	ChatBuffer buf(500);
+	ChatLine line(std::wstring(L"kahrl"), std::wstring(L"Hello world! Lorem ipsum dolor sit amet, consectetuer adipisicing elit. Lorem ipsum dolor sit amet, consectetuer adipisicing elit. Lorem ipsum dolor sit amet, consectetuer adipisicing elit. Lorem ipsum dolor sit amet, consectetuer adipisicing elit. LOLHAXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX!!!!!!!!!!!!!!!!!!!!!!!!!1111111111111111 ftw!"));
+	core::array<ChatFormattedLine> fls;
+	buf.formatChatLine(line, 80, fls);
+	for (u32 i = 0; i < fls.size(); ++i)
+	{
+		ChatFormattedLine& fl = fls[i];
+		dstream << "Formatted line " << i << ", first=" << (fl.first ? "yes" : "no") << std::endl;
+		for (u32 j = 0; j < fl.fragments.size(); ++j)
+		{
+			ChatFormattedFragment frag = fl.fragments[j];
+			dstream << "  Fragment " << j << ", len=" << frag.text.size() << ", text=\"";
+			for (const wchar_t* ptr = frag.text.c_str(); *ptr; ++ptr)
+				dstream << (char) (*ptr);
+			dstream << "\", column=" << frag.column << ", bold=" << (bool) (frag.bold) << std::endl;
+		}
+	}
+	dstream << "*** ChatBuffer test ended ***" << std::endl;
 }
 
 GUIChatConsole::~GUIChatConsole()
