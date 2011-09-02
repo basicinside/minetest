@@ -22,6 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "debug.h"
 #include "gettime.h"
 #include "keycode.h"
+#include "main.h"  // for g_settings
 #include "tile.h"
 #include <cmath>
 #include <string>
@@ -53,6 +54,7 @@ GUIChatConsole::GUIChatConsole(
 	m_cursor_blink_speed(0.0),
 	m_cursor_height(0.0),
 	m_background(NULL),
+	m_background_alpha(255),
 	m_font(NULL),
 	m_fontsize(0, 0)
 {
@@ -60,6 +62,13 @@ GUIChatConsole::GUIChatConsole(
 
 	// load the background texture
 	m_background = env->getVideoDriver()->getTexture(getTexturePath("background_chat.jpg").c_str());
+	s32 console_alpha = g_settings.getS32("console_alpha");
+	if (console_alpha < 0)
+		m_background_alpha = 0;
+	else if (console_alpha > 255)
+		m_background_alpha = 255;
+	else
+		m_background_alpha = console_alpha;
 
 	// load the font
 	m_font = env->getSkin()->getFont();
@@ -248,7 +257,7 @@ void GUIChatConsole::drawBackground()
 		v2s32(0, 0),
 		sourcerect,
 		&AbsoluteClippingRect,
-		video::SColor(240, 255, 255, 255),
+		video::SColor(m_background_alpha, 255, 255, 255),
 		false);
 }
 

@@ -63,6 +63,7 @@ void set_default_settings()
 	g_settings.setDefault("new_style_water", "false");
 	g_settings.setDefault("new_style_leaves", "true");
 	g_settings.setDefault("smooth_lighting", "true");
+	g_settings.setDefault("console_alpha", "255");
 	g_settings.setDefault("frametime_graph", "false");
 	g_settings.setDefault("enable_texture_atlas", "true");
 	g_settings.setDefault("texture_path", "");

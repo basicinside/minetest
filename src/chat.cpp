@@ -452,7 +452,7 @@ void ChatBackend::reformat(u32 cols, u32 rows)
 void ChatBackend::step(float dtime)
 {
 	m_recent_buffer.step(dtime);
-	m_recent_buffer.deleteByAge(m_recent_buffer.getLineCount() * 60.0);
+	m_recent_buffer.deleteByAge(60.0);
 
 	// no need to age messages in anything but m_recent_buffer
 }

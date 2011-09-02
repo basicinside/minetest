@@ -107,6 +107,8 @@ private:
 
 	// background texture
 	video::ITexture* m_background;
+	// background alpha
+	u32 m_background_alpha;
 
 	// font
 	gui::IGUIFont* m_font;
