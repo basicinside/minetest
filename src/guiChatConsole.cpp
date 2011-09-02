@@ -33,6 +33,12 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 // TODO text input
 // TODO test setCursor()
 
+inline u32 clamp_u8(s32 value)
+{
+	return (u32) MYMIN(MYMAX(value, 0), 255);
+}
+
+
 GUIChatConsole::GUIChatConsole(
 		gui::IGUIEnvironment* env,
 		gui::IGUIElement* parent,
@@ -54,21 +60,31 @@ GUIChatConsole::GUIChatConsole(
 	m_cursor_blink_speed(0.0),
 	m_cursor_height(0.0),
 	m_background(NULL),
+	m_background_color(255, 0, 0, 0),
 	m_background_alpha(255),
 	m_font(NULL),
 	m_fontsize(0, 0)
 {
 	m_animate_time_old = getTimeMs();
 
-	// load the background texture
-	m_background = env->getVideoDriver()->getTexture(getTexturePath("background_chat.jpg").c_str());
+	// load background settings
+	bool console_color_set = !g_settings.get("console_color").empty();
+	v3f console_color = g_settings.getV3F("console_color");
 	s32 console_alpha = g_settings.getS32("console_alpha");
-	if (console_alpha < 0)
-		m_background_alpha = 0;
-	else if (console_alpha > 255)
-		m_background_alpha = 255;
+
+	// load the background texture depending on settings
+	m_background_alpha = clamp_u8(console_alpha);
+	if (console_color_set)
+	{
+		m_background_color.setAlpha(m_background_alpha);
+		m_background_color.setRed(clamp_u8(round(console_color.X)));
+		m_background_color.setGreen(clamp_u8(round(console_color.Y)));
+		m_background_color.setBlue(clamp_u8(round(console_color.Z)));
+	}
 	else
-		m_background_alpha = console_alpha;
+	{
+		m_background = env->getVideoDriver()->getTexture(getTexturePath("background_chat.jpg").c_str());
+	}
 
 	// load the font
 	m_font = env->getSkin()->getFont();
@@ -78,10 +94,8 @@ GUIChatConsole::GUIChatConsole(
 		m_fontsize = v2u32(dim.Width, dim.Height);
 		dstream << "Font size: " << m_fontsize.X << " " << m_fontsize.Y << std::endl;
 	}
-	if (m_fontsize.X <= 0)
-		m_fontsize.X = 1;
-	if (m_fontsize.Y <= 0)
-		m_fontsize.Y = 1;
+	m_fontsize.X = MYMAX(m_fontsize.X, 1);
+	m_fontsize.Y = MYMAX(m_fontsize.Y, 1);
 
 	// set default cursor options
 	setCursor(true, true, 0.5, 0.1);
@@ -247,18 +261,25 @@ void GUIChatConsole::animate(u32 msec)
 
 void GUIChatConsole::drawBackground()
 {
-	if (m_background == NULL)
-		return;
-
 	video::IVideoDriver* driver = Environment->getVideoDriver();
-	core::rect<s32> sourcerect(0, -m_height, m_screensize.X, 0);
-	driver->draw2DImage(
-		m_background,
-		v2s32(0, 0),
-		sourcerect,
-		&AbsoluteClippingRect,
-		video::SColor(m_background_alpha, 255, 255, 255),
-		false);
+	if (m_background != NULL)
+	{
+		core::rect<s32> sourcerect(0, -m_height, m_screensize.X, 0);
+		driver->draw2DImage(
+			m_background,
+			v2s32(0, 0),
+			sourcerect,
+			&AbsoluteClippingRect,
+			video::SColor(m_background_alpha, 255, 255, 255),
+			false);
+	}
+	else
+	{
+		driver->draw2DRectangle(
+			m_background_color,
+			core::rect<s32>(0, 0, m_screensize.X, m_height),
+			&AbsoluteClippingRect);
+	}
 }
 
 void GUIChatConsole::drawText()

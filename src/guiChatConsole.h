@@ -107,6 +107,8 @@ private:
 
 	// background texture
 	video::ITexture* m_background;
+	// background color, only used if m_background == NULL
+	video::SColor m_background_color;
 	// background alpha
 	u32 m_background_alpha;
 
