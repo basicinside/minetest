@@ -42,16 +42,36 @@ GUIChatConsole::GUIChatConsole(gui::IGUIEnvironment* env,
 	m_animate_time_old(0),
 	m_height(0),
 	m_height_changed(true),
+	m_desired_height(0),
 	m_desired_height_fraction(0.0),
 	m_height_speed(1.5),
 	m_open_inhibited(0),
 	m_cursor_blink(0.0),
 	m_cursor_blink_speed(0.0),
 	m_cursor_height(0.0),
-	m_background(NULL)
+	m_background(NULL),
+	m_font(NULL),
+	m_fontsize(0, 0)
 {
 	m_animate_time_old = getTimeMs();
+
+	// load the background texture
 	m_background = env->getVideoDriver()->getTexture(getTexturePath("background_chat.jpg").c_str());
+
+	// load the font
+	m_font = env->getSkin()->getFont();
+	if (m_font != NULL)
+	{
+		core::dimension2d<u32> dim = m_font->getDimension(L"M");
+		m_fontsize = v2u32(dim.Width, dim.Height);
+		dstream << "Font size: " << m_fontsize.X << " " << m_fontsize.Y << std::endl;
+	}
+	if (m_fontsize.X <= 0)
+		m_fontsize.X = 1;
+	if (m_fontsize.Y <= 0)
+		m_fontsize.Y = 1;
+
+	// set default cursor options
 	setCursor(true);
 
 	// TODO remove the ChatBuffer test
@@ -178,28 +198,28 @@ void GUIChatConsole::animate(u32 msec)
 {
 	// animate the console height
 	s32 screenheight = m_screensize.Y;
-	s32 desired_height = m_desired_height_fraction * screenheight;
-	if (m_height != desired_height)
+	m_desired_height = m_desired_height_fraction * screenheight;
+	if (m_height != m_desired_height)
 	{
 		s32 max_change = msec * screenheight * (m_height_speed / 1000.0);
 		if (max_change == 0)
 			max_change = 1;
 
-		if (m_height < desired_height)
+		if (m_height < m_desired_height)
 		{
 			// increase height
-			if (m_height + max_change < desired_height)
+			if (m_height + max_change < m_desired_height)
 				m_height += max_change;
 			else
-				m_height = desired_height;
+				m_height = m_desired_height;
 		}
 		else
 		{
 			// decrease height
-			if (m_height > desired_height + max_change)
+			if (m_height > m_desired_height + max_change)
 				m_height -= max_change;
 			else
-				m_height = desired_height;
+				m_height = m_desired_height;
 		}
 		m_height_changed = true;
 	}
@@ -228,8 +248,10 @@ void GUIChatConsole::animate(u32 msec)
 
 void GUIChatConsole::drawBackground()
 {
+	if (m_background == NULL)
+		return;
+
 	video::IVideoDriver* driver = Environment->getVideoDriver();
-	//core::dimension2d<u32> texturesize = m_background->getSize();
 	core::rect<s32> sourcerect(0, -m_height, m_screensize.X, 0);
 	driver->draw2DImage(
 		m_background,
@@ -242,6 +264,13 @@ void GUIChatConsole::drawBackground()
 
 void GUIChatConsole::drawText()
 {
+	if (m_font == NULL)
+		return;
+
+	core::rect<s32> destrect(20, 20, 100, 100);
+	core::rect<s32> destrect2(20 + m_fontsize.X, 20 + m_fontsize.Y, 100 + m_fontsize.X, 100 + m_fontsize.Y);
+	m_font->draw(L"Hello", destrect, video::SColor(255, 255, 255, 255), false, false, &AbsoluteClippingRect);
+	m_font->draw(L"World", destrect2, video::SColor(255, 255, 255, 255), false, false, &AbsoluteClippingRect);
 }
 
 void GUIChatConsole::drawPrompt()

@@ -79,6 +79,8 @@ private:
 	s32 m_height;
 	// if true, force next animate() to resize the GUI element
 	bool m_height_changed;
+	// desired height [pixels]
+	f32 m_desired_height;
 	// desired height [screen height fraction]
 	f32 m_desired_height_fraction;
 	// console open/close animation speed [screen height fraction / second]
@@ -96,6 +98,10 @@ private:
 
 	// background texture
 	video::ITexture* m_background;
+
+	// font
+	gui::IGUIFont* m_font;
+	v2u32 m_fontsize;
 };
 
 
