@@ -57,12 +57,20 @@ GUIChatConsole::GUIChatConsole(gui::IGUIEnvironment* env,
 	// TODO remove the ChatBuffer test
 	dstream << "*** ChatBuffer test ***" << std::endl;
 	ChatBuffer buf(500);
-	ChatLine line(std::wstring(L"kahrl"), std::wstring(L"Hello world! Lorem ipsum dolor sit amet, consectetuer adipisicing elit. Lorem ipsum dolor sit amet, consectetuer adipisicing elit. Lorem ipsum dolor sit amet, consectetuer adipisicing elit. Lorem ipsum dolor sit amet, consectetuer adipisicing elit. LOLHAXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX!!!!!!!!!!!!!!!!!!!!!!!!!1111111111111111 ftw!"));
-	core::array<ChatFormattedLine> fls;
-	buf.formatChatLine(line, 80, fls);
-	for (u32 i = 0; i < fls.size(); ++i)
+	buf.addLine(std::wstring(L""), std::wstring(L"# Server version 0.2.20110731_3"));
+	buf.addLine(std::wstring(L""), std::wstring(L"# MOTD"));
+	buf.addLine(std::wstring(L"kahrl"), std::wstring(L"Hello world! Lorem ipsum dolor sit amet, consectetuer adipisicing elit. Lorem ipsum dolor sit amet, consectetuer adipisicing elit. Lorem ipsum dolor sit amet, consectetuer adipisicing elit. Lorem ipsum dolor sit amet, consectetuer adipisicing elit. LOLHAXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX!!!!!!!!!!!!!!!!!!!!!!!!!1111111111111111 ftw!"));
+	buf.reformat(3, 80);
+	buf.scrollTop();
+	buf.scroll(1);
+
+	dstream << "Scrollback = " << buf.getScrollback() << std::endl;
+	dstream << "Line count = " << buf.getLineCount() << std::endl;
+
+
+	for (u32 i = 0; i < buf.getRows(); ++i)
 	{
-		ChatFormattedLine& fl = fls[i];
+		const ChatFormattedLine& fl = buf.getFormattedLine(i);
 		dstream << "Formatted line " << i << ", first=" << (fl.first ? "yes" : "no") << std::endl;
 		for (u32 j = 0; j < fl.fragments.size(); ++j)
 		{

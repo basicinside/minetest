@@ -139,11 +139,49 @@ void ChatBuffer::reformat(u32 rows, u32 cols)
 		m_scroll = 0;
 		m_formatted.clear();
 	}
-	else
+	else if (rows != m_rows || cols != m_cols)
 	{
 		// TODO: Avoid reformatting ALL lines (even inivisble ones)
 		// each time the console size changes.
-		// TODO
+
+		// Find out the scroll position in *unformatted* lines
+		u32 restore_scroll_unformatted = 0;
+		u32 restore_scroll_formatted = 0;
+		bool at_bottom = (m_scroll == getBottomScrollPos());
+		if (!at_bottom)
+		{
+			for (s32 i = 0; i < m_scroll; ++i)
+			{
+				if (m_formatted[i].first)
+					++restore_scroll_unformatted;
+			}
+		}
+
+		// If number of columns change, reformat everything
+		if (cols != m_cols)
+		{
+			m_formatted.clear();
+			for (u32 i = 0; i < m_unformatted.size(); ++i)
+			{
+				if (i == restore_scroll_unformatted)
+					restore_scroll_formatted = m_formatted.size();
+				formatChatLine(m_unformatted[i], cols, m_formatted);
+			}
+		}
+
+		// Update the console size
+		m_rows = rows;
+		m_cols = cols;
+
+		// Restore the scroll position
+		if (at_bottom)
+		{
+			scrollBottom();
+		}
+		else
+		{
+			scrollAbsolute(restore_scroll_formatted);
+		}
 	}
 }
 
@@ -228,6 +266,7 @@ u32 ChatBuffer::formatChatLine(const ChatLine& line, u32 cols,
 		hanging_indentation = 2;
 	}
 
+	next_line.first = true;
 	bool text_processing = false;
 
 	// Produce fragments and layout them into lines
@@ -314,9 +353,9 @@ s32 ChatBuffer::getTopScrollPos() const
 	if (rows == 0)
 		return 0;
 	else if (formatted_count <= rows)
-		return 0;
-	else
 		return formatted_count - rows;
+	else
+		return 0;
 }
 
 s32 ChatBuffer::getBottomScrollPos() const
