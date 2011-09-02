@@ -52,22 +52,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 MapDrawControl draw_control;
 
-// Chat data
-struct OldChatLine
-{
-	OldChatLine():
-		age(0.0)
-	{
-	}
-	OldChatLine(const std::wstring &a_text):
-		age(0.0),
-		text(a_text)
-	{
-	}
-	float age;
-	std::wstring text;
-};
-
 /*
 	Inventory stuff
 */
