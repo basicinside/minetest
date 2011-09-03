@@ -23,9 +23,13 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "gettime.h"
 #include "keycode.h"
 #include "main.h"  // for g_settings
+#include "porting.h"
 #include "tile.h"
 #include <cmath>
 #include <string>
+
+#include "irrUString.h"  // must be included before CGUITTFont.h
+#include "CGUITTFont.h"
 
 #include "gettext.h"
 
@@ -90,8 +94,14 @@ GUIChatConsole::GUIChatConsole(
 	}
 
 	// load the font
-	m_font = env->getSkin()->getFont();
-	if (m_font != NULL)
+	// FIXME should a custom texture_path be searched too?
+	std::string font_path = porting::getDataPath("DejaVuSansMono.ttf");
+	m_font = gui::CGUITTFont::createTTFont(env, font_path.c_str(), 13);
+	if (m_font == NULL)
+	{
+		dstream << "Unable to load font: " << font_path << std::endl;
+	}
+	else
 	{
 		core::dimension2d<u32> dim = m_font->getDimension(L"M");
 		m_fontsize = v2u32(dim.Width, dim.Height);

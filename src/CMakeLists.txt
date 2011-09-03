@@ -85,6 +85,9 @@ endif()
 find_package(Jthread REQUIRED)
 find_package(Sqlite3 REQUIRED)
 
+set(CGUITTFONT_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/cguittfont")
+set(CGUITTFONT_LIBRARY cguittfont)
+
 configure_file(
 	"${PROJECT_SOURCE_DIR}/cmake_config.h.in"
 	"${PROJECT_BINARY_DIR}/cmake_config.h"
@@ -172,9 +175,11 @@ include_directories(
 	${ZLIB_INCLUDE_DIR}
 	${CMAKE_BUILD_TYPE}
 	${PNG_INCLUDE_DIR}
+	${FREETYPE_INCLUDE_DIRS}
 	${GETTEXT_INCLUDE_DIR}
 	${JTHREAD_INCLUDE_DIR}
 	${SQLITE3_INCLUDE_DIR}
+	${CGUITTFONT_INCLUDE_DIR}
 )
 
 set(EXECUTABLE_OUTPUT_PATH "${CMAKE_SOURCE_DIR}/bin")
@@ -196,7 +201,7 @@ if(BUILD_CLIENT)
 		${CLIENT_PLATFORM_LIBS}
 		${JTHREAD_LIBRARY}
 		${SQLITE3_LIBRARY}
-		cguittfont
+		${CGUITTFONT_LIBRARY}
 	)
 endif(BUILD_CLIENT)
 
