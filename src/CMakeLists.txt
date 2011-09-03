@@ -61,6 +61,7 @@ else()
 		find_package(JPEG REQUIRED)
 		find_package(BZip2 REQUIRED)
 		find_package(PNG REQUIRED)
+		find_package(Freetype REQUIRED)
 		if(APPLE)
 			FIND_LIBRARY(CARBON_LIB Carbon)
 			FIND_LIBRARY(COCOA_LIB Cocoa)
@@ -188,12 +189,14 @@ if(BUILD_CLIENT)
 		${JPEG_LIBRARIES}
 		${BZIP2_LIBRARIES}
 		${PNG_LIBRARIES}
+		${FREETYPE_LIBRARIES}
 		${X11_LIBRARIES}
 		${GETTEXT_LIBRARY}
 		${PLATFORM_LIBS}
 		${CLIENT_PLATFORM_LIBS}
 		${JTHREAD_LIBRARY}
 		${SQLITE3_LIBRARY}
+		cguittfont
 	)
 endif(BUILD_CLIENT)
 
@@ -350,5 +353,9 @@ if (SQLITE3_FOUND)
 else (SQLITE3_FOUND)
 add_subdirectory(sqlite)
 endif (SQLITE3_FOUND)
+
+if (BUILD_CLIENT)
+	add_subdirectory(cguittfont)
+endif (BUILD_CLIENT)
 
 #end
