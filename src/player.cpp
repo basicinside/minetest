@@ -189,10 +189,15 @@ RemotePlayer::RemotePlayer(
 		IrrlichtDevice *device,
 		s32 id):
 	scene::ISceneNode(parent, (device==NULL)?NULL:device->getSceneManager(), id),
-	m_text(NULL)
-{
-	m_box = core::aabbox3d<f32>(-BS/2,0,-BS/2,BS/2,BS*2,BS/2);
+	m_node(NULL),
+	m_text(NULL),
+	m_box(-BS/2,0,-BS/2,BS/2,BS*2,BS/2),
+	m_oldpos(0,0,0),
+	m_pos_animation_counter(0),
+	m_pos_animation_time(0),
+	m_showpos(0,0,0)
 
+{
 	if(parent != NULL && device != NULL)
 	{
 		// ISceneNode stores a member called SceneManager
