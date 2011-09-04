@@ -34,7 +34,7 @@ struct ChatLine
 	// message text
 	std::wstring text;
 
-	ChatLine(const std::wstring& a_name, const std::wstring& a_text):
+	ChatLine(std::wstring a_name, std::wstring a_text):
 		age(0.0),
 		name(a_name),
 		text(a_text)
@@ -68,7 +68,7 @@ public:
 
 	// Append chat line
 	// Removed oldest chat line if scrollback size is reached
-	void addLine(const std::wstring& name, const std::wstring& text);
+	void addLine(std::wstring name, std::wstring text);
 
 	// Get number of lines currently in buffer.
 	u32 getLineCount() const;
@@ -148,7 +148,7 @@ public:
 	void clear();
 
 	// Replace the current line with the given text
-	void replace(const std::wstring& line);
+	void replace(std::wstring line);
 
 	// Select previous command from history
 	void historyPrev();
@@ -226,9 +226,9 @@ public:
 	~ChatBackend();
 
 	// Add chat message
-	void addMessage(const std::wstring& name, const std::wstring& text);
+	void addMessage(std::wstring name, std::wstring text);
 	// Parse and add legacy preformatted chat message
-	void addLegacyMessage(const std::wstring& line);
+	void addLegacyMessage(std::wstring line);
 
 	// Get the console buffer
 	ChatBuffer& getConsoleBuffer();

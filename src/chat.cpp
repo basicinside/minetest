@@ -42,7 +42,7 @@ ChatBuffer::~ChatBuffer()
 {
 }
 
-void ChatBuffer::addLine(const std::wstring& name, const std::wstring& text)
+void ChatBuffer::addLine(std::wstring name, std::wstring text)
 {
 	ChatLine line(name, text);
 	m_unformatted.push_back(line);
@@ -416,7 +416,7 @@ void ChatPrompt::clear()
 	m_cursor = 0;
 }
 
-void ChatPrompt::replace(const std::wstring& line)
+void ChatPrompt::replace(std::wstring line)
 {
 	m_line =  line;
 	m_view = m_cursor = line.size();
@@ -564,7 +564,7 @@ ChatBackend::~ChatBackend()
 {
 }
 
-void ChatBackend::addMessage(const std::wstring& name, const std::wstring& text)
+void ChatBackend::addMessage(std::wstring name, std::wstring text)
 {
 	// Note: A message may consist of multiple lines, for example the MOTD.
 	WStrfnd fnd(text);
@@ -576,7 +576,7 @@ void ChatBackend::addMessage(const std::wstring& name, const std::wstring& text)
 	}
 }
 
-void ChatBackend::addLegacyMessage(const std::wstring& message)
+void ChatBackend::addLegacyMessage(std::wstring message)
 {
 	// FIXME: Don't use legacy messages anymore.
 	// They fail miserably with player names that contain '>' symbols.
