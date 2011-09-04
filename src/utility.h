@@ -203,7 +203,7 @@ inline void writeU8(std::ostream &os, u8 p)
 }
 inline u8 readU8(std::istream &is)
 {
-	char buf[1];
+	char buf[1] = "";
 	is.read(buf, 1);
 	return readU8((u8*)buf);
 }
@@ -216,7 +216,7 @@ inline void writeU16(std::ostream &os, u16 p)
 }
 inline u16 readU16(std::istream &is)
 {
-	char buf[2];
+	char buf[2] = "";
 	is.read(buf, 2);
 	return readU16((u8*)buf);
 }
@@ -229,7 +229,7 @@ inline void writeU32(std::ostream &os, u16 p)
 }
 inline u16 readU32(std::istream &is)
 {
-	char buf[4];
+	char buf[4] = "";
 	is.read(buf, 4);
 	return readU32((u8*)buf);
 }
@@ -242,7 +242,7 @@ inline void writeF1000(std::ostream &os, f32 p)
 }
 inline f32 readF1000(std::istream &is)
 {
-	char buf[4];
+	char buf[4] = "";
 	is.read(buf, 4);
 	return readF1000((u8*)buf);
 }
@@ -255,7 +255,7 @@ inline void writeV3F1000(std::ostream &os, v3f p)
 }
 inline v3f readV3F1000(std::istream &is)
 {
-	char buf[12];
+	char buf[12] = "";
 	is.read(buf, 12);
 	return readV3F1000((u8*)buf);
 }
