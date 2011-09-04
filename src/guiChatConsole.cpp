@@ -529,24 +529,6 @@ bool GUIChatConsole::OnEvent(const SEvent& event)
 				ChatPrompt::CURSOROP_SCOPE_LINE);
 			return true;
 		}
-		else if(event.KeyInput.Key == KEY_KEY_D && event.KeyInput.Control)
-		{
-			// DEBUG
-			ChatBuffer& buf = m_chat_backend->getConsoleBuffer();
-			for (u32 row = 0; row < buf.getRows(); ++row)
-			{
-				const ChatFormattedLine& line = buf.getFormattedLine(row);
-				dstream << "row " << row << (line.first ? " [first] " : "") << std::endl;
-				for (u32 i = 0; i < line.fragments.size(); ++i)
-				{
-					const ChatFormattedFragment& fragment = line.fragments[i];
-					dstream << "fragment len=" << fragment.text.size() << " column=" << fragment.column << " bold=" << fragment.bold << " text=\"";
-					for (u32 j = 0; j < fragment.text.size(); ++j)
-						dstream << (char) fragment.text[j];
-					dstream << "\"" << std::endl;
-				}
-			}
-		}
 		else if(event.KeyInput.Char != 0 && !event.KeyInput.Control)
 		{
 			m_chat_backend->getPrompt().input(event.KeyInput.Char);

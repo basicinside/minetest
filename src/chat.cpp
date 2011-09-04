@@ -239,15 +239,15 @@ u32 ChatBuffer::formatChatLine(const ChatLine& line, u32 cols,
 	{
 		temp_frag.text = L"<";
 		temp_frag.column = 0;
-		temp_frag.bold = 0;
+		//temp_frag.bold = 0;
 		next_frags.push_back(temp_frag);
 		temp_frag.text = line.name;
 		temp_frag.column = 0;
-		temp_frag.bold = 1;
+		//temp_frag.bold = 1;
 		next_frags.push_back(temp_frag);
 		temp_frag.text = L"> ";
 		temp_frag.column = 0;
-		temp_frag.bold = 0;
+		//temp_frag.bold = 0;
 		next_frags.push_back(temp_frag);
 	}
 
@@ -292,7 +292,7 @@ u32 ChatBuffer::formatChatLine(const ChatLine& line, u32 cols,
 				// So split it up
 				temp_frag.text = frag.text.substr(0, cols - out_column);
 				temp_frag.column = out_column;
-				temp_frag.bold = frag.bold;
+				//temp_frag.bold = frag.bold;
 				next_line.fragments.push_back(temp_frag);
 				frag.text = frag.text.substr(cols - out_column);
 				out_column = cols;
@@ -331,7 +331,7 @@ u32 ChatBuffer::formatChatLine(const ChatLine& line, u32 cols,
 
 			temp_frag.text = line.text.substr(in_pos, frag_length);
 			temp_frag.column = 0;
-			temp_frag.bold = false;
+			//temp_frag.bold = 0;
 			next_frags.push_back(temp_frag);
 			in_pos += frag_length;
 			text_processing = true;

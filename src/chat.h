@@ -49,7 +49,7 @@ struct ChatFormattedFragment
 	// starting column
 	u32 column;
 	// formatting
-	u8 bold:1;
+	//u8 bold:1;
 };
 
 struct ChatFormattedLine
