@@ -19,6 +19,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 #include "guiChatConsole.h"
 #include "chat.h"
+#include "client.h"
 #include "debug.h"
 #include "gettime.h"
 #include "keycode.h"
@@ -48,12 +49,12 @@ GUIChatConsole::GUIChatConsole(
 		gui::IGUIElement* parent,
 		s32 id,
 		ChatBackend* backend,
-		TextDest* dest
+		Client* client
 ):
 	IGUIElement(gui::EGUIET_ELEMENT, env, parent, id,
 			core::rect<s32>(0,0,100,100)),
 	m_chat_backend(backend),
-	m_dest(dest),
+	m_client(client),
 	m_screensize(v2u32(0,0)),
 	m_animate_time_old(0),
 	m_open(false),
@@ -116,8 +117,6 @@ GUIChatConsole::GUIChatConsole(
 
 GUIChatConsole::~GUIChatConsole()
 {
-	if (m_dest)
-		delete m_dest;
 }
 
 void GUIChatConsole::openConsole(f32 height)
@@ -415,8 +414,7 @@ bool GUIChatConsole::OnEvent(const SEvent& event)
 		else if(event.KeyInput.Key == KEY_RETURN)
 		{
 			std::wstring text = m_chat_backend->getPrompt().submit();
-			if (m_dest)
-				m_dest->gotText(text);
+			m_client->typeChatMessage(text);
 			return true;
 		}
 		else if(event.KeyInput.Key == KEY_UP)
@@ -527,6 +525,15 @@ bool GUIChatConsole::OnEvent(const SEvent& event)
 				ChatPrompt::CURSOROP_DELETE,
 				ChatPrompt::CURSOROP_DIR_RIGHT,
 				ChatPrompt::CURSOROP_SCOPE_LINE);
+			return true;
+		}
+		else if(event.KeyInput.Key == KEY_TAB)
+		{
+			// Tab or Shift-Tab pressed
+			// Nick completion
+			core::list<std::wstring> names = m_client->getConnectedPlayerNames();
+			bool backwards = event.KeyInput.Shift;
+			m_chat_backend->getPrompt().nickCompletion(names, backwards);
 			return true;
 		}
 		else if(event.KeyInput.Char != 0 && !event.KeyInput.Control)

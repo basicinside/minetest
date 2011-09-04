@@ -244,6 +244,8 @@ public:
 	// Prints a line or two of info
 	void printDebugInfo(std::ostream &os);
 
+	core::list<std::wstring> getConnectedPlayerNames();
+
 	u32 getDayNightRatio();
 
 	u16 getHP();
@@ -268,20 +270,29 @@ public:
 		return true;
 	}
 
-	void addChatMessage(const std::wstring &message)
+	void typeChatMessage(const std::wstring &message)
 	{
-		if (message[0] == L'/') {
+		// Discard empty line
+		if(message == L"")
+			return;
+
+		// Send to others
+		sendChatMessage(message);
+
+		// Show locally
+		if (message[0] == L'/')
+		{
 			m_chat_queue.push_back(
 				(std::wstring)L"issued command: "+message);
-			return;
 		}
-
-		//JMutexAutoLock envlock(m_env_mutex); //bulk comment-out
-		LocalPlayer *player = m_env.getLocalPlayer();
-		assert(player != NULL);
-		std::wstring name = narrow_to_wide(player->getName());
-		m_chat_queue.push_back(
-				(std::wstring)L"<"+name+L"> "+message);
+		else
+		{
+			LocalPlayer *player = m_env.getLocalPlayer();
+			assert(player != NULL);
+			std::wstring name = narrow_to_wide(player->getName());
+			m_chat_queue.push_back(
+					(std::wstring)L"<"+name+L"> "+message);
+		}
 	}
 
 	u64 getMapSeed(){ return m_map_seed; }

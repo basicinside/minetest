@@ -96,14 +96,7 @@ struct TextDestChat : public TextDest
 	}
 	void gotText(std::wstring text)
 	{
-		// Discard empty line
-		if(text == L"")
-			return;
-
-		// Send to others
-		m_client->sendChatMessage(text);
-		// Show locally
-		m_client->addChatMessage(text);
+		m_client->typeChatMessage(text);
 	}
 
 	Client *m_client;
@@ -1016,7 +1009,7 @@ void the_game(
 	
 	// Chat backend and console
 	ChatBackend chat_backend;
-	GUIChatConsole *gui_chat_console = new GUIChatConsole(guienv, guienv->getRootGUIElement(), -1, &chat_backend, new TextDestChat(&client));
+	GUIChatConsole *gui_chat_console = new GUIChatConsole(guienv, guienv->getRootGUIElement(), -1, &chat_backend, &client);
 
 	/*GUIQuickInventory *quick_inventory = new GUIQuickInventory
 			(guienv, NULL, v2s32(10, 70), 5, &local_inventory);*/

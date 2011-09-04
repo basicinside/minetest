@@ -22,7 +22,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 #include "common_irrlicht.h"
 #include "chat.h"
-#include "guiTextInputMenu.h"  // for TextDest
+
+class Client;
 
 class GUIChatConsole : public gui::IGUIElement
 {
@@ -31,7 +32,7 @@ public:
 			gui::IGUIElement* parent,
 			s32 id,
 			ChatBackend* backend,
-			TextDest* dest);
+			Client* client);
 	virtual ~GUIChatConsole();
 
 	// Open the console (height = desired fraction of screen size)
@@ -79,8 +80,8 @@ private:
 	// pointer to the chat backend
 	ChatBackend* m_chat_backend;
 
-	// pointer to a text destination
-	TextDest* m_dest;
+	// pointer to the client
+	Client* m_client;
 
 	// current screen size
 	v2u32 m_screensize;

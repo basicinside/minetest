@@ -2201,7 +2201,21 @@ void Client::printDebugInfo(std::ostream &os)
 		//<<", m_opt_not_found_history.size()="<<m_opt_not_found_history.size()
 		<<std::endl;*/
 }
-	
+
+core::list<std::wstring> Client::getConnectedPlayerNames()
+{
+	core::list<Player*> players = m_env.getPlayers(true);
+	core::list<std::wstring> playerNames;
+	for(core::list<Player*>::Iterator
+			i = players.begin();
+			i != players.end(); i++)
+	{
+		Player *player = *i;
+		playerNames.push_back(narrow_to_wide(player->getName()));
+	}
+	return playerNames;
+}
+
 u32 Client::getDayNightRatio()
 {
 	//JMutexAutoLock envlock(m_env_mutex); //bulk comment-out

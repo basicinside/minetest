@@ -155,6 +155,9 @@ public:
 	// Select next command from history
 	void historyNext();
 
+	// Nick completion
+	void nickCompletion(const core::list<std::wstring>& names, bool backwards);
+
 	// Update console size and reformat the visible portion of the prompt
 	void reformat(u32 cols);
 	// Get visible portion of the prompt.
@@ -216,6 +219,11 @@ private:
 	s32 m_view;
 	// Cursor (index into m_line)
 	s32 m_cursor;
+
+	// Last nick completion start (index into m_line)
+	s32 m_nick_completion_start;
+	// Last nick completion start (index into m_line)
+	s32 m_nick_completion_end;
 };
 
 
