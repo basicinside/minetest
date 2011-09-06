@@ -26,17 +26,12 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "main.h"  // for g_settings
 #include "porting.h"
 #include "tile.h"
-#include <cmath>
 #include <string>
 
 #include "irrUString.h"  // must be included before CGUITTFont.h
 #include "CGUITTFont.h"
 
 #include "gettext.h"
-
-// TODO text display
-// TODO text input
-// TODO test setCursor()
 
 inline u32 clamp_u8(s32 value)
 {
@@ -82,9 +77,9 @@ GUIChatConsole::GUIChatConsole(
 	m_background_color.setAlpha(clamp_u8(console_alpha));
 	if (console_color_set)
 	{
-		m_background_color.setRed(clamp_u8(round(console_color.X)));
-		m_background_color.setGreen(clamp_u8(round(console_color.Y)));
-		m_background_color.setBlue(clamp_u8(round(console_color.Z)));
+		m_background_color.setRed(clamp_u8(myround(console_color.X)));
+		m_background_color.setGreen(clamp_u8(myround(console_color.Y)));
+		m_background_color.setBlue(clamp_u8(myround(console_color.Z)));
 	}
 	else
 	{
@@ -546,7 +541,7 @@ bool GUIChatConsole::OnEvent(const SEvent& event)
 	{
 		if(event.MouseInput.Event == EMIE_MOUSE_WHEEL)
 		{
-			s32 rows = round(-3.0 * event.MouseInput.Wheel);
+			s32 rows = myround(-3.0 * event.MouseInput.Wheel);
 			m_chat_backend->scroll(rows);
 		}
 	}

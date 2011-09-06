@@ -1997,6 +1997,15 @@ inline std::string wrap_rows(const std::string &from, u32 rowlen)
 #define MYMAX(a,b) ((a)>(b)?(a):(b))
 
 /*
+	Returns nearest 32-bit integer for given floating point number
+	<cmath> and <math.h> in VC++ don't provide round().
+*/
+inline s32 myround(f32 f)
+{
+	return floor(f + 0.5);
+}
+
+/*
 	Returns integer position of node in given floating point position
 */
 inline v3s16 floatToInt(v3f p, f32 d)
