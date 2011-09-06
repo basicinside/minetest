@@ -70,13 +70,13 @@ GUIChatConsole::GUIChatConsole(
 
 	// load background settings
 	bool console_color_set = !g_settings.get("console_color").empty();
-	v3f console_color = g_settings.getV3F("console_color");
 	s32 console_alpha = g_settings.getS32("console_alpha");
 
 	// load the background texture depending on settings
 	m_background_color.setAlpha(clamp_u8(console_alpha));
 	if (console_color_set)
 	{
+		v3f console_color = g_settings.getV3F("console_color");
 		m_background_color.setRed(clamp_u8(myround(console_color.X)));
 		m_background_color.setGreen(clamp_u8(myround(console_color.Y)));
 		m_background_color.setBlue(clamp_u8(myround(console_color.Z)));
