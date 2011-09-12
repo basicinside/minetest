@@ -20,6 +20,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "keycode.h"
 #include "main.h" // For g_settings
 #include "exceptions.h"
+#include <sstream>
 
 class UnknownKeycode : public BaseException
 {
@@ -311,6 +312,16 @@ const char *KeyPress::name() const
 	else {
 		return m_name.c_str();
 	}
+}
+
+std::string KeyPress::debug() const
+{
+	std::ostringstream os;
+	os << "<KeyPress " << name();
+	if (Char > 0 && Char <= 255)
+		os << " '" << ((char) Char) << "'";
+	os << " Key=" << Key << " Char=" << ((u32)Char) << ">";
+	return os.str();
 }
 
 const KeyPress EscapeKey("KEY_ESCAPE");

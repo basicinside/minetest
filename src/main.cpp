@@ -564,6 +564,7 @@ public:
 		if(event.EventType == irr::EET_KEY_INPUT_EVENT)
 		{
 			if(event.KeyInput.PressedDown) {
+				dstream<<"key pressed: "<<KeyPress(event.KeyInput).debug()<<std::endl;
 				keyIsDown.set(event.KeyInput);
 				keyWasDown.set(event.KeyInput);
 			} else {
