@@ -431,6 +431,7 @@ Doing currently:
 #include "game.h"
 #include "keycode.h"
 #include "tile.h"
+#include "chat.h"
 
 #include "gettext.h"
 
@@ -1452,6 +1453,8 @@ int main(int argc, char *argv[])
 		GUI stuff
 	*/
 
+	ChatBackend chat_backend;
+
 	/*
 		If an error occurs, this is set to something and the
 		menu-game loop is restarted. It is then displayed before
@@ -1620,6 +1623,9 @@ int main(int argc, char *argv[])
 			// Initialize mapnode again to enable changed graphics settings
 			init_mapnode();
 
+			// Remove stale "recent" chat messages
+			chat_backend.clearRecentChat();
+
 			/*
 				Run game
 			*/
@@ -1635,7 +1641,8 @@ int main(int argc, char *argv[])
 				address,
 				port,
 				error_message,
-				configpath
+				configpath,
+				chat_backend
 			);
 
 		} //try

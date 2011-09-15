@@ -67,8 +67,11 @@ public:
 	~ChatBuffer();
 
 	// Append chat line
-	// Removed oldest chat line if scrollback size is reached
+	// Removes oldest chat line if scrollback size is reached
 	void addLine(std::wstring name, std::wstring text);
+
+	// Remove all chat lines
+	void clear();
 
 	// Get number of lines currently in buffer.
 	u32 getLineCount() const;
@@ -235,8 +238,8 @@ public:
 
 	// Add chat message
 	void addMessage(std::wstring name, std::wstring text);
-	// Parse and add legacy preformatted chat message
-	void addLegacyMessage(std::wstring line);
+	// Parse and add unparsed chat message
+	void addUnparsedMessage(std::wstring line);
 
 	// Get the console buffer
 	ChatBuffer& getConsoleBuffer();
@@ -249,6 +252,9 @@ public:
 
 	// Reformat all buffers
 	void reformat(u32 cols, u32 rows);
+
+	// Clear all recent messages
+	void clearRecentChat();
 
 	// Age recent messages
 	void step(float dtime);

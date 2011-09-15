@@ -775,7 +775,8 @@ void the_game(
 	std::string address,
 	u16 port,
 	std::wstring &error_message,
-    std::string configpath
+	std::string configpath,
+	ChatBackend &chat_backend
 )
 {
 	video::IVideoDriver* driver = device->getVideoDriver();
@@ -1008,7 +1009,6 @@ void the_game(
 			false, true);
 	
 	// Chat backend and console
-	ChatBackend chat_backend;
 	GUIChatConsole *gui_chat_console = new GUIChatConsole(guienv, guienv->getRootGUIElement(), -1, &chat_backend, &client);
 
 	/*GUIQuickInventory *quick_inventory = new GUIQuickInventory
@@ -2159,7 +2159,7 @@ void the_game(
 			std::wstring message;
 			while(client.getChatMessage(message))
 			{
-				chat_backend.addLegacyMessage(message);
+				chat_backend.addUnparsedMessage(message);
 			}
 
 			// Remove old messages
@@ -2385,6 +2385,9 @@ void the_game(
 		driver->endScene();
 		gui_shuttingdowntext->remove();*/
 	}
+
+	chat_backend.addMessage(L"", L"# Disconnected.");
+	chat_backend.addMessage(L"", L"");
 }
 
 

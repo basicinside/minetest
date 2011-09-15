@@ -63,6 +63,13 @@ void ChatBuffer::addLine(std::wstring name, std::wstring text)
 	}
 }
 
+void ChatBuffer::clear()
+{
+	m_unformatted.clear();
+	m_formatted.clear();
+	m_scroll = 0;
+}
+
 u32 ChatBuffer::getLineCount() const
 {
 	return m_unformatted.size();
@@ -669,10 +676,10 @@ void ChatBackend::addMessage(std::wstring name, std::wstring text)
 	}
 }
 
-void ChatBackend::addLegacyMessage(std::wstring message)
+void ChatBackend::addUnparsedMessage(std::wstring message)
 {
-	// FIXME: Don't use legacy messages anymore.
-	// They fail miserably with player names that contain '>' symbols.
+	// TODO: Remove the need to parse chat messages client-side, by sending
+	// separate name and text fields in TOCLIENT_CHAT_MESSAGE.
 
 	if (message.size() >= 2 && message[0] == L'<')
 	{
@@ -722,7 +729,6 @@ ChatPrompt& ChatBackend::getPrompt()
 	return m_prompt;
 }
 
-
 void ChatBackend::reformat(u32 cols, u32 rows)
 {
 	m_console_buffer.reformat(cols, rows);
@@ -731,6 +737,11 @@ void ChatBackend::reformat(u32 cols, u32 rows)
 	// are not used
 
 	m_prompt.reformat(cols);
+}
+
+void ChatBackend::clearRecentChat()
+{
+	m_recent_buffer.clear();
 }
 
 void ChatBackend::step(float dtime)
