@@ -28,9 +28,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "tile.h"
 #include <string>
 
-#include "irrUString.h"  // must be included before CGUITTFont.h
-#include "CGUITTFont.h"
-
 #include "gettext.h"
 
 inline u32 clamp_u8(s32 value)
@@ -91,11 +88,11 @@ GUIChatConsole::GUIChatConsole(
 
 	// load the font
 	// FIXME should a custom texture_path be searched too?
-	std::string font_path = porting::getDataPath("DejaVuSansMono.ttf");
-	m_font = gui::CGUITTFont::createTTFont(env, font_path.c_str(), 13);
+	std::string font_name = "fontdejavusansmono.png";
+    m_font = env->getFont(getTexturePath(font_name).c_str());
 	if (m_font == NULL)
 	{
-		dstream << "Unable to load font: " << font_path << std::endl;
+		dstream << "Unable to load font: " << font_name << std::endl;
 	}
 	else
 	{
