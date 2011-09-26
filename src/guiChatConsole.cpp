@@ -89,7 +89,7 @@ GUIChatConsole::GUIChatConsole(
 	// load the font
 	// FIXME should a custom texture_path be searched too?
 	std::string font_name = "fontdejavusansmono.png";
-    m_font = env->getFont(getTexturePath(font_name).c_str());
+	m_font = env->getFont(getTexturePath(font_name).c_str());
 	if (m_font == NULL)
 	{
 		dstream << "Unable to load font: " << font_name << std::endl;
