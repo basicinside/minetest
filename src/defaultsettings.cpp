@@ -38,6 +38,7 @@ void set_default_settings(Settings *settings)
 	settings->setDefault("keymap_inventory", "KEY_KEY_I");
 	settings->setDefault("keymap_chat", "KEY_KEY_T");
 	settings->setDefault("keymap_cmd", "/");
+	settings->setDefault("keymap_console", "`");
 	settings->setDefault("keymap_rangeselect", "KEY_KEY_R");
 	settings->setDefault("keymap_freemove", "KEY_KEY_K");
 	settings->setDefault("keymap_fastmove", "KEY_KEY_J");
@@ -75,6 +76,8 @@ void set_default_settings(Settings *settings)
 	settings->setDefault("invisible_stone", "false");
 	settings->setDefault("screenshot_path", ".");
 	settings->setDefault("view_bobbing_amount", "1.0");
+	settings->setDefault("console_color", "(0,0,0)");
+	settings->setDefault("console_alpha", "240");
 
 	// Server stuff
 	// "map-dir" doesn't exist by default.

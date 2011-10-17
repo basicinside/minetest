@@ -31,6 +31,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "guiInventoryMenu.h"
 #include "guiTextInputMenu.h"
 #include "guiDeathScreen.h"
+#include "guiChatConsole.h"
 #include "materials.h"
 #include "config.h"
 #include "clouds.h"
@@ -62,22 +63,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #define FIELD_OF_VIEW_TEST 0
 
 
-// Chat data
-struct ChatLine
-{
-	ChatLine():
-		age(0.0)
-	{
-	}
-	ChatLine(const std::wstring &a_text):
-		age(0.0),
-		text(a_text)
-	{
-	}
-	float age;
-	std::wstring text;
-};
-
 /*
 	Inventory stuff
 */
@@ -101,14 +86,7 @@ struct TextDestChat : public TextDest
 	}
 	void gotText(std::wstring text)
 	{
-		// Discard empty line
-		if(text == L"")
-			return;
-
-		// Send to others
-		m_client->sendChatMessage(text);
-		// Show locally
-		m_client->addChatMessage(text);
+		m_client->typeChatMessage(text);
 	}
 
 	Client *m_client;
@@ -669,7 +647,8 @@ void the_game(
 	std::string address,
 	u16 port,
 	std::wstring &error_message,
-    std::string configpath
+	std::string configpath,
+	ChatBackend &chat_backend
 )
 {
 	video::IVideoDriver* driver = device->getVideoDriver();
@@ -886,8 +865,10 @@ void the_game(
 			core::rect<s32>(0,0,0,0),
 			//false, false); // Disable word wrap as of now
 			false, true);
-	//guitext_chat->setBackgroundColor(video::SColor(96,0,0,0));
-	core::list<ChatLine> chat_lines;
+	// Remove stale "recent" chat messages from previous connections
+	chat_backend.clearRecentChat();
+	// Chat backend and console
+	GUIChatConsole *gui_chat_console = new GUIChatConsole(guienv, guienv->getRootGUIElement(), -1, &chat_backend, &client);
 	
 	/*GUIQuickInventory *quick_inventory = new GUIQuickInventory
 			(guienv, NULL, v2s32(10, 70), 5, &local_inventory);*/
@@ -1177,7 +1158,9 @@ void the_game(
 		*/
 		
 		// Reset input if window not active or some menu is active
-		if(device->isWindowActive() == false || noMenuActive() == false)
+		if(device->isWindowActive() == false
+				|| noMenuActive() == false
+				|| guienv->hasFocus(gui_chat_console))
 		{
 			input->clear();
 		}
@@ -1241,17 +1224,26 @@ void the_game(
 					&g_menumgr, dest,
 					L"/"))->drop();
 		}
+		else if(input->wasKeyDown(getKeySetting("keymap_console")))
+		{
+			if (!gui_chat_console->isOpenInhibited())
+			{
+				// Open up to over half of the screen
+				gui_chat_console->openConsole(0.6);
+				guienv->setFocus(gui_chat_console);
+			}
+		}
 		else if(input->wasKeyDown(getKeySetting("keymap_freemove")))
 		{
 			if(g_settings->getBool("free_move"))
 			{
 				g_settings->set("free_move","false");
-				chat_lines.push_back(ChatLine(L"free_move disabled"));
+				chat_backend.addMessage(L"", L"free_move disabled");
 			}
 			else
 			{
 				g_settings->set("free_move","true");
-				chat_lines.push_back(ChatLine(L"free_move enabled"));
+				chat_backend.addMessage(L"", L"free_move enabled");
 			}
 		}
 		else if(input->wasKeyDown(getKeySetting("keymap_fastmove")))
@@ -1259,12 +1251,12 @@ void the_game(
 			if(g_settings->getBool("fast_move"))
 			{
 				g_settings->set("fast_move","false");
-				chat_lines.push_back(ChatLine(L"fast_move disabled"));
+				chat_backend.addMessage(L"", L"fast_move disabled");
 			}
 			else
 			{
 				g_settings->set("fast_move","true");
-				chat_lines.push_back(ChatLine(L"fast_move enabled"));
+				chat_backend.addMessage(L"", L"fast_move enabled");
 			}
 		}
 		else if(input->wasKeyDown(getKeySetting("keymap_frametime_graph")))
@@ -1272,12 +1264,12 @@ void the_game(
 			if(g_settings->getBool("frametime_graph"))
 			{
 				g_settings->set("frametime_graph","false");
-				chat_lines.push_back(ChatLine(L"frametime_graph disabled"));
+				chat_backend.addMessage(L"", L"frametime_graph disabled");
 			}
 			else
 			{
 				g_settings->set("frametime_graph","true");
-				chat_lines.push_back(ChatLine(L"frametime_graph enabled"));
+				chat_backend.addMessage(L"", L"frametime_graph enabled");
 			}
 		}
 		else if(input->wasKeyDown(getKeySetting("keymap_screenshot")))
@@ -1292,7 +1284,7 @@ void the_game(
 					std::wstringstream sstr;
 					sstr<<"Saved screenshot to '"<<filename<<"'";
 					infostream<<"Saved screenshot to '"<<filename<<"'"<<std::endl;
-					chat_lines.push_back(ChatLine(sstr.str()));
+					chat_backend.addMessage(L"", sstr.str());
 				} else{
 					infostream<<"Failed to save screenshot '"<<filename<<"'"<<std::endl;
 				}
@@ -1418,23 +1410,6 @@ void the_game(
 		/*
 			Player speed control
 		*/
-		
-		if(!noMenuActive() || !device->isWindowActive())
-		{
-			PlayerControl control(
-				false,
-				false,
-				false,
-				false,
-				false,
-				false,
-				false,
-				camera_pitch,
-				camera_yaw
-			);
-			client.setPlayerControl(control);
-		}
-		else
 		{
 			/*bool a_up,
 			bool a_down,
@@ -1521,6 +1496,8 @@ void the_game(
 								&g_menumgr, respawner);
 					menu->drop();
 					
+					chat_backend.addMessage(L"", L"You died.");
+
 					/* Handle visualization */
 
 					damage_flash_timer = 0;
@@ -2051,57 +2028,22 @@ void the_game(
 			std::wstring message;
 			while(client.getChatMessage(message))
 			{
-				chat_lines.push_back(ChatLine(message));
-				/*if(chat_lines.size() > 6)
-				{
-					core::list<ChatLine>::Iterator
-							i = chat_lines.begin();
-					chat_lines.erase(i);
-				}*/
+				chat_backend.addUnparsedMessage(message);
 			}
-			// Append them to form the whole static text and throw
-			// it to the gui element
-			std::wstring whole;
-			// This will correspond to the line number counted from
-			// top to bottom, from size-1 to 0
-			s16 line_number = chat_lines.size();
-			// Count of messages to be removed from the top
-			u16 to_be_removed_count = 0;
-			for(core::list<ChatLine>::Iterator
-					i = chat_lines.begin();
-					i != chat_lines.end(); i++)
-			{
-				// After this, line number is valid for this loop
-				line_number--;
-				// Increment age
-				(*i).age += dtime;
-				/*
-					This results in a maximum age of 60*6 to the
-					lowermost line and a maximum of 6 lines
-				*/
-				float allowed_age = (6-line_number) * 60.0;
+			// Remove old messages
+			chat_backend.step(dtime);
 
-				if((*i).age > allowed_age)
-				{
-					to_be_removed_count++;
-					continue;
-				}
-				whole += (*i).text + L'\n';
-			}
-			for(u16 i=0; i<to_be_removed_count; i++)
-			{
-				core::list<ChatLine>::Iterator
-						it = chat_lines.begin();
-				chat_lines.erase(it);
-			}
-			guitext_chat->setText(whole.c_str());
+			// Display all messages in a static text element
+			u32 recent_chat_count = chat_backend.getRecentBuffer().getLineCount();
+			std::wstring recent_chat = chat_backend.getRecentChat();
+			guitext_chat->setText(recent_chat.c_str());
 
 			// Update gui element size and position
 
 			/*core::rect<s32> rect(
 					10,
 					screensize.Y - guitext_chat_pad_bottom
-							- text_height*chat_lines.size(),
+							- text_height*recent_chat_count,
 					screensize.X - 10,
 					screensize.Y - guitext_chat_pad_bottom
 			);*/
@@ -2113,11 +2055,7 @@ void the_game(
 			);
 
 			guitext_chat->setRelativePosition(rect);
-
-			if(chat_lines.size() == 0)
-				guitext_chat->setVisible(false);
-			else
-				guitext_chat->setVisible(true);
+			guitext_chat->setVisible(recent_chat_count != 0);
 		}
 
 		/*
@@ -2315,6 +2253,8 @@ void the_game(
 	*/
 	if(clouds)
 		clouds->drop();
+	if(gui_chat_console)
+		gui_chat_console->drop();
 	
 	/*
 		Draw a "shutting down" screen, which will be shown while the map
@@ -2328,6 +2268,9 @@ void the_game(
 		driver->endScene();
 		gui_shuttingdowntext->remove();*/
 	}
+
+	chat_backend.addMessage(L"", L"# Disconnected.");
+	chat_backend.addMessage(L"", L"");
 }
 
 

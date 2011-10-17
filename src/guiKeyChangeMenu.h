@@ -44,6 +44,7 @@ enum
 	GUI_ID_KEY_JUMP_BUTTON,
 	GUI_ID_KEY_CHAT_BUTTON,
 	GUI_ID_KEY_CMD_BUTTON,
+	GUI_ID_KEY_CONSOLE_BUTTON,
 	GUI_ID_KEY_SNEAK_BUTTON,
 	GUI_ID_KEY_INVENTORY_BUTTON,
 	GUI_ID_KEY_DUMP_BUTTON,
@@ -89,6 +90,7 @@ private:
 	gui::IGUIButton *dump;
 	gui::IGUIButton *chat;
 	gui::IGUIButton *cmd;
+	gui::IGUIButton *console;
 
 	s32 activeKey;
 	KeyPress key_forward;
@@ -104,6 +106,7 @@ private:
 	KeyPress key_range;
 	KeyPress key_chat;
 	KeyPress key_cmd;
+	KeyPress key_console;
 	KeyPress key_dump;
 };
 
