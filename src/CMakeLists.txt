@@ -93,7 +93,7 @@ find_package(Sqlite3 REQUIRED)
 find_package(Freetype REQUIRED)
 
 set(CGUITTFONT_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/cguittfont")
-set(CGUITTFNOT_LIBRARY cguittfont)
+set(CGUITTFONT_LIBRARY cguittfont)
 
 configure_file(
 	"${PROJECT_SOURCE_DIR}/cmake_config.h.in"
@@ -165,6 +165,7 @@ set(minetest_SRCS
 	camera.cpp
 	clouds.cpp
 	clientobject.cpp
+	intlGUIEditBox.cpp
 	guiMainMenu.cpp
 	guiKeyChangeMenu.cpp
 	guiMessageMenu.cpp
@@ -218,6 +219,7 @@ if(BUILD_CLIENT)
 		${CGUITTFONT_LIBRARY}
 		${PLATFORM_LIBS}
 		${CLIENT_PLATFORM_LIBS}
+		${CGUITTFONT_LIBRARY}
 	)
 endif(BUILD_CLIENT)
 

@@ -38,12 +38,18 @@ inline wchar_t* wgettext(const char *str)
 
 inline void changeCtype(const char *l)
 {
-	char *ret = NULL;
-	ret = setlocale(LC_CTYPE, l);
-	if(ret == NULL)
-		std::cout<<"locale could not be set"<<std::endl;
-	else
-		std::cout<<"locale has been set to:"<<ret<<std::endl;
+	// ValkaTR: Disable the locale change
+	// to let the international character
+    // input work.
+	// TODO: It is better to remove changeCtype
+	// function from the mine test code.
+
+	//char *ret = NULL;
+	//ret = setlocale(LC_CTYPE, l);
+	//if(ret == NULL)
+	//	std::cout<<"locale could not be set"<<std::endl;
+	//else
+	//	std::cout<<"locale has been set to:"<<ret<<std::endl;
 }
 #define GETTEXT_HEADER
 #endif

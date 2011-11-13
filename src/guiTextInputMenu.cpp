@@ -29,6 +29,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 #include "gettext.h"
 
+// Include the custom EditBox
+#include "intlGUIEditBox.h"
+
 GUITextInputMenu::GUITextInputMenu(gui::IGUIEnvironment* env,
 		gui::IGUIElement* parent, s32 id,
 		IMenuManager *menumgr,
@@ -105,8 +108,9 @@ void GUITextInputMenu::regenerateGui(v2u32 screensize)
 	{
 		core::rect<s32> rect(0, 0, 300, 30);
 		rect = rect + v2s32(size.X/2-300/2, size.Y/2-30/2-25);
-		gui::IGUIElement *e = 
-		Environment->addEditBox(text.c_str(), rect, true, this, 256);
+		//gui::IGUIElement *e = Environment->addEditBox(text.c_str(), rect, true, this, 256);
+		gui::IGUIElement *e = (gui::IGUIElement *) new gui::intlGUIEditBox(text.c_str(), true, Environment, this, 256, rect);
+        e->drop();
 		Environment->setFocus(e);
 
 		irr::SEvent evt;
