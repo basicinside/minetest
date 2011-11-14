@@ -21,6 +21,8 @@ else(WIN32)
 	endif(APPLE)
 endif(WIN32)
 
+add_definitions(-DFT2_BUILD_LIBRARY)
+
 include_directories(${ZLIB_INCLUDE_DIR})
 
 add_library(freetype
