@@ -90,7 +90,6 @@ Compiling on Windows:
 		http://www.winimage.com/zLibDll/index.html
 	* Zlib library (zlibwapi.lib and zlibwapi.dll from zlib125dll.zip):
 		http://www.winimage.com/zLibDll/index.html
-	* Freetype library (TODO: test and explain this)
 	* Optional: gettext bibrary and tools:
 		http://gnuwin32.sourceforge.net/downlinks/gettext.php
 		- This is used for other UI languages. Feel free to leave it out.

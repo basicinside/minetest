@@ -90,7 +90,7 @@ endif()
 
 find_package(Jthread REQUIRED)
 find_package(Sqlite3 REQUIRED)
-find_package(Freetype REQUIRED)
+find_package(FreetypeBundled REQUIRED)
 
 set(CGUITTFONT_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/cguittfont")
 set(CGUITTFONT_LIBRARY cguittfont)
@@ -252,7 +252,7 @@ if(MSVC)
 	# Add some optimizations because otherwise it's VERY slow
 	set(CMAKE_CXX_FLAGS_DEBUG "/MDd /Zi /Ob0 /Od /RTC1")
 
-	# Flags for C files (sqlite)
+	# Flags for C files (sqlite, freetype)
 	# /MT = Link statically with standard library stuff
 	set(CMAKE_C_FLAGS_RELEASE "/O2 /Ob2 /MT")
 	
@@ -380,6 +380,11 @@ if (SQLITE3_FOUND)
 else (SQLITE3_FOUND)
 add_subdirectory(sqlite)
 endif (SQLITE3_FOUND)
+
+if (FREETYPE_FOUND)
+else (FREETYPE_FOUND)
+add_subdirectory(freetype)
+endif (FREETYPE_FOUND)
 
 if (BUILD_CLIENT)
 	add_subdirectory(cguittfont)
