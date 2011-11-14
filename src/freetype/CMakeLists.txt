@@ -45,7 +45,7 @@ add_library(freetype
 	${freetype_SOURCE_DIR}/base/ftstroke.c
 	${freetype_SOURCE_DIR}/base/ftsynth.c
 	${freetype_SOURCE_DIR}/base/fttype1.c
-	${freetype_SOURCE_DIR}/base/ftwinfmt.c
+	${freetype_SOURCE_DIR}/base/ftwinfnt.c
 	${freetype_SOURCE_DIR}/base/ftxf86.c
 	#${freetype_SOURCE_DIR}/base/ftmac.c  # only on the Macintosh
 
