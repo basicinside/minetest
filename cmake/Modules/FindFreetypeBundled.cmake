@@ -3,7 +3,7 @@
 # exists in vanilla cmake, and is in fact called from here to look for
 # the system freetype.
 
-SET(FREETYPE_BUNDLE_VERSION 2.4.7)
+SET(FREETYPE_BUNDLE_VERSION 2.4.8)
 SET(FREETYPE_BUNDLE_DIR ${PROJECT_SOURCE_DIR}/freetype/freetype-${FREETYPE_BUNDLE_VERSION})
 
 FIND_PACKAGE(Freetype)
