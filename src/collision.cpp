@@ -177,20 +177,16 @@ collisionMoveResult collisionMoveSimple(Map *map, IGameDef *gamedef,
 				f32 nodemin = nodebox.MinEdge.dotProduct(dirs[j]);
 				f32 objectmax = box.MaxEdge.dotProduct(dirs[j]);
 				f32 objectmin = box.MinEdge.dotProduct(dirs[j]);
+				f32 objectmax_old = oldbox.MaxEdge.dotProduct(dirs[j]);
+				f32 objectmin_old = oldbox.MinEdge.dotProduct(dirs[j]);
+				f32 objectmax_all = MYMAX(objectmax, objectmax_old);
+				f32 objectmin_all = MYMIN(objectmin, objectmin_old);
 
-				#if 0
-				if(nodemax - d <= objectmin || nodemin + d >= objectmax)
+				if(nodemax <= objectmin_all || nodemin >= objectmax_all)
 					other_axes_overlap = false;
 
-				if(j == 1 && (nodemax - d <= objectmin + stepheight || nodemin + d >= objectmax))
+				if(j == 1 && (nodemax <= objectmin_all + stepheight || nodemin >= objectmax_all))
 					other_axes_overlap_plus_step = false;
-				#else
-				if(nodemax <= objectmin || nodemin >= objectmax)
-					other_axes_overlap = false;
-
-				//if(j == 1 && (nodemax <= objectmin + stepheight || nodemin >= objectmax))
-				//	other_axes_overlap_plus_step = false;
-				#endif
 			}
 			
 			/*
