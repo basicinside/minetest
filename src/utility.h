@@ -1715,14 +1715,28 @@ inline u32 time_to_daynight_ratio(u32 time_of_day)
 // Random helper. Usually d=BS
 inline core::aabbox3d<f32> getNodeBox(v3s16 p, float d)
 {
-	return core::aabbox3d<f32>(
-		(float)p.X * d - 0.5*d,
-		(float)p.Y * d - 0.5*d,
-		(float)p.Z * d - 0.5*d,
-		(float)p.X * d + 0.5*d,
-		(float)p.Y * d + 0.5*d,
-		(float)p.Z * d + 0.5*d
-	);
+	if(p.Y%2 == 0)
+	{
+		return core::aabbox3d<f32>(
+			(float)p.X * d - 0.5*d,
+			(float)p.Y * d - 0.5*d,
+			(float)p.Z * d - 0.5*d,
+			(float)p.X * d + 0.5*d,
+			(float)p.Y * d + 0.0*d,
+			(float)p.Z * d + 0.5*d
+		);
+	}
+	else
+	{
+		return core::aabbox3d<f32>(
+			(float)p.X * d - 0.5*d,
+			(float)p.Y * d - 0.5*d,
+			(float)p.Z * d - 0.5*d,
+			(float)p.X * d + 0.5*d,
+			(float)p.Y * d + 0.5*d,
+			(float)p.Z * d + 0.5*d
+		);
+	}
 }
 	
 class IntervalLimiter
