@@ -163,9 +163,11 @@ void ItemSAO::step(float dtime, bool send_recommended)
 	v3f pos_f = getBasePosition();
 	v3f pos_f_old = pos_f;
 	v3f accel_f = v3f(0,0,0);
+	f32 stepheight = 0;
 	IGameDef *gamedef = m_env->getGameDef();
 	moveresult = collisionMoveSimple(&m_env->getMap(), gamedef,
-			pos_max_d, box, dtime, pos_f, m_speed_f, accel_f);
+			pos_max_d, box, stepheight, dtime,
+			pos_f, m_speed_f, accel_f);
 	
 	if(send_recommended == false)
 		return;
@@ -390,9 +392,11 @@ void RatSAO::step(float dtime, bool send_recommended)
 	v3f pos_f = getBasePosition();
 	v3f pos_f_old = pos_f;
 	v3f accel_f = v3f(0,0,0);
+	f32 stepheight = 0;
 	IGameDef *gamedef = m_env->getGameDef();
 	moveresult = collisionMoveSimple(&m_env->getMap(), gamedef,
-			pos_max_d, box, dtime, pos_f, m_speed_f, accel_f);
+			pos_max_d, box, stepheight, dtime,
+			pos_f, m_speed_f, accel_f);
 	m_touching_ground = moveresult.touching_ground;
 	
 	setBasePosition(pos_f);
@@ -629,9 +633,11 @@ void Oerkki1SAO::step(float dtime, bool send_recommended)
 	v3f pos_f = getBasePosition();
 	v3f pos_f_old = pos_f;
 	v3f accel_f = v3f(0,0,0);
+	f32 stepheight = 0;
 	IGameDef *gamedef = m_env->getGameDef();
 	moveresult = collisionMovePrecise(&m_env->getMap(), gamedef,
-			pos_max_d, box, dtime, pos_f, m_speed_f, accel_f);
+			pos_max_d, box, stepheight, dtime,
+			pos_f, m_speed_f, accel_f);
 	m_touching_ground = moveresult.touching_ground;
 	
 	// Do collision damage
@@ -871,9 +877,11 @@ void FireflySAO::step(float dtime, bool send_recommended)
 	v3f pos_f = getBasePosition();
 	v3f pos_f_old = pos_f;
 	v3f accel_f = v3f(0,0,0);
+	f32 stepheight = 0;
 	IGameDef *gamedef = m_env->getGameDef();
 	moveresult = collisionMoveSimple(&m_env->getMap(), gamedef,
-			pos_max_d, box, dtime, pos_f, m_speed_f, accel_f);
+			pos_max_d, box, dtime, stepheight,
+			pos_f, m_speed_f, accel_f);
 	m_touching_ground = moveresult.touching_ground;
 	
 	setBasePosition(pos_f);
@@ -1584,12 +1592,14 @@ void LuaEntitySAO::step(float dtime, bool send_recommended)
 		box.MaxEdge *= BS;
 		collisionMoveResult moveresult;
 		f32 pos_max_d = BS*0.125; // Distance per iteration
+		f32 stepheight = 0; // Maximum climbable step height
 		v3f p_pos = getBasePosition();
 		v3f p_velocity = m_velocity;
 		v3f p_acceleration = m_acceleration;
 		IGameDef *gamedef = m_env->getGameDef();
 		moveresult = collisionMovePrecise(&m_env->getMap(), gamedef,
-				pos_max_d, box, dtime, p_pos, p_velocity, p_acceleration);
+				pos_max_d, box, dtime, stepheight,
+				p_pos, p_velocity, p_acceleration);
 		// Apply results
 		setBasePosition(p_pos);
 		m_velocity = p_velocity;

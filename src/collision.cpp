@@ -25,7 +25,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 collisionMoveResult collisionMoveSimple(Map *map, IGameDef *gamedef,
 		f32 pos_max_d, const core::aabbox3d<f32> &box_0,
-		f32 dtime, v3f &pos_f, v3f &speed_f, v3f &accel_f)
+		f32 stepheight, f32 dtime,
+		v3f &pos_f, v3f &speed_f, v3f &accel_f)
 {
 	collisionMoveResult result;
 
@@ -71,11 +72,6 @@ collisionMoveResult collisionMoveSimple(Map *map, IGameDef *gamedef,
 	oldbox.MinEdge += oldpos_f;
 
 	/*
-		If the object lies on a walkable node, this is set to true.
-	*/
-	result.touching_ground = false;
-	
-	/*
 		Go through every node around the object
 	*/
 	s16 min_x = (box_0.MinEdge.X / BS) - 2;
@@ -84,10 +80,11 @@ collisionMoveResult collisionMoveSimple(Map *map, IGameDef *gamedef,
 	s16 max_x = (box_0.MaxEdge.X / BS) + 1;
 	s16 max_y = (box_0.MaxEdge.Y / BS) + 1;
 	s16 max_z = (box_0.MaxEdge.Z / BS) + 1;
-	for(s16 y = oldpos_i.Y + min_y; y <= oldpos_i.Y + max_y; y++)
+	for(s16 y = oldpos_i.Y + max_y; y >= oldpos_i.Y + min_y; y--)
 	for(s16 z = oldpos_i.Z + min_z; z <= oldpos_i.Z + max_z; z++)
 	for(s16 x = oldpos_i.X + min_x; x <= oldpos_i.X + max_x; x++)
 	{
+		bool is_unloaded = false;
 		try{
 			// Object collides into walkable nodes
 			MapNode n = map->getNode(v3s16(x,y,z));
@@ -96,6 +93,7 @@ collisionMoveResult collisionMoveSimple(Map *map, IGameDef *gamedef,
 		}
 		catch(InvalidPositionException &e)
 		{
+			is_unloaded = true;
 			// Doing nothing here will block the object from
 			// walking over map borders
 		}
@@ -120,12 +118,16 @@ collisionMoveResult collisionMoveSimple(Map *map, IGameDef *gamedef,
 				&& nodebox.MinEdge.Z+d < box.MaxEdge.Z
 		){
 			result.touching_ground = true;
+			if(is_unloaded)
+				result.standing_on_unloaded = true;
 		}
 		
 		// If object doesn't intersect with node, ignore node.
 		if(box.intersectsWithBox(nodebox) == false)
 			continue;
 		
+		int walking_up_step = 0; // 0 = no, 1 = yes, 2 = inhibited
+
 		/*
 			Go through every axis
 		*/
@@ -159,10 +161,14 @@ collisionMoveResult collisionMoveSimple(Map *map, IGameDef *gamedef,
 			bool main_axis_collides =
 					negative_axis_collides || positive_axis_collides;
 			
+			if(!main_axis_collides)
+				continue;
+
 			/*
 				Check overlap of object and node in other axes
 			*/
 			bool other_axes_overlap = true;
+			bool other_axes_overlap_plus_step = true;
 			for(u16 j=0; j<3; j++)
 			{
 				if(j == i)
@@ -171,25 +177,55 @@ collisionMoveResult collisionMoveSimple(Map *map, IGameDef *gamedef,
 				f32 nodemin = nodebox.MinEdge.dotProduct(dirs[j]);
 				f32 objectmax = box.MaxEdge.dotProduct(dirs[j]);
 				f32 objectmin = box.MinEdge.dotProduct(dirs[j]);
-				if(!(nodemax - d > objectmin && nodemin + d < objectmax))
-				{
+
+				#if 0
+				if(nodemax - d <= objectmin || nodemin + d >= objectmax)
 					other_axes_overlap = false;
-					break;
-				}
+
+				if(j == 1 && (nodemax - d <= objectmin + stepheight || nodemin + d >= objectmax))
+					other_axes_overlap_plus_step = false;
+				#else
+				if(nodemax <= objectmin || nodemin >= objectmax)
+					other_axes_overlap = false;
+
+				//if(j == 1 && (nodemax <= objectmin + stepheight || nodemin >= objectmax))
+				//	other_axes_overlap_plus_step = false;
+				#endif
 			}
 			
 			/*
 				If this is a collision, revert the pos_f in the main
 				direction.
 			*/
-			if(other_axes_overlap && main_axis_collides)
+			if(other_axes_overlap_plus_step == false && other_axes_overlap)
 			{
+				// Special case: walking up a step
+				if(walking_up_step == 0)
+					walking_up_step = 1;
+			}
+			else if(other_axes_overlap)
+			{
+				// Collision occurred
 				speed_f -= speed_f.dotProduct(dirs[i]) * dirs[i];
 				pos_f -= pos_f.dotProduct(dirs[i]) * dirs[i];
 				pos_f += oldpos_f.dotProduct(dirs[i]) * dirs[i];
 				result.collides = true;
+				if(i != 1)
+					result.collides_xz = true;
+				walking_up_step = 2;  // inhibit
 			}
 		
+		}
+
+		if(walking_up_step == 1)
+		{
+			dstream << "walking up step\n";
+			speed_f.Y = 0;
+
+			f32 ydiff = nodebox.MaxEdge.Y - box.MinEdge.Y;
+			pos_f.Y += ydiff;
+			box.MinEdge.Y += ydiff;
+			box.MaxEdge.Y += ydiff;
 		}
 	} // xyz
 	
@@ -198,7 +234,8 @@ collisionMoveResult collisionMoveSimple(Map *map, IGameDef *gamedef,
 
 collisionMoveResult collisionMovePrecise(Map *map, IGameDef *gamedef,
 		f32 pos_max_d, const core::aabbox3d<f32> &box_0,
-		f32 dtime, v3f &pos_f, v3f &speed_f, v3f &accel_f)
+		f32 stepheight, f32 dtime,
+		v3f &pos_f, v3f &speed_f, v3f &accel_f)
 {
 	collisionMoveResult final_result;
 
@@ -241,17 +278,20 @@ collisionMoveResult collisionMovePrecise(Map *map, IGameDef *gamedef,
 		}
 
 		collisionMoveResult result = collisionMoveSimple(map, gamedef,
-				pos_max_d, box_0, dtime_part, pos_f, speed_f, accel_f);
+				pos_max_d, box_0, stepheight, dtime_part,
+				pos_f, speed_f, accel_f);
 
 		if(result.touching_ground)
 			final_result.touching_ground = true;
 		if(result.collides)
 			final_result.collides = true;
+		if(result.collides_xz)
+			final_result.collides_xz = true;
+		if(result.standing_on_unloaded)
+			final_result.standing_on_unloaded = true;
 	}
 	while(dtime_downcount > 0.001);
 		
 
 	return final_result;
 }
-
-

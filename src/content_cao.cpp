@@ -1862,12 +1862,14 @@ public:
 			box.MaxEdge *= BS;
 			collisionMoveResult moveresult;
 			f32 pos_max_d = BS*0.125; // Distance per iteration
+			f32 stepheight = 0;
 			v3f p_pos = m_position;
 			v3f p_velocity = m_velocity;
 			v3f p_acceleration = m_acceleration;
 			IGameDef *gamedef = env->getGameDef();
 			moveresult = collisionMovePrecise(&env->getMap(), gamedef,
-					pos_max_d, box, dtime, p_pos, p_velocity, p_acceleration);
+					pos_max_d, box, stepheight, dtime,
+					p_pos, p_velocity, p_acceleration);
 			// Apply results
 			m_position = p_pos;
 			m_velocity = p_velocity;
