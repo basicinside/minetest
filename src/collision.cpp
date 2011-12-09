@@ -25,12 +25,17 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 collisionMoveResult collisionMoveSimple(Map *map, IGameDef *gamedef,
 		f32 pos_max_d, const core::aabbox3d<f32> &box_0,
-		f32 dtime, v3f &pos_f, v3f &speed_f)
+		f32 dtime, v3f &pos_f, v3f &speed_f, v3f &accel_f)
 {
 	collisionMoveResult result;
 
 	v3f oldpos_f = pos_f;
 	v3s16 oldpos_i = floatToInt(oldpos_f, BS);
+
+	/*
+		Calculate new velocity
+	*/
+	speed_f += accel_f * dtime;
 
 	/*
 		Calculate new position
@@ -193,18 +198,10 @@ collisionMoveResult collisionMoveSimple(Map *map, IGameDef *gamedef,
 
 collisionMoveResult collisionMovePrecise(Map *map, IGameDef *gamedef,
 		f32 pos_max_d, const core::aabbox3d<f32> &box_0,
-		f32 dtime, v3f &pos_f, v3f &speed_f)
+		f32 dtime, v3f &pos_f, v3f &speed_f, v3f &accel_f)
 {
 	collisionMoveResult final_result;
 
-	// Maximum time increment (for collision detection etc)
-	// time = distance / speed
-	f32 dtime_max_increment = pos_max_d / speed_f.getLength();
-	
-	// Maximum time increment is 10ms or lower
-	if(dtime_max_increment > 0.01)
-		dtime_max_increment = 0.01;
-	
 	// Don't allow overly huge dtime
 	if(dtime > 2.0)
 		dtime = 2.0;
@@ -215,6 +212,16 @@ collisionMoveResult collisionMovePrecise(Map *map, IGameDef *gamedef,
 	do
 	{
 		loopcount++;
+
+		// Maximum time increment (for collision detection etc)
+		// time = distance / speed
+		f32 dtime_max_increment = 1.0;
+		if(speed_f.getLength() != 0)
+			dtime_max_increment = pos_max_d / speed_f.getLength();
+
+		// Maximum time increment is 10ms or lower
+		if(dtime_max_increment > 0.01)
+			dtime_max_increment = 0.01;
 
 		f32 dtime_part;
 		if(dtime_downcount > dtime_max_increment)
@@ -234,7 +241,7 @@ collisionMoveResult collisionMovePrecise(Map *map, IGameDef *gamedef,
 		}
 
 		collisionMoveResult result = collisionMoveSimple(map, gamedef,
-				pos_max_d, box_0, dtime_part, pos_f, speed_f);
+				pos_max_d, box_0, dtime_part, pos_f, speed_f, accel_f);
 
 		if(result.touching_ground)
 			final_result.touching_ground = true;

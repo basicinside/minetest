@@ -2052,6 +2052,18 @@ private:
 		return 0;
 	}
 	
+	// getvelocity(self)
+	static int l_getvelocity(lua_State *L)
+	{
+		ObjectRef *ref = checkobject(L, 1);
+		LuaEntitySAO *co = getluaobject(ref);
+		if(co == NULL) return 0;
+		// Do it
+		v3f v = co->getVelocity();
+		pushFloatPos(L, v);
+		return 1;
+	}
+	
 	// getacceleration(self)
 	static int l_getacceleration(lua_State *L)
 	{
@@ -2283,6 +2295,7 @@ const luaL_reg ObjectRef::methods[] = {
 	// LuaEntitySAO-only
 	method(ObjectRef, setvelocity),
 	method(ObjectRef, setacceleration),
+	method(ObjectRef, getvelocity),
 	method(ObjectRef, getacceleration),
 	method(ObjectRef, settexturemod),
 	method(ObjectRef, setsprite),

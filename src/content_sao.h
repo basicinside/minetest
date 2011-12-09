@@ -214,6 +214,7 @@ public:
 	/* LuaEntitySAO-specific */
 	void setVelocity(v3f velocity);
 	void setAcceleration(v3f acceleration);
+	v3f getVelocity();
 	v3f getAcceleration();
 	void setTextureMod(const std::string &mod);
 	void setSprite(v2s16 p, int num_frames, float framelength,
