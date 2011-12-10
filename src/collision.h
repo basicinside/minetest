@@ -42,15 +42,23 @@ struct collisionMoveResult
 
 // Moves using a single iteration; speed should not exceed pos_max_d/dtime
 collisionMoveResult collisionMoveSimple(Map *map, IGameDef *gamedef,
-		f32 pos_max_d, const core::aabbox3d<f32> &box_0,
+		f32 pos_max_d, const aabb3f &box_0,
 		f32 stepheight, f32 dtime,
 		v3f &pos_f, v3f &speed_f, v3f &accel_f);
 
 // Moves using as many iterations as needed
 collisionMoveResult collisionMovePrecise(Map *map, IGameDef *gamedef,
-		f32 pos_max_d, const core::aabbox3d<f32> &box_0,
+		f32 pos_max_d, const aabb3f &box_0,
 		f32 stepheight, f32 dtime,
 		v3f &pos_f, v3f &speed_f, v3f &accel_f);
+
+// Helper function:
+// Checks for collision of a moving aabbox with a static aabbox
+// Returns -1 if no collision, 0 if X collision, 1 if Y collision, 2 if Z collision
+// dtime receives time until first collision, invalid if -1 is returned
+int axisAlignedCollision(
+		const aabb3f &staticbox, const aabb3f &movingbox,
+		const v3f &speed, f32 &dtime);
 
 enum CollisionType
 {

@@ -25,15 +25,13 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include <algorithm>  // std::sort
 #include <vector>
 
-typedef core::aabbox3d<f32> aabb3f;
-
 // Helper function:
 // Checks for collision of a moving aabbox with a static aabbox
 // Returns -1 if no collision, 0 if X collision, 1 if Y collision, 2 if Z collision
 // The time after which the collision occurs is stored in dtime.
-static inline int axisAlignedCollision(
-		const aabb3f &staticbox, const aabb3f &movingbox, const v3f &speed,
-		f32 &dtime)
+int axisAlignedCollision(
+		const aabb3f &staticbox, const aabb3f &movingbox,
+		const v3f &speed, f32 &dtime)
 {
 	// Transform so that staticbox == (0,0,0,1,1,1)
 	f32 xoffset = - staticbox.MinEdge.X;
@@ -67,7 +65,7 @@ static inline int axisAlignedCollision(
 					&& mymovingbox.MaxEdge.Z + myspeed.Z * dtime > 0)
 				return 0;
 		}
-		else if(mymovingbox.MaxEdge.X > 1)
+		else if(mymovingbox.MinEdge.X > 1)
 		{
 			return -1;
 		}
@@ -76,7 +74,7 @@ static inline int axisAlignedCollision(
 	{
 		if(mymovingbox.MinEdge.X >= 1)
 		{
-			dtime = (mymovingbox.MinEdge.X - 1) / myspeed.X;
+			dtime = (1 - mymovingbox.MinEdge.X) / myspeed.X;
 			if(mymovingbox.MinEdge.Y + myspeed.Y * dtime < 1
 					&& mymovingbox.MaxEdge.Y + myspeed.Y * dtime > 0
 					&& mymovingbox.MinEdge.Z + myspeed.Z * dtime < 1
@@ -100,7 +98,7 @@ static inline int axisAlignedCollision(
 					&& mymovingbox.MaxEdge.Z + myspeed.Z * dtime > 0)
 				return 1;
 		}
-		else if(mymovingbox.MaxEdge.Y > 1)
+		else if(mymovingbox.MinEdge.Y > 1)
 		{
 			return -1;
 		}
@@ -109,12 +107,12 @@ static inline int axisAlignedCollision(
 	{
 		if(mymovingbox.MinEdge.Y >= 1)
 		{
-			dtime = (mymovingbox.MinEdge.Y - 1) / myspeed.Y;
+			dtime = (1 - mymovingbox.MinEdge.Y) / myspeed.Y;
 			if(mymovingbox.MinEdge.X + myspeed.X * dtime < 1
 					&& mymovingbox.MaxEdge.X + myspeed.X * dtime > 0
 					&& mymovingbox.MinEdge.Z + myspeed.Z * dtime < 1
 					&& mymovingbox.MaxEdge.Z + myspeed.Z * dtime > 0)
-				return 0;
+				return 1;
 		}
 		else if (mymovingbox.MaxEdge.Y < 0)
 		{
@@ -131,9 +129,9 @@ static inline int axisAlignedCollision(
 					&& mymovingbox.MaxEdge.X + myspeed.X * dtime > 0
 					&& mymovingbox.MinEdge.Y + myspeed.Y * dtime < 1
 					&& mymovingbox.MaxEdge.Y + myspeed.Y * dtime > 0)
-				return 1;
+				return 2;
 		}
-		//else if(mymovingbox.MaxEdge.Z > 1)
+		//else if(mymovingbox.MinEdge.Z > 1)
 		//{
 		//	return -1;
 		//}
@@ -142,12 +140,12 @@ static inline int axisAlignedCollision(
 	{
 		if(mymovingbox.MinEdge.Z >= 1)
 		{
-			dtime = (mymovingbox.MinEdge.Z - 1) / myspeed.Y;
+			dtime = (1 - mymovingbox.MinEdge.Z) / myspeed.Z;
 			if(mymovingbox.MinEdge.X + myspeed.X * dtime < 1
 					&& mymovingbox.MaxEdge.X + myspeed.X * dtime > 0
 					&& mymovingbox.MinEdge.Y + myspeed.Y * dtime < 1
 					&& mymovingbox.MaxEdge.Y + myspeed.Y * dtime > 0)
-				return 0;
+				return 2;
 		}
 		//else if (mymovingbox.MaxEdge.Z < 0)
 		//{
@@ -274,17 +272,17 @@ collisionMoveResult collisionMoveSimple(Map *map, IGameDef *gamedef,
 			dstream<<"\n=== collisionMoveSimple debugging ===\n\n";
 
 		v3f oldpos = pos_f;
-		newpos = oldpos + newspeed * dtime;
+		v3f newpos = pos_f + newspeed * dtime;
 
 		/*
 			Calculate collision box
 		*/
-		aabb3f box = box_0;
-		box.MaxEdge += newpos;
-		box.MinEdge += newpos;
 		aabb3f oldbox = box_0;
 		oldbox.MaxEdge += oldpos;
 		oldbox.MinEdge += oldpos;
+		aabb3f box = box_0;
+		box.MaxEdge += newpos;
+		box.MinEdge += newpos;
 
 		result.touching_ground = true;
 		result.standing_on_unloaded = true;
@@ -324,10 +322,6 @@ collisionMoveResult collisionMoveSimple(Map *map, IGameDef *gamedef,
 		{
 			const aabb3f& nodebox = nodeboxes[boxindex].box;
 			//bool is_unloaded = nodeboxes[boxindex].is_unloaded;
-
-			// If object doesn't intersect with node, ignore node.
-			if(box.intersectsWithBox(nodebox) == false)
-				continue;
 
 			int walking_up_step = 2; // 0 = no, 1 = yes, 2 = inhibited
 
@@ -474,7 +468,7 @@ collisionMoveResult collisionMoveSimple(Map *map, IGameDef *gamedef,
 }
 
 collisionMoveResult collisionMovePrecise(Map *map, IGameDef *gamedef,
-		f32 pos_max_d, const core::aabbox3d<f32> &box_0,
+		f32 pos_max_d, const aabb3f &box_0,
 		f32 stepheight, f32 dtime,
 		v3f &pos_f, v3f &speed_f, v3f &accel_f)
 {
