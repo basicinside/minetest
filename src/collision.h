@@ -58,7 +58,7 @@ collisionMoveResult collisionMovePrecise(Map *map, IGameDef *gamedef,
 // dtime receives time until first collision, invalid if -1 is returned
 int axisAlignedCollision(
 		const aabb3f &staticbox, const aabb3f &movingbox,
-		const v3f &speed, f32 &dtime);
+		const v3f &speed, f32 d, f32 &dtime);
 
 enum CollisionType
 {
