@@ -21,6 +21,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #define COLLISION_HEADER
 
 #include "common_irrlicht.h"
+#include <vector>
 
 class Map;
 class IGameDef;
@@ -59,6 +60,14 @@ collisionMoveResult collisionMovePrecise(Map *map, IGameDef *gamedef,
 int axisAlignedCollision(
 		const aabb3f &staticbox, const aabb3f &movingbox,
 		const v3f &speed, f32 d, f32 &dtime);
+
+// Helper function:
+// Checks if moving the movingbox up by the given distance would hit a ceiling.
+bool wouldCollideWithCeiling(
+		const std::vector<aabb3f> &staticboxes,
+		const aabb3f &movingbox,
+		f32 y_increase, f32 d);
+
 
 enum CollisionType
 {
