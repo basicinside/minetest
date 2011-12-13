@@ -256,7 +256,9 @@ static TileSpec getTile(const MapNode &node, v3s16 dir,
 	const ContentFeatures &f = nodemgr->get(node);
 	
 	if(f.param_type == CPT_FACEDIR_SIMPLE)
-		dir = facedir_rotate(node.param1, dir);
+		dir = facedir_rotate(node.getParam1(), dir);
+	else if(f.param_type_2 == CPT2_FACEDIR_SIMPLE)
+		dir = facedir_rotate(node.getParam2(), dir);
 	
 	TileSpec spec;
 	

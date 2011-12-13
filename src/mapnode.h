@@ -22,6 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 #include "irrlichttypes.h"
 #include "light.h"
+#include <vector>
 
 class INodeDefManager;
 
@@ -85,6 +86,8 @@ v3s16 unpackDir(u8 b);
 	      and Y- too?
 */
 v3s16 facedir_rotate(u8 facedir, v3s16 dir);
+
+void facedir_rotate_box(u8 facedir, aabb3f& box);
 
 enum LightBank
 {
@@ -244,6 +247,22 @@ struct MapNode
 	*/
 	u8 getMineral(INodeDefManager *nodemgr) const;
 	
+	/*
+		Gets facedir (e.g. chests, furnaces), 0 if not defined.
+	*/
+	u8 getFacedirSimple(INodeDefManager *nodemgr) const;
+
+	/*
+		Gets list of node boxes (used for rendering (NDT_NODEBOX)
+		and collision)
+	*/
+	std::vector<aabb3f> getNodeBoxes(INodeDefManager *nodemgr) const;
+
+	/*
+		Gets list of selection boxes
+	*/
+	std::vector<aabb3f> getSelectionBoxes(INodeDefManager *nodemgr) const;
+
 	/*
 		Serialization functions
 	*/

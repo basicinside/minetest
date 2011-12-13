@@ -568,8 +568,8 @@ void content_mapnode_init(IWritableNodeDefManager *nodemgr)
 	f.is_ground_content = true;
 	f.dug_item = std::string("MaterialItem2 ")+itos(i)+" 1";
 	f.selection_box.type = NODEBOX_FIXED;
-	f.selection_box.fixed = core::aabbox3d<f32>(
-			-BS/7, -BS/2, -BS/7, BS/7, BS/2, BS/7);
+	f.selection_box.fixed.push_back(aabb3f(
+			-BS/7, -BS/2, -BS/7, BS/7, BS/2, BS/7));
 	f.furnace_burntime = 30/2;
 	setWoodLikeMaterialProperties(f.material, 0.75);
 	nodemgr->set(i, f);
@@ -589,6 +589,8 @@ void content_mapnode_init(IWritableNodeDefManager *nodemgr)
 	f.dug_item = std::string("MaterialItem2 ")+itos(i)+" 1";
 	f.walkable = false;
 	f.selection_box.type = NODEBOX_FIXED;
+	f.selection_box.fixed.push_back(aabb3f(
+			-BS/2, -BS/2, -BS/2, BS/2, -BS/2+BS/16, BS/2));
 	f.furnace_burntime = 5;
 	setDirtLikeMaterialProperties(f.material, 0.75);
 	nodemgr->set(i, f);
@@ -601,9 +603,9 @@ void content_mapnode_init(IWritableNodeDefManager *nodemgr)
 	f.setInventoryTexture("ladder.png");
 	f.light_propagates = true;
 	f.param_type = CPT_LIGHT;
+	f.param_type_2 = CPT2_WALLMOUNTED;
 	f.is_ground_content = true;
 	f.dug_item = std::string("MaterialItem ")+itos(i)+" 1";
-	f.wall_mounted = true;
 	f.walkable = false;
 	f.climbable = true;
 	f.selection_box.type = NODEBOX_WALLMOUNTED;
@@ -765,10 +767,10 @@ void content_mapnode_init(IWritableNodeDefManager *nodemgr)
 	f.setTexture(2, "torch.png");
 	f.setInventoryTexture("torch_on_floor.png");
 	f.param_type = CPT_LIGHT;
+	f.param_type_2 = CPT2_WALLMOUNTED;
 	f.light_propagates = true;
 	f.sunlight_propagates = true;
 	f.walkable = false;
-	f.wall_mounted = true;
 	f.dug_item = std::string("MaterialItem2 ")+itos(i)+" 1";
 	f.light_source = LIGHT_MAX-1;
 	f.selection_box.type = NODEBOX_WALLMOUNTED;
@@ -789,10 +791,10 @@ void content_mapnode_init(IWritableNodeDefManager *nodemgr)
 	f.setAllTextures("sign_wall.png");
 	f.setInventoryTexture("sign_wall.png");
 	f.param_type = CPT_LIGHT;
+	f.param_type_2 = CPT2_WALLMOUNTED;
 	f.light_propagates = true;
 	f.sunlight_propagates = true;
 	f.walkable = false;
-	f.wall_mounted = true;
 	f.dug_item = std::string("MaterialItem2 ")+itos(i)+" 1";
 	f.metadata_name = "sign";
 	setConstantMaterialProperties(f.material, 0.5);

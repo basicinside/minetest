@@ -3258,28 +3258,36 @@ void Server::ProcessData(u8 *data, u32 datasize, u16 peer_id)
 							<<(int)mitem->getMaterial()
 							<<" at "<<PP(p_under)<<std::endl;
 				
+					ContentParamType cpt = m_nodedef->get(n).param_type;
+					ContentParamType2 cpt2 = m_nodedef->get(n).param_type_2;
+
 					// Calculate direction for wall mounted stuff
-					if(m_nodedef->get(n).wall_mounted)
+					if(cpt2 == CPT2_WALLMOUNTED)
 						n.param2 = packDir(p_under - p_above);
 
 					// Calculate the direction for furnaces and chests and stuff
-					if(m_nodedef->get(n).param_type == CPT_FACEDIR_SIMPLE)
+					if(cpt == CPT_FACEDIR_SIMPLE || cpt2 == CPT2_FACEDIR_SIMPLE)
 					{
 						v3f playerpos = player->getPosition();
 						v3f blockpos = intToFloat(p_above, BS) - playerpos;
 						blockpos = blockpos.normalize();
-						n.param1 = 0;
+						int facedir = 0;
 						if (fabs(blockpos.X) > fabs(blockpos.Z)) {
 							if (blockpos.X < 0)
-								n.param1 = 3;
+								facedir = 3;
 							else
-								n.param1 = 1;
+								facedir = 1;
 						} else {
 							if (blockpos.Z < 0)
-								n.param1 = 2;
+								facedir = 2;
 							else
-								n.param1 = 0;
+								facedir = 0;
 						}
+						dstream<<"facedir is "<<facedir<<"\n";
+						if(cpt == CPT_FACEDIR_SIMPLE)
+							n.setParam1(facedir);
+						if(cpt2 == CPT2_FACEDIR_SIMPLE)
+							n.setParam2(facedir);
 					}
 
 					/*

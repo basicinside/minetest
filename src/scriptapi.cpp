@@ -167,6 +167,228 @@ void check_modname_prefix(lua_State *L, std::string &name)
 				+"\"contains unallowed characters");
 }
 
+/*
+	EnumString definitions
+*/
+
+struct EnumString
+{
+	int num;
+	const char *str;
+};
+
+struct EnumString es_DrawType[] =
+{
+	{NDT_NORMAL, "normal"},
+	{NDT_AIRLIKE, "airlike"},
+	{NDT_LIQUID, "liquid"},
+	{NDT_FLOWINGLIQUID, "flowingliquid"},
+	{NDT_GLASSLIKE, "glasslike"},
+	{NDT_ALLFACES, "allfaces"},
+	{NDT_ALLFACES_OPTIONAL, "allfaces_optional"},
+	{NDT_TORCHLIKE, "torchlike"},
+	{NDT_SIGNLIKE, "signlike"},
+	{NDT_PLANTLIKE, "plantlike"},
+	{NDT_FENCELIKE, "fencelike"},
+	{NDT_RAILLIKE, "raillike"},
+	{NDT_NODEBOX, "nodebox"},
+	{0, NULL},
+};
+
+struct EnumString es_ContentParamType[] =
+{
+	{CPT_NONE, "none"},
+	{CPT_LIGHT, "light"},
+	{CPT_MINERAL, "mineral"},
+	{CPT_FACEDIR_SIMPLE, "facedir_simple"},
+	{0, NULL},
+};
+
+struct EnumString es_ContentParamType2[] =
+{
+	{CPT2_NONE, "none"},
+	{CPT2_WALLMOUNTED, "wallmounted"},
+	{CPT2_FACEDIR_SIMPLE, "facedir_simple"},
+	{0, NULL},
+};
+
+struct EnumString es_LiquidType[] =
+{
+	{LIQUID_NONE, "none"},
+	{LIQUID_FLOWING, "flowing"},
+	{LIQUID_SOURCE, "source"},
+	{0, NULL},
+};
+
+struct EnumString es_NodeBoxType[] =
+{
+	{NODEBOX_REGULAR, "regular"},
+	{NODEBOX_FIXED, "fixed"},
+	{NODEBOX_WALLMOUNTED, "wallmounted"},
+	{0, NULL},
+};
+
+struct EnumString es_Diggability[] =
+{
+	{DIGGABLE_NOT, "not"},
+	{DIGGABLE_NORMAL, "normal"},
+	{DIGGABLE_CONSTANT, "constant"},
+	{0, NULL},
+};
+
+/*
+	Lua table field getters/setters
+*/
+
+static bool getstringfield(lua_State *L, int table,
+		const char *fieldname, std::string &result)
+{
+	lua_getfield(L, table, fieldname);
+	bool got = false;
+	if(lua_isstring(L, -1)){
+		result = lua_tostring(L, -1);
+		got = true;
+	}
+	lua_pop(L, 1);
+	return got;
+}
+
+static bool getintfield(lua_State *L, int table,
+		const char *fieldname, int &result)
+{
+	lua_getfield(L, table, fieldname);
+	bool got = false;
+	if(lua_isnumber(L, -1)){
+		result = lua_tonumber(L, -1);
+		got = true;
+	}
+	lua_pop(L, 1);
+	return got;
+}
+
+static bool getfloatfield(lua_State *L, int table,
+		const char *fieldname, float &result)
+{
+	lua_getfield(L, table, fieldname);
+	bool got = false;
+	if(lua_isnumber(L, -1)){
+		result = lua_tonumber(L, -1);
+		got = true;
+	}
+	lua_pop(L, 1);
+	return got;
+}
+
+static bool getboolfield(lua_State *L, int table,
+		const char *fieldname, bool &result)
+{
+	lua_getfield(L, table, fieldname);
+	bool got = false;
+	if(lua_isboolean(L, -1)){
+		result = lua_toboolean(L, -1);
+		got = true;
+	}
+	lua_pop(L, 1);
+	return got;
+}
+
+static std::string getstringfield_default(lua_State *L, int table,
+		const char *fieldname, const std::string &default_)
+{
+	std::string result = default_;
+	getstringfield(L, table, fieldname, result);
+	return result;
+}
+
+static int getintfield_default(lua_State *L, int table,
+		const char *fieldname, int default_)
+{
+	int result = default_;
+	getintfield(L, table, fieldname, result);
+	return result;
+}
+
+/*static float getfloatfield_default(lua_State *L, int table,
+		const char *fieldname, float default_)
+{
+	float result = default_;
+	getfloatfield(L, table, fieldname, result);
+	return result;
+}*/
+
+static bool getboolfield_default(lua_State *L, int table,
+		const char *fieldname, bool default_)
+{
+	bool result = default_;
+	getboolfield(L, table, fieldname, result);
+	return result;
+}
+
+static bool string_to_enum(const EnumString *spec, int &result,
+		const std::string &str)
+{
+	const EnumString *esp = spec;
+	while(esp->str){
+		if(str == std::string(esp->str)){
+			result = esp->num;
+			return true;
+		}
+		esp++;
+	}
+	return false;
+}
+
+/*static bool enum_to_string(const EnumString *spec, std::string &result,
+		int num)
+{
+	const EnumString *esp = spec;
+	while(esp){
+		if(num == esp->num){
+			result = esp->str;
+			return true;
+		}
+		esp++;
+	}
+	return false;
+}*/
+
+static int getenumfield(lua_State *L, int table,
+		const char *fieldname, const EnumString *spec, int default_)
+{
+	int result = default_;
+	string_to_enum(spec, result,
+			getstringfield_default(L, table, fieldname, ""));
+	return result;
+}
+
+static void setfloatfield(lua_State *L, int table,
+		const char *fieldname, float value)
+{
+	lua_pushnumber(L, value);
+	if(table < 0)
+		table -= 1;
+	lua_setfield(L, table, fieldname);
+}
+
+static void warn_if_field_exists(lua_State *L, int table,
+		const char *fieldname, const std::string &message)
+{
+	lua_getfield(L, table, fieldname);
+	if(!lua_isnil(L, -1)){
+		infostream<<script_get_backtrace(L)<<std::endl;
+		infostream<<"WARNING: field \""<<fieldname<<"\": "
+				<<message<<std::endl;
+	}
+	lua_pop(L, 1);
+}
+
+/*
+	Convert common structures from or to lua tables
+*/
+
+static void objectref_get(lua_State *L, u16 id);
+static void luaentity_get(lua_State *L, u16 id);
+
 static v3f readFloatPos(lua_State *L, int index)
 {
 	v3f pos;
@@ -267,9 +489,9 @@ static video::SColor readARGB8(lua_State *L, int index)
 	return color;
 }
 
-static core::aabbox3d<f32> read_aabbox3df32(lua_State *L, int index, f32 scale)
+static aabb3f read_aabb3f(lua_State *L, f32 scale)
 {
-	core::aabbox3d<f32> box;
+	aabb3f box;
 	if(lua_istable(L, -1)){
 		lua_rawgeti(L, -1, 1);
 		box.MinEdge.X = lua_tonumber(L, -1) * scale;
@@ -291,6 +513,77 @@ static core::aabbox3d<f32> read_aabbox3df32(lua_State *L, int index, f32 scale)
 		lua_pop(L, 1);
 	}
 	return box;
+}
+
+static std::vector<aabb3f> read_aabb3f_vector(lua_State *L, f32 scale)
+{
+	std::vector<aabb3f> boxes;
+	if(lua_istable(L, -1)){
+		int n = lua_objlen(L, -1);
+		for(int i = 1; i <= n; i++)
+		{
+			lua_rawgeti(L, -1, i);
+			boxes.push_back(read_aabb3f(L, scale));
+			lua_pop(L, 1);
+		}
+	}
+	return boxes;
+}
+
+static NodeBox read_nodebox(lua_State *L)
+{
+	NodeBox nodebox;
+	if(lua_istable(L, -1)){
+		nodebox.type = (NodeBoxType)getenumfield(L, -1, "type",
+				es_NodeBoxType, NODEBOX_REGULAR);
+
+		lua_getfield(L, -1, "fixed");
+		if(lua_istable(L, -1))
+			nodebox.fixed = read_aabb3f_vector(L, BS);
+		lua_pop(L, 1);
+
+		lua_getfield(L, -1, "wall_top");
+		if(lua_istable(L, -1))
+			nodebox.wall_top = read_aabb3f(L, BS);
+		lua_pop(L, 1);
+
+		lua_getfield(L, -1, "wall_bottom");
+		if(lua_istable(L, -1))
+			nodebox.wall_bottom = read_aabb3f(L, BS);
+		lua_pop(L, 1);
+
+		lua_getfield(L, -1, "wall_side");
+		if(lua_istable(L, -1))
+			nodebox.wall_side = read_aabb3f(L, BS);
+		lua_pop(L, 1);
+	}
+	return nodebox;
+}
+
+static void push_pointed_thing(lua_State *L, const PointedThing& pointed)
+{
+	lua_newtable(L);
+	if(pointed.type == POINTEDTHING_NODE)
+	{
+		lua_pushstring(L, "node");
+		lua_setfield(L, -2, "type");
+		pushpos(L, pointed.node_undersurface);
+		lua_setfield(L, -2, "under");
+		pushpos(L, pointed.node_abovesurface);
+		lua_setfield(L, -2, "above");
+	}
+	else if(pointed.type == POINTEDTHING_OBJECT)
+	{
+		lua_pushstring(L, "object");
+		lua_setfield(L, -2, "type");
+		objectref_get(L, pointed.object_id);
+		lua_setfield(L, -2, "ref");
+	}
+	else
+	{
+		lua_pushstring(L, "nothing");
+		lua_setfield(L, -2, "type");
+	}
 }
 
 static v2s16 read_v2s16(lua_State *L, int index)
@@ -317,154 +610,6 @@ static v2f read_v2f(lua_State *L, int index)
 	p.Y = lua_tonumber(L, -1);
 	lua_pop(L, 1);
 	return p;
-}
-
-static bool getstringfield(lua_State *L, int table,
-		const char *fieldname, std::string &result)
-{
-	lua_getfield(L, table, fieldname);
-	bool got = false;
-	if(lua_isstring(L, -1)){
-		result = lua_tostring(L, -1);
-		got = true;
-	}
-	lua_pop(L, 1);
-	return got;
-}
-
-static bool getintfield(lua_State *L, int table,
-		const char *fieldname, int &result)
-{
-	lua_getfield(L, table, fieldname);
-	bool got = false;
-	if(lua_isnumber(L, -1)){
-		result = lua_tonumber(L, -1);
-		got = true;
-	}
-	lua_pop(L, 1);
-	return got;
-}
-
-static bool getfloatfield(lua_State *L, int table,
-		const char *fieldname, float &result)
-{
-	lua_getfield(L, table, fieldname);
-	bool got = false;
-	if(lua_isnumber(L, -1)){
-		result = lua_tonumber(L, -1);
-		got = true;
-	}
-	lua_pop(L, 1);
-	return got;
-}
-
-static bool getboolfield(lua_State *L, int table,
-		const char *fieldname, bool &result)
-{
-	lua_getfield(L, table, fieldname);
-	bool got = false;
-	if(lua_isboolean(L, -1)){
-		result = lua_toboolean(L, -1);
-		got = true;
-	}
-	lua_pop(L, 1);
-	return got;
-}
-
-static std::string getstringfield_default(lua_State *L, int table,
-		const char *fieldname, const std::string &default_)
-{
-	std::string result = default_;
-	getstringfield(L, table, fieldname, result);
-	return result;
-}
-
-static int getintfield_default(lua_State *L, int table,
-		const char *fieldname, int default_)
-{
-	int result = default_;
-	getintfield(L, table, fieldname, result);
-	return result;
-}
-
-/*static float getfloatfield_default(lua_State *L, int table,
-		const char *fieldname, float default_)
-{
-	float result = default_;
-	getfloatfield(L, table, fieldname, result);
-	return result;
-}*/
-
-static bool getboolfield_default(lua_State *L, int table,
-		const char *fieldname, bool default_)
-{
-	bool result = default_;
-	getboolfield(L, table, fieldname, result);
-	return result;
-}
-
-struct EnumString
-{
-	int num;
-	const char *str;
-};
-
-static bool string_to_enum(const EnumString *spec, int &result,
-		const std::string &str)
-{
-	const EnumString *esp = spec;
-	while(esp->str){
-		if(str == std::string(esp->str)){
-			result = esp->num;
-			return true;
-		}
-		esp++;
-	}
-	return false;
-}
-
-/*static bool enum_to_string(const EnumString *spec, std::string &result,
-		int num)
-{
-	const EnumString *esp = spec;
-	while(esp){
-		if(num == esp->num){
-			result = esp->str;
-			return true;
-		}
-		esp++;
-	}
-	return false;
-}*/
-
-static int getenumfield(lua_State *L, int table,
-		const char *fieldname, const EnumString *spec, int default_)
-{
-	int result = default_;
-	string_to_enum(spec, result,
-			getstringfield_default(L, table, fieldname, ""));
-	return result;
-}
-
-static void setfloatfield(lua_State *L, int table,
-		const char *fieldname, float value)
-{
-	lua_pushnumber(L, value);
-	if(table < 0)
-		table -= 1;
-	lua_setfield(L, table, fieldname);
-}
-
-static void warn_if_field_exists(lua_State *L, int table,
-		const char *fieldname, const std::string &message)
-{
-	lua_getfield(L, table, fieldname);
-	if(!lua_isnil(L, -1)){
-		infostream<<script_get_backtrace(L)<<std::endl;
-		infostream<<"WARNING: field \""<<fieldname<<"\": "
-				<<message<<std::endl;
-	}
-	lua_pop(L, 1);
 }
 
 /*
@@ -610,60 +755,6 @@ static void push_tool_definition(lua_State *L, const ToolDefinition &def)
 	lua_setfield(L, -2, "image");
 	set_tool_digging_properties(L, -1, def.properties);
 }
-
-/*
-	EnumString definitions
-*/
-
-struct EnumString es_DrawType[] =
-{
-	{NDT_NORMAL, "normal"},
-	{NDT_AIRLIKE, "airlike"},
-	{NDT_LIQUID, "liquid"},
-	{NDT_FLOWINGLIQUID, "flowingliquid"},
-	{NDT_GLASSLIKE, "glasslike"},
-	{NDT_ALLFACES, "allfaces"},
-	{NDT_ALLFACES_OPTIONAL, "allfaces_optional"},
-	{NDT_TORCHLIKE, "torchlike"},
-	{NDT_SIGNLIKE, "signlike"},
-	{NDT_PLANTLIKE, "plantlike"},
-	{NDT_FENCELIKE, "fencelike"},
-	{NDT_RAILLIKE, "raillike"},
-	{0, NULL},
-};
-
-struct EnumString es_ContentParamType[] =
-{
-	{CPT_NONE, "none"},
-	{CPT_LIGHT, "light"},
-	{CPT_MINERAL, "mineral"},
-	{CPT_FACEDIR_SIMPLE, "facedir_simple"},
-	{0, NULL},
-};
-
-struct EnumString es_LiquidType[] =
-{
-	{LIQUID_NONE, "none"},
-	{LIQUID_FLOWING, "flowing"},
-	{LIQUID_SOURCE, "source"},
-	{0, NULL},
-};
-
-struct EnumString es_NodeBoxType[] =
-{
-	{NODEBOX_REGULAR, "regular"},
-	{NODEBOX_FIXED, "fixed"},
-	{NODEBOX_WALLMOUNTED, "wallmounted"},
-	{0, NULL},
-};
-
-struct EnumString es_Diggability[] =
-{
-	{DIGGABLE_NOT, "not"},
-	{DIGGABLE_NORMAL, "normal"},
-	{DIGGABLE_CONSTANT, "constant"},
-	{0, NULL},
-};
 
 /*
 	Global functions
@@ -1029,6 +1120,9 @@ static int l_register_node(lua_State *L)
 	f.param_type = (ContentParamType)getenumfield(L, nodedef_table, "paramtype",
 			es_ContentParamType, CPT_NONE);
 	
+	f.param_type_2 = (ContentParamType2)getenumfield(L, nodedef_table, "paramtype2",
+			es_ContentParamType2, CPT2_NONE);
+	
 	// True for all ground-like things like stone and mud, false for eg. trees
 	getboolfield(L, nodedef_table, "is_ground_content", f.is_ground_content);
 	f.light_propagates = (f.param_type == CPT_LIGHT);
@@ -1048,7 +1142,9 @@ static int l_register_node(lua_State *L)
 	getboolfield(L, nodedef_table, "buildable_to", f.buildable_to);
 	// If true, param2 is set to direction when placed. Used for torches.
 	// NOTE: the direction format is quite inefficient and should be changed
-	getboolfield(L, nodedef_table, "wall_mounted", f.wall_mounted);
+	//f.wall_mounted = (f.param_type_2 == CPT2_WALLMOUNTED);
+	warn_if_field_exists(L, nodedef_table, "wall_mounted",
+			"deprecated: determined from paramtype2");
 	// Whether this content type often contains mineral.
 	// Used for texture atlas creation.
 	// Currently only enabled for CONTENT_STONE.
@@ -1081,32 +1177,15 @@ static int l_register_node(lua_State *L)
 			"light_source", f.light_source);
 	f.damage_per_second = getintfield_default(L, nodedef_table,
 			"damage_per_second", f.damage_per_second);
-	
+
+	lua_getfield(L, nodedef_table, "node_box");
+	if(lua_istable(L, -1))
+		f.node_box = read_nodebox(L);
+	lua_pop(L, 1);
+
 	lua_getfield(L, nodedef_table, "selection_box");
-	if(lua_istable(L, -1)){
-		f.selection_box.type = (NodeBoxType)getenumfield(L, -1, "type",
-				es_NodeBoxType, NODEBOX_REGULAR);
-
-		lua_getfield(L, -1, "fixed");
-		if(lua_istable(L, -1))
-			f.selection_box.fixed = read_aabbox3df32(L, -1, BS);
-		lua_pop(L, 1);
-
-		lua_getfield(L, -1, "wall_top");
-		if(lua_istable(L, -1))
-			f.selection_box.wall_top = read_aabbox3df32(L, -1, BS);
-		lua_pop(L, 1);
-
-		lua_getfield(L, -1, "wall_bottom");
-		if(lua_istable(L, -1))
-			f.selection_box.wall_bottom = read_aabbox3df32(L, -1, BS);
-		lua_pop(L, 1);
-
-		lua_getfield(L, -1, "wall_side");
-		if(lua_istable(L, -1))
-			f.selection_box.wall_side = read_aabbox3df32(L, -1, BS);
-		lua_pop(L, 1);
-	}
+	if(lua_istable(L, -1))
+		f.selection_box = read_nodebox(L);
 	lua_pop(L, 1);
 
 	lua_getfield(L, nodedef_table, "material");
@@ -2966,32 +3045,6 @@ void scriptapi_get_creative_inventory(lua_State *L, ServerRemotePlayer *player)
 	craftitem
 */
 
-static void pushPointedThing(lua_State *L, const PointedThing& pointed)
-{
-	lua_newtable(L);
-	if(pointed.type == POINTEDTHING_NODE)
-	{
-		lua_pushstring(L, "node");
-		lua_setfield(L, -2, "type");
-		pushpos(L, pointed.node_undersurface);
-		lua_setfield(L, -2, "under");
-		pushpos(L, pointed.node_abovesurface);
-		lua_setfield(L, -2, "above");
-	}
-	else if(pointed.type == POINTEDTHING_OBJECT)
-	{
-		lua_pushstring(L, "object");
-		lua_setfield(L, -2, "type");
-		objectref_get(L, pointed.object_id);
-		lua_setfield(L, -2, "ref");
-	}
-	else
-	{
-		lua_pushstring(L, "nothing");
-		lua_setfield(L, -2, "type");
-	}
-}
-
 void scriptapi_add_craftitem(lua_State *L, const char *name)
 {
 	StackUnroller stack_unroller(L);
@@ -3111,7 +3164,7 @@ bool scriptapi_craftitem_on_use(lua_State *L, const char *name,
 		// Call function
 		lua_pushstring(L, name);
 		objectref_get_or_create(L, user);
-		pushPointedThing(L, pointed);
+		push_pointed_thing(L, pointed);
 		if(lua_pcall(L, 3, 1, 0))
 			script_error(L, "error: %s", lua_tostring(L, -1));
 		result = lua_toboolean(L, -1);
@@ -3416,7 +3469,7 @@ void scriptapi_luaentity_get_properties(lua_State *L, u16 id,
 
 	lua_getfield(L, -1, "collisionbox");
 	if(lua_istable(L, -1))
-		prop->collisionbox = read_aabbox3df32(L, -1, 1.0);
+		prop->collisionbox = read_aabb3f(L, 1.0);
 	lua_pop(L, 1);
 
 	getstringfield(L, -1, "visual", prop->visual);

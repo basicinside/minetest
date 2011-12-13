@@ -43,7 +43,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 //              same as passing NULL.
 void makeCuboid(video::SMaterial &material, MeshCollector *collector,
 	AtlasPointer* pa, video::SColor &c,
-	v3f &pos, f32 rx, f32 ry, f32 rz, f32* txc)
+	const v3f &pos, f32 rx, f32 ry, f32 rz, f32* txc)
 {
 	f32 tu0=pa->x0();
 	f32 tu1=pa->x1();
@@ -1007,6 +1007,91 @@ void mapblock_mesh_generate_special(MeshMakeData *data,
 
 			u16 indices[] = {0,1,2,2,3,0};
 			collector.append(material_rail, vertices, 4, indices, 6);
+		break;}
+		case NDT_NODEBOX:
+		{
+			video::SMaterial material_nodebox[6];
+			const AtlasPointer *pa_nodebox[6];
+			for(int i = 0; i < 6; i++)
+			{
+				material_nodebox[i].setFlag(video::EMF_LIGHTING, false);
+				material_nodebox[i].setFlag(video::EMF_BILINEAR_FILTER, false);
+				material_nodebox[i].setFlag(video::EMF_FOG_ENABLE, true);
+				material_nodebox[i].MaterialType = video::EMT_TRANSPARENT_ALPHA_CHANNEL_REF;
+				pa_nodebox[i] = &f.tiles[i].texture;
+				material_nodebox[i].setTexture(0, pa_nodebox[i]->atlas);
+			}
+
+			u8 l = decode_light(undiminish_light(n.getLightBlend(data->m_daynight_ratio, nodedef)));
+			video::SColor c = MapBlock_LightColor(255, l);
+
+			v3f pos = intToFloat(p+blockpos_nodes, BS);
+
+			std::vector<aabb3f> boxes = n.getNodeBoxes(nodedef);
+			for(std::vector<aabb3f>::iterator
+					i = boxes.begin();
+					i != boxes.end(); i++)
+			{
+				v3f min = i->MinEdge + pos;
+				v3f max = i->MaxEdge + pos;
+
+				f32 tx1 = (i->MinEdge.X/BS)+0.5;
+				f32 ty1 = (i->MinEdge.Y/BS)+0.5;
+				f32 tz1 = (i->MinEdge.Z/BS)+0.5;
+				f32 tx2 = (i->MaxEdge.X/BS)+0.5;
+				f32 ty2 = (i->MaxEdge.Y/BS)+0.5;
+				f32 tz2 = (i->MaxEdge.Z/BS)+0.5;
+
+				video::S3DVertex vertices[24] =
+				{
+					// up
+					video::S3DVertex(min.X,max.Y,min.Z, 0,0,0, c, tx1,1-tz1),
+					video::S3DVertex(min.X,max.Y,max.Z, 0,0,0, c, tx1,1-tz2),
+					video::S3DVertex(max.X,max.Y,max.Z, 0,0,0, c, tx2,1-tz2),
+					video::S3DVertex(max.X,max.Y,min.Z, 0,0,0, c, tx2,1-tz1),
+					// down
+					video::S3DVertex(max.X,min.Y,max.Z, 0,0,0, c, tx2,tz2),
+					video::S3DVertex(min.X,min.Y,max.Z, 0,0,0, c, tx1,tz2),
+					video::S3DVertex(min.X,min.Y,min.Z, 0,0,0, c, tx1,tz1),
+					video::S3DVertex(max.X,min.Y,min.Z, 0,0,0, c, tx2,tz1),
+					// right
+					video::S3DVertex(max.X,max.Y,min.Z, 0,0,0, c, tz1,1-ty2),
+					video::S3DVertex(max.X,max.Y,max.Z, 0,0,0, c, tz2,1-ty2),
+					video::S3DVertex(max.X,min.Y,max.Z, 0,0,0, c, tz2,1-ty1),
+					video::S3DVertex(max.X,min.Y,min.Z, 0,0,0, c, tz1,1-ty1),
+					// left
+					video::S3DVertex(min.X,max.Y,max.Z, 0,0,0, c, 1-tz2,1-ty2),
+					video::S3DVertex(min.X,max.Y,min.Z, 0,0,0, c, 1-tz1,1-ty2),
+					video::S3DVertex(min.X,min.Y,min.Z, 0,0,0, c, 1-tz1,1-ty1),
+					video::S3DVertex(min.X,min.Y,max.Z, 0,0,0, c, 1-tz2,1-ty1),
+					// back
+					video::S3DVertex(min.X,max.Y,min.Z, 0,0,0, c, tx1,1-ty2),
+					video::S3DVertex(max.X,max.Y,min.Z, 0,0,0, c, tx2,1-ty2),
+					video::S3DVertex(max.X,min.Y,min.Z, 0,0,0, c, tx2,1-ty1),
+					video::S3DVertex(min.X,min.Y,min.Z, 0,0,0, c, tx1,1-ty1),
+					// front
+					video::S3DVertex(max.X,max.Y,max.Z, 0,0,0, c, 1-tx2,1-ty2),
+					video::S3DVertex(min.X,max.Y,max.Z, 0,0,0, c, 1-tx1,1-ty2),
+					video::S3DVertex(min.X,min.Y,max.Z, 0,0,0, c, 1-tx1,1-ty1),
+					video::S3DVertex(max.X,min.Y,max.Z, 0,0,0, c, 1-tx2,1-ty1),
+				};
+
+				for(s32 j=0; j<24; j++)
+				{
+					const AtlasPointer *pa = pa_nodebox[j/4];
+					vertices[j].TCoords *= pa->size;
+					vertices[j].TCoords += pa->pos;
+				}
+
+				u16 indices[] = {0,1,2,2,3,0};
+
+				// Add to mesh collector
+				for(s32 j=0; j<24; j+=4)
+				{
+					collector.append(material_nodebox[j/4],
+						vertices+j, 4, indices, 6);
+				}
+			}
 		break;}
 		}
 	}

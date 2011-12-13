@@ -156,25 +156,25 @@ int axisAlignedCollision(
 }
 
 
-struct Nodebox
+struct CollisionBox
 {
 	aabb3f box;
 	bool is_unloaded;
 	bool is_step_up;
 
-	Nodebox(const aabb3f &box_, bool is_unloaded_, bool is_step_up_):
+	CollisionBox(const aabb3f &box_, bool is_unloaded_, bool is_step_up_):
 		box(box_), is_unloaded(is_unloaded_), is_step_up(is_step_up_) {}
 };
 
-struct NodeboxCompareByDistance
+struct CollisionBoxCompareByDistance
 {
 	v3f origin;
 
-	NodeboxCompareByDistance(v3f origin_): origin(origin_) {}
+	CollisionBoxCompareByDistance(v3f origin_): origin(origin_) {}
 
 	// Computes the manhattan distance between the box and m_origin.
 	// Returns 0 if m_origin is inside the box.
-	inline f32 getDistance(const Nodebox &nb) const
+	inline f32 getDistance(const CollisionBox &nb) const
 	{
 		f32 xd = getDistanceFromInterval(origin.X, nb.box.MinEdge.X, nb.box.MaxEdge.X);
 		f32 yd = getDistanceFromInterval(origin.Y, nb.box.MinEdge.Y, nb.box.MaxEdge.Y);
@@ -192,7 +192,7 @@ struct NodeboxCompareByDistance
 			return 0;
 	}
 
-	bool operator()(const Nodebox &a, const Nodebox &b) const
+	bool operator()(const CollisionBox &a, const CollisionBox &b) const
 	{
 		return getDistance(a) < getDistance(b);
 	}
@@ -216,7 +216,7 @@ collisionMoveResult collisionMoveSimple(Map *map, IGameDef *gamedef,
 	/*
 		Collect node boxes in movement range
 	*/
-	std::vector<Nodebox> nodeboxes;
+	std::vector<CollisionBox> cboxes;
 	{
 	TimeTaker tt2("collisionMoveSimple collect boxes");
 
@@ -239,14 +239,22 @@ collisionMoveResult collisionMoveSimple(Map *map, IGameDef *gamedef,
 			if(gamedef->getNodeDefManager()->get(n).walkable == false)
 				continue;
 
-			aabb3f box = getNodeBox(v3s16(x,y,z), BS);
-			nodeboxes.push_back(Nodebox(box, false, false));
+			std::vector<aabb3f> nodeboxes = n.getNodeBoxes(gamedef->ndef());
+			for(std::vector<aabb3f>::iterator
+					i = nodeboxes.begin();
+					i != nodeboxes.end(); i++)
+			{
+				aabb3f box = *i;
+				box.MinEdge += v3f(x, y, z)*BS;
+				box.MaxEdge += v3f(x, y, z)*BS;
+				cboxes.push_back(CollisionBox(box, false, false));
+			}
 		}
 		catch(InvalidPositionException &e)
 		{
 			// Collide with unloaded nodes
 			aabb3f box = getNodeBox(v3s16(x,y,z), BS);
-			nodeboxes.push_back(Nodebox(box, true, false));
+			cboxes.push_back(CollisionBox(box, true, false));
 		}
 	}
 	} // tt2
@@ -282,11 +290,11 @@ collisionMoveResult collisionMoveSimple(Map *map, IGameDef *gamedef,
 		}
 
 		/*
-			Sort nodeboxes by distance from (old) object position.
+			Sort collision boxes by distance from (old) object position.
 			NOTE: This is a heuristic.
 		*/
-		NodeboxCompareByDistance comparator(pos_f);
-		std::sort(nodeboxes.begin(), nodeboxes.end(), comparator);
+		CollisionBoxCompareByDistance comparator(pos_f);
+		std::sort(cboxes.begin(), cboxes.end(), comparator);
 
 		aabb3f movingbox = box_0;
 		movingbox.MinEdge += pos_f;
@@ -297,14 +305,14 @@ collisionMoveResult collisionMoveSimple(Map *map, IGameDef *gamedef,
 		/*
 			Go through every nodebox
 		*/
-		for(u32 boxindex = 0; boxindex < nodeboxes.size(); boxindex++)
+		for(u32 boxindex = 0; boxindex < cboxes.size(); boxindex++)
 		{
 			// Ignore if already stepped up this nodebox.
-			if(nodeboxes[boxindex].is_step_up)
+			if(cboxes[boxindex].is_step_up)
 				continue;
 
 			// Find nearest collision of the two boxes (raytracing-like)
-			const aabb3f& staticbox = nodeboxes[boxindex].box;
+			const aabb3f& staticbox = cboxes[boxindex].box;
 			f32 dtime_tmp;
 			collided = axisAlignedCollision(staticbox, movingbox, speed_f, d, dtime_tmp);
 
@@ -344,7 +352,7 @@ collisionMoveResult collisionMoveSimple(Map *map, IGameDef *gamedef,
 			if(step_up)
 			{
 				// Special case: Handle stairs
-				nodeboxes[boxindex].is_step_up = true;
+				cboxes[boxindex].is_step_up = true;
 			}
 			else if(collided == 0) // X
 			{
@@ -380,11 +388,11 @@ collisionMoveResult collisionMoveSimple(Map *map, IGameDef *gamedef,
 	aabb3f box = box_0;
 	box.MinEdge += pos_f;
 	box.MaxEdge += pos_f;
-	for(u32 boxindex = 0; boxindex < nodeboxes.size(); boxindex++)
+	for(u32 boxindex = 0; boxindex < cboxes.size(); boxindex++)
 	{
-		const aabb3f& nodebox = nodeboxes[boxindex].box;
-		bool is_unloaded = nodeboxes[boxindex].is_unloaded;
-		bool is_step_up = nodeboxes[boxindex].is_step_up;
+		const aabb3f& nodebox = cboxes[boxindex].box;
+		bool is_unloaded = cboxes[boxindex].is_unloaded;
+		bool is_step_up = cboxes[boxindex].is_step_up;
 
 		/*
 			See if the object is touching ground.
