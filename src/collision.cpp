@@ -162,9 +162,7 @@ bool wouldCollideWithCeiling(
 		const aabb3f &movingbox,
 		f32 y_increase, f32 d)
 {
-	dstream<<"wouldCollideWithCeiling, y_increase="<<y_increase<<"\n";
-
-	//TimeTaker tt("hitCeiling");
+	//TimeTaker tt("wouldCollideWithCeiling");
 
 	assert(y_increase >= 0);
 
