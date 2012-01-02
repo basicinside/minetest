@@ -992,6 +992,7 @@ void the_game(
 	bool invert_mouse = g_settings->getBool("invert_mouse");
 
 	bool respawn_menu_active = false;
+	bool update_wielded_item_trigger = false;
 
 	bool show_profiler = false;
 	bool force_fog_off = false;
@@ -1640,6 +1641,8 @@ void the_game(
 				else if(event.type == CE_TEXTURES_UPDATED)
 				{
 					update_skybox(driver, tsrc, smgr, skybox, brightness);
+					
+					update_wielded_item_trigger = true;
 				}
 			}
 		}
@@ -2218,7 +2221,12 @@ void the_game(
 		{
 			//infostream<<"Updating local inventory"<<std::endl;
 			client.getLocalInventory(local_inventory);
-
+			
+			update_wielded_item_trigger = true;
+		}
+		if(update_wielded_item_trigger)
+		{
+			update_wielded_item_trigger = false;
 			// Update wielded tool
 			InventoryList *mlist = local_inventory.getList("main");
 			InventoryItem *item = NULL;
