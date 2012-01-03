@@ -73,9 +73,15 @@ scene::IAnimatedMesh* createCubeMesh(v3f scale)
 	{
 		scene::IMeshBuffer *buf = new scene::SMeshBuffer();
 		buf->append(vertices + 4 * i, 4, indices, 6);
+		// Set default material
+		buf->getMaterial().setFlag(video::EMF_LIGHTING, false);
+		buf->getMaterial().setFlag(video::EMF_BILINEAR_FILTER, false);
+		buf->getMaterial().MaterialType = video::EMT_TRANSPARENT_ALPHA_CHANNEL_REF;
+		// Add mesh buffer to mesh
 		mesh->addMeshBuffer(buf);
 		buf->drop();
 	}
+
 	scene::SAnimatedMesh *anim_mesh = new scene::SAnimatedMesh(mesh);
 	mesh->drop();
 	scaleMesh(anim_mesh, scale);  // also recalculates bounding box
@@ -280,6 +286,13 @@ scene::IAnimatedMesh* createExtrudedMesh(video::ITexture *texture,
 		}
 		img1->drop();
 	}
+
+	// Set default material
+	mesh->getMeshBuffer(0)->getMaterial().setTexture(0, texture);
+	mesh->getMeshBuffer(0)->getMaterial().setFlag(video::EMF_LIGHTING, false);
+	mesh->getMeshBuffer(0)->getMaterial().setFlag(video::EMF_BILINEAR_FILTER, false);
+	mesh->getMeshBuffer(0)->getMaterial().MaterialType = video::EMT_TRANSPARENT_ALPHA_CHANNEL_REF;
+
 	scaleMesh(mesh, scale);  // also recalculates bounding box
 	return mesh;
 }
@@ -301,6 +314,35 @@ void scaleMesh(scene::IMesh *mesh, v3f scale)
 		for(u16 i=0; i<vc; i++)
 		{
 			vertices[i].Pos *= scale;
+		}
+		buf->recalculateBoundingBox();
+
+		// calculate total bounding box
+		if(j == 0)
+			bbox = buf->getBoundingBox();
+		else
+			bbox.addInternalBox(buf->getBoundingBox());
+	}
+	mesh->setBoundingBox(bbox);
+}
+
+void translateMesh(scene::IMesh *mesh, v3f vec)
+{
+	if(mesh == NULL)
+		return;
+
+	core::aabbox3d<f32> bbox;
+	bbox.reset(0,0,0);
+
+	u16 mc = mesh->getMeshBufferCount();
+	for(u16 j=0; j<mc; j++)
+	{
+		scene::IMeshBuffer *buf = mesh->getMeshBuffer(j);
+		video::S3DVertex *vertices = (video::S3DVertex*)buf->getVertices();
+		u16 vc = buf->getVertexCount();
+		for(u16 i=0; i<vc; i++)
+		{
+			vertices[i].Pos += vec;
 		}
 		buf->recalculateBoundingBox();
 

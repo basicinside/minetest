@@ -48,6 +48,11 @@ scene::IAnimatedMesh* createExtrudedMesh(video::ITexture *texture,
 void scaleMesh(scene::IMesh *mesh, v3f scale);
 
 /*
+	Translate each vertex coordinate by the specified vector.
+*/
+void translateMesh(scene::IMesh *mesh, v3f vec);
+
+/*
 	Set a constant color for all vertices in the mesh
 */
 void setMeshColor(scene::IMesh *mesh, const video::SColor &color);
