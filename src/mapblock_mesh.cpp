@@ -83,6 +83,39 @@ void MeshMakeData::fill(u32 daynight_ratio, MapBlock *block)
 	}
 }
 
+void MeshMakeData::fillSingleNode(u32 daynight_ratio, MapNode *node)
+{
+	m_daynight_ratio = daynight_ratio;
+	m_blockpos = v3s16(0,0,0);
+	m_temp_mods.clear();
+	
+	v3s16 blockpos_nodes = v3s16(0,0,0);
+	VoxelArea area(blockpos_nodes-v3s16(1,1,1)*MAP_BLOCKSIZE,
+			blockpos_nodes+v3s16(1,1,1)*MAP_BLOCKSIZE*2-v3s16(1,1,1));
+	s32 volume = area.getVolume();
+	s32 our_node_index = area.index(1,1,1);
+
+	// Allocate this block + neighbors
+	m_vmanip.clear();
+	m_vmanip.addArea(area);
+
+	// Fill in data
+	MapNode *data = new MapNode[volume];
+	for(s32 i = 0; i < volume; i++)
+	{
+		if(i == our_node_index)
+		{
+			data[i] = *node;
+		}
+		else
+		{
+			data[i] = MapNode(CONTENT_AIR, LIGHT_MAX, 0);
+		}
+	}
+	m_vmanip.copyFrom(data, area, area.MinEdge, area.MinEdge, area.getExtent());
+	delete[] data;
+}
+
 /*
 	vertex_dirs: v3s16[4]
 */

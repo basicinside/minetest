@@ -140,6 +140,11 @@ struct MeshMakeData
 		parent of block.
 	*/
 	void fill(u32 daynight_ratio, MapBlock *block);
+
+	/*
+		Set up with only a single node at (1,1,1)
+	*/
+	void fillSingleNode(u32 daynight_ratio, MapNode *node);
 };
 
 // This is the highest-level function in here
