@@ -33,8 +33,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "log.h"
 #include "nodemetadata.h"
 #include "nodedef.h"
-#include "tooldef.h"
-#include "craftitemdef.h"
+#include "itemdef.h"
 #include <IFileSystem.h>
 #include "sha1.h"
 #include "base64.h"
@@ -207,14 +206,12 @@ Client::Client(
 		std::string password,
 		MapDrawControl &control,
 		IWritableTextureSource *tsrc,
-		IWritableToolDefManager *tooldef,
-		IWritableNodeDefManager *nodedef,
-		IWritableCraftItemDefManager *craftitemdef
+		IWritableItemDefManager *itemdef,
+		IWritableNodeDefManager *nodedef
 ):
 	m_tsrc(tsrc),
-	m_tooldef(tooldef),
+	m_itemdef(itemdef),
 	m_nodedef(nodedef),
-	m_craftitemdef(craftitemdef),
 	m_mesh_update_thread(this),
 	m_env(
 		new ClientMap(this, this, control,
@@ -234,9 +231,8 @@ Client::Client(
 	m_access_denied(false),
 	m_texture_receive_progress(0),
 	m_textures_received(false),
-	m_tooldef_received(false),
-	m_nodedef_received(false),
-	m_craftitemdef_received(false)
+	m_itemdef_received(false),
+	m_nodedef_received(false)
 {
 	m_packetcounter_timer = 0.0;
 	//m_delete_unused_sectors_timer = 0.0;
@@ -266,9 +262,6 @@ Client::Client(
 		player->updateName(playername);
 
 		m_env.addPlayer(player);
-		
-		// Initialize player in the inventory context
-		m_inventory_context.current_player = player;
 	}
 }
 
@@ -983,7 +976,7 @@ void Client::ProcessData(u8 *data, u32 datasize, u16 sender_peer_id)
 			//t4.stop();
 
 			//TimeTaker t1("inventory.deSerialize()", m_device);
-			player->inventory.deSerialize(is, this);
+			player->inventory.deSerialize(is);
 			//t1.stop();
 
 			m_inventory_updated = true;
@@ -1216,18 +1209,18 @@ void Client::ProcessData(u8 *data, u32 datasize, u16 sender_peer_id)
 			} else {
 				InventoryList *inv = player->inventory.getList("main");
 				std::string itemstring(deSerializeString(is));
-				if (itemstring.empty()) {
-					inv->deleteItem(0);
-					infostream
-						<<"Client: empty player item for peer "
-						<< peer_id << std::endl;
-				} else {
-					std::istringstream iss(itemstring);
-					delete inv->changeItem(0,
-							InventoryItem::deSerialize(iss, this));
-					infostream<<"Client: player item for peer " << peer_id << ": ";
-					player->getWieldItem()->serialize(infostream);
-					infostream<<std::endl;
+				InventoryItem item;
+				item.deSerialize(itemstring, m_itemdef);
+				inv->changeItem(0, item);
+				if(itemstring.empty())
+				{
+					infostream<<"Client: empty player item for peer "
+						<<peer_id<<std::endl;
+				}
+				else
+				{
+					infostream<<"Client: player item for peer "
+						<<peer_id<<": "<<itemstring<<std::endl;
 				}
 			}
 		}
@@ -1494,28 +1487,7 @@ void Client::ProcessData(u8 *data, u32 datasize, u16 sender_peer_id)
 	}
 	else if(command == TOCLIENT_TOOLDEF)
 	{
-		infostream<<"Client: Received tool definitions: packet size: "
-				<<datasize<<std::endl;
-
-		std::string datastring((char*)&data[2], datasize-2);
-		std::istringstream is(datastring, std::ios_base::binary);
-
-		m_tooldef_received = true;
-
-		// Stop threads while updating content definitions
-		m_mesh_update_thread.setRun(false);
-		// Process the remaining TextureSource queue to let MeshUpdateThread
-		// get it's remaining textures and thus let it stop
-		while(m_mesh_update_thread.IsRunning()){
-			m_tsrc->processQueue();
-		}
-		
-		std::istringstream tmp_is(deSerializeLongString(is), std::ios::binary);
-		m_tooldef->deSerialize(tmp_is);
-		
-		// Resume threads
-		m_mesh_update_thread.setRun(true);
-		m_mesh_update_thread.Start();
+		infostream<<"Client: WARNING: Ignoring TOCLIENT_TOOLDEF"<<std::endl;
 	}
 	else if(command == TOCLIENT_NODEDEF)
 	{
@@ -1531,7 +1503,7 @@ void Client::ProcessData(u8 *data, u32 datasize, u16 sender_peer_id)
 		m_mesh_update_thread.stop();
 
 		std::istringstream tmp_is(deSerializeLongString(is), std::ios::binary);
-		m_nodedef->deSerialize(tmp_is, this);
+		m_nodedef->deSerialize(tmp_is);
 		
 		if(m_textures_received){
 			// Update texture atlas
@@ -1542,19 +1514,26 @@ void Client::ProcessData(u8 *data, u32 datasize, u16 sender_peer_id)
 			m_nodedef->updateTextures(m_tsrc);
 		}
 
+		if(m_itemdef_received)
+			m_itemdef->updateTexturesAndMeshes(this);
+		
 		// Resume threads
 		m_mesh_update_thread.setRun(true);
 		m_mesh_update_thread.Start();
 	}
 	else if(command == TOCLIENT_CRAFTITEMDEF)
 	{
-		infostream<<"Client: Received CraftItem definitions: packet size: "
+		infostream<<"Client: WARNING: Ignoring TOCLIENT_CRAFTITEMDEF"<<std::endl;
+	}
+	else if(command == TOCLIENT_ITEMDEF)
+	{
+		infostream<<"Client: Received item definitions: packet size: "
 				<<datasize<<std::endl;
 
 		std::string datastring((char*)&data[2], datasize-2);
 		std::istringstream is(datastring, std::ios_base::binary);
 
-		m_craftitemdef_received = true;
+		m_itemdef_received = true;
 
 		// Stop threads while updating content definitions
 		m_mesh_update_thread.setRun(false);
@@ -1565,7 +1544,10 @@ void Client::ProcessData(u8 *data, u32 datasize, u16 sender_peer_id)
 		}
 		
 		std::istringstream tmp_is(deSerializeLongString(is), std::ios::binary);
-		m_craftitemdef->deSerialize(tmp_is);
+		m_itemdef->deSerialize(tmp_is);
+
+		if(m_nodedef_received)
+			m_itemdef->updateTexturesAndMeshes(this);
 		
 		// Resume threads
 		m_mesh_update_thread.setRun(true);
@@ -1930,11 +1912,6 @@ void Client::selectPlayerItem(u16 item)
 	//JMutexAutoLock envlock(m_env_mutex); //bulk comment-out
 	m_playeritem = item;
 	m_inventory_updated = true;
-
-	LocalPlayer *player = m_env.getLocalPlayer();
-	assert(player != NULL);
-	player->wieldItem(item);
-
 	sendPlayerItem(item);
 }
 
@@ -1958,16 +1935,18 @@ void Client::getLocalInventory(Inventory &dst)
 	dst = player->inventory;
 }
 
-InventoryContext *Client::getInventoryContext()
-{
-	return &m_inventory_context;
-}
-
 Inventory* Client::getInventory(const InventoryLocation &loc)
 {
 	switch(loc.type){
 	case InventoryLocation::UNDEFINED:
 	{}
+	break;
+	case InventoryLocation::CURRENT_PLAYER:
+	{
+		Player *player = m_env.getLocalPlayer();
+		assert(player != NULL);
+		return &player->inventory;
+	}
 	break;
 	case InventoryLocation::PLAYER:
 	{
@@ -1990,36 +1969,6 @@ Inventory* Client::getInventory(const InventoryLocation &loc)
 	}
 	return NULL;
 }
-#if 0
-Inventory* Client::getInventory(InventoryContext *c, std::string id)
-{
-	if(id == "current_player")
-	{
-		assert(c->current_player);
-		return &(c->current_player->inventory);
-	}
-	
-	Strfnd fn(id);
-	std::string id0 = fn.next(":");
-
-	if(id0 == "nodemeta")
-	{
-		v3s16 p;
-		p.X = stoi(fn.next(","));
-		p.Y = stoi(fn.next(","));
-		p.Z = stoi(fn.next(","));
-		NodeMetadata* meta = getNodeMetadata(p);
-		if(meta)
-			return meta->getInventory();
-		infostream<<"nodemeta at ("<<p.X<<","<<p.Y<<","<<p.Z<<"): "
-				<<"no metadata found"<<std::endl;
-		return NULL;
-	}
-
-	infostream<<__FUNCTION_NAME<<": unknown id "<<id<<std::endl;
-	return NULL;
-}
-#endif
 void Client::inventoryAction(InventoryAction *a)
 {
 	sendInventoryAction(a);
@@ -2232,9 +2181,9 @@ float Client::getRTT(void)
 
 // IGameDef interface
 // Under envlock
-IToolDefManager* Client::getToolDefManager()
+IItemDefManager* Client::getItemDefManager()
 {
-	return m_tooldef;
+	return m_itemdef;
 }
 INodeDefManager* Client::getNodeDefManager()
 {
@@ -2244,10 +2193,6 @@ ICraftDefManager* Client::getCraftDefManager()
 {
 	return NULL;
 	//return m_craftdef;
-}
-ICraftItemDefManager* Client::getCraftItemDefManager()
-{
-	return m_craftitemdef;
 }
 ITextureSource* Client::getTextureSource()
 {

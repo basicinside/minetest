@@ -337,6 +337,14 @@ public:
 		return ap.atlas;
 	}
 
+	// Gets a texture extruded into a mesh
+	// Note: The mesh must be deleted by the caller
+	scene::IAnimatedMesh* getTextureExtruded(const std::string &name, v3f scale)
+	{
+		return createExtrudedMesh(getTextureRaw(name),
+				m_device->getVideoDriver(), scale);
+	}
+
 	// Update new texture pointer and texture coordinates to an
 	// AtlasPointer based on it's texture id
 	void updateAP(AtlasPointer &ap);
@@ -816,14 +824,12 @@ void TextureSource::buildMainAtlas(class IGameDef *gamedef)
 		if(j == CONTENT_IGNORE || j == CONTENT_AIR)
 			continue;
 		const ContentFeatures &f = ndef->get(j);
-		for(std::set<std::string>::const_iterator
-				i = f.used_texturenames.begin();
-				i != f.used_texturenames.end(); i++)
+		for(u32 i=0; i<6; i++)
 		{
-			std::string name = *i;
+			std::string name = f.tname_tiles[i];
 			sourcelist[name] = true;
 
-			if(f.often_contains_mineral){
+			if(f.param_type == CPT_MINERAL){
 				for(int k=1; k<MINERAL_COUNT; k++){
 					std::string mineraltexture = mineral_block_texture(k);
 					std::string fulltexture = name + "^" + mineraltexture;

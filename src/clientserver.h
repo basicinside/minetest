@@ -250,6 +250,15 @@ enum ToClientCommand
 			string sha1_digest
 		}
 	*/
+
+	TOCLIENT_ITEMDEF = 0x3d,
+	/*
+		FIXME bunches?
+		u16 command
+		u32 length of next item
+		serialized ItemDefManager
+	*/
+
 };
 
 enum ToServerCommand

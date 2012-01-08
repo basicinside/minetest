@@ -103,8 +103,6 @@ void ContentFeatures::reset()
 		Cached stuff
 	*/
 #ifndef SERVER
-	inventory_texture = NULL;
-	
 	for(u16 j=0; j<CF_SPECIAL_COUNT; j++){
 		special_materials[j] = NULL;
 		special_aps[j] = NULL;
@@ -113,7 +111,6 @@ void ContentFeatures::reset()
 	visual_solidness = 0;
 	backface_culling = true;
 #endif
-	used_texturenames.clear();
 	/*
 		Actual data
 		
@@ -127,7 +124,6 @@ void ContentFeatures::reset()
 		tname_tiles[i] = "";
 	for(u16 j=0; j<CF_SPECIAL_COUNT; j++)
 		mspec_special[j] = MaterialSpec();
-	tname_inventory = "";
 	alpha = 255;
 	post_effect_color = video::SColor(0, 0, 0, 0);
 	param_type = CPT_NONE;
@@ -140,7 +136,6 @@ void ContentFeatures::reset()
 	climbable = false;
 	buildable_to = false;
 	wall_mounted = false;
-	often_contains_mineral = false;
 	dug_item = "";
 	extra_dug_item = "";
 	extra_dug_item_rarity = 2;
@@ -153,21 +148,17 @@ void ContentFeatures::reset()
 	damage_per_second = 0;
 	selection_box = NodeBox();
 	material = MaterialProperties();
-	cookresult_item = ""; // Cannot be cooked
-	furnace_cooktime = 3.0;
-	furnace_burntime = -1.0; // Cannot be burned
 }
 
 void ContentFeatures::serialize(std::ostream &os)
 {
-	writeU8(os, 0); // version
+	writeU8(os, 1); // version
 	os<<serializeString(name);
 	writeU8(os, drawtype);
 	writeF1000(os, visual_scale);
 	writeU8(os, 6);
 	for(u32 i=0; i<6; i++)
 		os<<serializeString(tname_tiles[i]);
-	os<<serializeString(tname_inventory);
 	writeU8(os, CF_SPECIAL_COUNT);
 	for(u32 i=0; i<CF_SPECIAL_COUNT; i++){
 		mspec_special[i].serialize(os);
@@ -187,7 +178,6 @@ void ContentFeatures::serialize(std::ostream &os)
 	writeU8(os, climbable);
 	writeU8(os, buildable_to);
 	writeU8(os, wall_mounted);
-	writeU8(os, often_contains_mineral);
 	os<<serializeString(dug_item);
 	os<<serializeString(extra_dug_item);
 	writeS32(os, extra_dug_item_rarity);
@@ -200,15 +190,12 @@ void ContentFeatures::serialize(std::ostream &os)
 	writeU32(os, damage_per_second);
 	selection_box.serialize(os);
 	material.serialize(os);
-	os<<serializeString(cookresult_item);
-	writeF1000(os, furnace_cooktime);
-	writeF1000(os, furnace_burntime);
 }
 
-void ContentFeatures::deSerialize(std::istream &is, IGameDef *gamedef)
+void ContentFeatures::deSerialize(std::istream &is)
 {
 	int version = readU8(is);
-	if(version != 0)
+	if(version != 1)
 		throw SerializationError("unsupported ContentFeatures version");
 	name = deSerializeString(is);
 	drawtype = (enum NodeDrawType)readU8(is);
@@ -216,9 +203,7 @@ void ContentFeatures::deSerialize(std::istream &is, IGameDef *gamedef)
 	if(readU8(is) != 6)
 		throw SerializationError("unsupported tile count");
 	for(u32 i=0; i<6; i++)
-		setTexture(i, deSerializeString(is));
-		//tname_tiles[i] = deSerializeString(is);
-	tname_inventory = deSerializeString(is);
+		tname_tiles[i] = deSerializeString(is);
 	if(readU8(is) != CF_SPECIAL_COUNT)
 		throw SerializationError("unsupported CF_SPECIAL_COUNT");
 	for(u32 i=0; i<CF_SPECIAL_COUNT; i++){
@@ -239,7 +224,6 @@ void ContentFeatures::deSerialize(std::istream &is, IGameDef *gamedef)
 	climbable = readU8(is);
 	buildable_to = readU8(is);
 	wall_mounted = readU8(is);
-	often_contains_mineral = readU8(is);
 	dug_item = deSerializeString(is);
 	extra_dug_item = deSerializeString(is);
 	extra_dug_item_rarity = readS32(is);
@@ -252,53 +236,6 @@ void ContentFeatures::deSerialize(std::istream &is, IGameDef *gamedef)
 	damage_per_second = readU32(is);
 	selection_box.deSerialize(is);
 	material.deSerialize(is);
-	cookresult_item = deSerializeString(is);
-	furnace_cooktime = readF1000(is);
-	furnace_burntime = readF1000(is);
-}
-
-void ContentFeatures::setTexture(u16 i, std::string name)
-{
-	used_texturenames.insert(name);
-	tname_tiles[i] = name;
-	if(tname_inventory == "")
-		tname_inventory = name;
-}
-
-void ContentFeatures::setAllTextures(std::string name)
-{
-	for(u16 i=0; i<6; i++)
-		setTexture(i, name);
-	// Force inventory texture too
-	setInventoryTexture(name);
-}
-
-void ContentFeatures::setSpecialMaterial(u16 i, const MaterialSpec &mspec)
-{
-	assert(i < CF_SPECIAL_COUNT);
-	mspec_special[i] = mspec;
-}
-
-void ContentFeatures::setInventoryTexture(std::string imgname)
-{
-	tname_inventory = imgname;
-}
-
-void ContentFeatures::setInventoryTextureCube(std::string top,
-		std::string left, std::string right)
-{
-	str_replace_char(top, '^', '&');
-	str_replace_char(left, '^', '&');
-	str_replace_char(right, '^', '&');
-
-	std::string imgname_full;
-	imgname_full += "[inventorycube{";
-	imgname_full += top;
-	imgname_full += "{";
-	imgname_full += left;
-	imgname_full += "{";
-	imgname_full += right;
-	tname_inventory = imgname_full;
 }
 
 /*
@@ -312,13 +249,10 @@ public:
 	{
 		m_name_id_mapping.clear();
 
-		m_aliases.clear();
-		
 		for(u16 i=0; i<=MAX_CONTENT; i++)
 		{
 			ContentFeatures &f = m_content_features[i];
 			f.reset(); // Reset to defaults
-			f.setAllTextures("unknown_block.png");
 		}
 		
 		// Set CONTENT_AIR
@@ -401,11 +335,9 @@ public:
 	{
 		return get(n.getContent());
 	}
-	virtual bool getId(const std::string &name_, content_t &result) const
+	virtual bool getId(const std::string &name, content_t &result) const
 	{
-		// Convert name according to possible alias
-		std::string name = getAlias(name_);
-		// Get id
+		// Note: Item aliases are not followed.
 		return m_name_id_mapping.getId(name, result);
 	}
 	virtual content_t getId(const std::string &name) const
@@ -419,14 +351,6 @@ public:
 		content_t id = CONTENT_IGNORE;
 		getId(name, id);
 		return get(id);
-	}
-	virtual std::string getAlias(const std::string &name) const
-	{
-		std::map<std::string, std::string>::const_iterator i;
-		i = m_aliases.find(name);
-		if(i != m_aliases.end())
-			return i->second;
-		return name;
 	}
 	// IWritableNodeDefManager
 	virtual void set(content_t c, const ContentFeatures &def)
@@ -452,12 +376,6 @@ public:
 		m_content_features[c] = def;
 		if(def.name != "")
 			m_name_id_mapping.set(c, def.name);
-
-		// Remove conflicting alias if it exists
-		bool alias_removed = (m_aliases.erase(def.name) != 0);
-		if(alias_removed)
-			infostream<<"ndef: erased alias "<<def.name
-					<<" because node was defined"<<std::endl;
 	}
 	virtual content_t set(const std::string &name,
 			const ContentFeatures &def)
@@ -491,23 +409,10 @@ public:
 		assert(name != "");
 		ContentFeatures f;
 		f.name = name;
-		f.setAllTextures("unknown_block.png");
 		// Make unknown blocks diggable
-		f.material.diggability = DIGGABLE_NORMAL;
+		f.material.diggability = DIGGABLE_CONSTANT;
+		f.material.constant_time = 0.5;
 		return set(name, f);
-	}
-	virtual void setAlias(const std::string &name,
-			const std::string &convert_to)
-	{
-		content_t id;
-		if(getId(name, id)){
-			infostream<<"ndef: not setting alias "<<name<<" -> "<<convert_to
-					<<": "<<name<<" is already defined"<<std::endl;
-			return;
-		}
-		infostream<<"ndef: setting alias "<<name<<" -> "<<convert_to
-				<<std::endl;
-		m_aliases[name] = convert_to;
 	}
 	virtual void updateTextures(ITextureSource *tsrc)
 	{
@@ -522,6 +427,14 @@ public:
 		for(u16 i=0; i<=MAX_CONTENT; i++)
 		{
 			ContentFeatures *f = &m_content_features[i];
+
+			std::string tname_tiles[6];
+			for(u32 j=0; j<6; j++)
+			{
+				tname_tiles[j] = f->tname_tiles[j];
+				if(tname_tiles[j] == "")
+					tname_tiles[j] = "unknown_block.png";
+                        }
 
 			switch(f->drawtype){
 			default:
@@ -567,8 +480,7 @@ public:
 					f->drawtype = NDT_NORMAL;
 					f->solidness = 2;
 					for(u32 i=0; i<6; i++){
-						f->setTexture(i, f->tname_tiles[i]
-								+ std::string("^[noalpha"));
+						tname_tiles[i] += std::string("^[noalpha");
 					}
 				}
 				break;
@@ -581,15 +493,8 @@ public:
 				break;
 			}
 
-			// Inventory texture
-			if(f->tname_inventory != "")
-				f->inventory_texture = tsrc->getTextureRaw(f->tname_inventory);
-			else
-				f->inventory_texture = NULL;
 			// Tile textures
 			for(u16 j=0; j<6; j++){
-				if(f->tname_tiles[j] == "")
-					continue;
 				f->tiles[j].texture = tsrc->getTexture(f->tname_tiles[j]);
 				f->tiles[j].alpha = f->alpha;
 				if(f->alpha == 255)
@@ -649,16 +554,8 @@ public:
 		}
 		writeU16(os, count);
 		os<<serializeLongString(tmp_os.str());
-
-		writeU16(os, m_aliases.size());
-		for(std::map<std::string, std::string>::const_iterator
-				i = m_aliases.begin(); i != m_aliases.end(); i++)
-		{
-			os<<serializeString(i->first);
-			os<<serializeString(i->second);
-		}
 	}
-	void deSerialize(std::istream &is, IGameDef *gamedef)
+	void deSerialize(std::istream &is)
 	{
 		clear();
 		u16 count = readU16(is);
@@ -674,18 +571,9 @@ public:
 			if(i == CONTENT_IGNORE || i == CONTENT_AIR)
 				continue;*/
 			ContentFeatures *f = &m_content_features[i];
-			f->deSerialize(tmp_is, gamedef);
+			f->deSerialize(tmp_is);
 			if(f->name != "")
 				m_name_id_mapping.set(i, f->name);
-		}
-
-		u16 num_aliases = readU16(is);
-		if(!is.eof()){
-			for(u16 i=0; i<num_aliases; i++){
-				std::string name = deSerializeString(is);
-				std::string convert_to = deSerializeString(is);
-				m_aliases[name] = convert_to;
-			}
 		}
 	}
 private:
@@ -693,8 +581,6 @@ private:
 	ContentFeatures m_content_features[MAX_CONTENT+1];
 	// A mapping for fast converting back and forth between names and ids
 	NameIdMapping m_name_id_mapping;
-	// Aliases
-	std::map<std::string, std::string> m_aliases;
 };
 
 IWritableNodeDefManager* createNodeDefManager()

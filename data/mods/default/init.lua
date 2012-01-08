@@ -131,10 +131,14 @@
 -- minetest.env - environment reference
 --
 -- Global tables:
+-- minetest.registered_items
+-- ^ List of registered items, indexed by name
 -- minetest.registered_nodes
 -- ^ List of registered node definitions, indexed by name
 -- minetest.registered_craftitems
 -- ^ List of registered craft item definitions, indexed by name
+-- minetest.registered_tools
+-- ^ List of registered tool definitions, indexed by name
 -- minetest.registered_entities
 -- ^ List of registered entity prototypes, indexed by name
 -- minetest.object_refs
@@ -307,7 +311,6 @@
 --     climbable = false,
 --     buildable_to = false,
 --     wall_mounted = false,
---     often_contains_mineral = false,
 --     dug_item = "",
 --     extra_dug_item = "",
 --     extra_dug_item_rarity = 2,
@@ -837,7 +840,6 @@ minetest.register_node("default:stone", {
 	inventory_image = minetest.inventorycube("default_stone.png"),
 	paramtype = "mineral",
 	is_ground_content = true,
-	often_contains_mineral = true, -- Texture atlas hint
 	material = minetest.digprop_stonelike(1.0),
 	dug_item = 'node "default:cobble" 1',
 })

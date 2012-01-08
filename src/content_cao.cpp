@@ -20,6 +20,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "content_cao.h"
 #include "tile.h"
 #include "environment.h"
+#include "collision.h"
 #include "settings.h"
 #include <ICameraSceneNode.h>
 #include <ITextSceneNode.h>
@@ -191,7 +192,7 @@ private:
 	core::aabbox3d<f32> m_selection_box;
 	scene::IMeshSceneNode *m_node;
 	v3f m_position;
-	std::string m_inventorystring;
+	std::string m_itemstring;
 	std::string m_infotext;
 };
 
@@ -605,25 +606,19 @@ void ItemCAO::addToScene(scene::ISceneManager *smgr, ITextureSource *tsrc,
 	*/
 
 	// Create an inventory item to see what is its image
-	std::istringstream is(m_inventorystring, std::ios_base::binary);
+	std::istringstream is(m_itemstring, std::ios_base::binary);
 	video::ITexture *texture = NULL;
 	try{
-		InventoryItem *item = NULL;
-		item = InventoryItem::deSerialize(is, m_gamedef);
-		infostream<<__FUNCTION_NAME<<": m_inventorystring=\""
-				<<m_inventorystring<<"\" -> item="<<item
-				<<std::endl;
-		if(item)
-		{
-			texture = item->getImage();
-			delete item;
-		}
+		IItemDefManager *idef = m_gamedef->idef();
+		InventoryItem item;
+		item.deSerialize(is, idef);
+		texture = item.getDefinition(idef).inventory_texture;
 	}
 	catch(SerializationError &e)
 	{
 		infostream<<"WARNING: "<<__FUNCTION_NAME
-				<<": error deSerializing inventorystring \""
-				<<m_inventorystring<<"\""<<std::endl;
+				<<": error deSerializing itemstring \""
+				<<m_itemstring<<std::endl;
 	}
 	
 	// Set meshbuffer texture
@@ -704,8 +699,8 @@ void ItemCAO::initialize(const std::string &data)
 			return;
 		// pos
 		m_position = readV3F1000(is);
-		// inventorystring
-		m_inventorystring = deSerializeString(is);
+		// itemstring
+		m_itemstring = deSerializeString(is);
 	}
 	
 	updateNodePos();
@@ -714,17 +709,19 @@ void ItemCAO::initialize(const std::string &data)
 		Set infotext to item name if item cannot be deserialized
 	*/
 	try{
-		InventoryItem *item = NULL;
-		item = InventoryItem::deSerialize(m_inventorystring, m_gamedef);
-		if(item){
-			if(!item->isKnown())
-				m_infotext = "Unknown item: '" + m_inventorystring + "'";
-		}
-		delete item;
+		IItemDefManager *idef = m_gamedef->idef();
+		InventoryItem item;
+		item.deSerialize(m_itemstring, idef);
+		if(item.isKnown(idef))
+			m_infotext = item.getDefinition(idef).description;
+		else
+			m_infotext = "Unknown item: '" + m_itemstring + "'";
+		if(item.count >= 2)
+			m_infotext += " (" + itos(item.count) + ")";
 	}
 	catch(SerializationError &e)
 	{
-		m_infotext = "Unknown item: '" + m_inventorystring + "'";
+		m_infotext = "Unknown item: '" + m_itemstring + "'";
 	}
 }
 

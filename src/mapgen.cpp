@@ -1647,6 +1647,7 @@ void make_block(BlockMakeData *data)
 	*/
 
 // Creates variables c_name=id and n_name=node
+// FIXME NDEF_GETID
 #define CONTENT_VARIABLE(ndef, name)\
 	content_t c_##name = ndef->getId(#name);\
 	MapNode n_##name(c_##name);

@@ -609,7 +609,7 @@ public:
 			for(std::set<std::string>::iterator
 					i = required_neighbors_s.begin();
 					i != required_neighbors_s.end(); i++){
-				content_t c = ndef->getId(*i);
+				content_t c = ndef->getId(*i);  // FIXME NDEF_GETID
 				if(c == CONTENT_IGNORE)
 					continue;
 				aabm.required_neighbors.insert(c);
@@ -618,7 +618,7 @@ public:
 			std::set<std::string> contents_s = abm->getTriggerContents();
 			for(std::set<std::string>::iterator
 					i = contents_s.begin(); i != contents_s.end(); i++){
-				content_t c = ndef->getId(*i);
+				content_t c = ndef->getId(*i);  // FIXME NDEF_GETID
 				if(c == CONTENT_IGNORE)
 					continue;
 				std::map<content_t, std::list<ActiveABM> >::iterator j;

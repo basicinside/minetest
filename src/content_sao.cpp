@@ -24,8 +24,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "main.h" // For g_profiler
 #include "profiler.h"
 #include "serialization.h" // For compressZlib
-#include "materials.h" // For MaterialProperties
-#include "tooldef.h" // ToolDiggingProperties
+#include "materials.h" // For MaterialProperties and ToolDiggingProperties
+#include "gamedef.h"
 
 core::map<u16, ServerActiveObject::Factory> ServerActiveObject::m_types;
 
@@ -114,9 +114,9 @@ void TestSAO::step(float dtime, bool send_recommended)
 ItemSAO proto_ItemSAO(NULL, v3f(0,0,0), "");
 
 ItemSAO::ItemSAO(ServerEnvironment *env, v3f pos,
-		const std::string inventorystring):
+		const std::string itemstring):
 	ServerActiveObject(env, pos),
-	m_inventorystring(inventorystring),
+	m_itemstring(itemstring),
 	m_speed_f(0,0,0),
 	m_last_sent_position(0,0,0)
 {
@@ -134,10 +134,10 @@ ServerActiveObject* ItemSAO::create(ServerEnvironment *env, v3f pos,
 	// check if version is supported
 	if(version != 0)
 		return NULL;
-	std::string inventorystring = deSerializeString(is);
+	std::string itemstring = deSerializeString(is);
 	infostream<<"ItemSAO::create(): Creating item \""
-			<<inventorystring<<"\""<<std::endl;
-	return new ItemSAO(env, pos, inventorystring);
+			<<itemstring<<"\""<<std::endl;
+	return new ItemSAO(env, pos, itemstring);
 }
 
 void ItemSAO::step(float dtime, bool send_recommended)
@@ -206,8 +206,8 @@ std::string ItemSAO::getClientInitializationData()
 	os.write(buf, 4);
 	writeS32((u8*)buf, m_base_position.Z*1000);
 	os.write(buf, 4);
-	// inventorystring
-	os<<serializeString(m_inventorystring);
+	// itemstring
+	os<<serializeString(m_itemstring);
 	return os.str();
 }
 
@@ -219,38 +219,48 @@ std::string ItemSAO::getStaticData()
 	// version
 	buf[0] = 0;
 	os.write(buf, 1);
-	// inventorystring
-	os<<serializeString(m_inventorystring);
+	// itemstring
+	os<<serializeString(m_itemstring);
 	return os.str();
 }
 
-InventoryItem * ItemSAO::createInventoryItem()
+InventoryItem ItemSAO::createInventoryItem()
 {
 	try{
-		std::istringstream is(m_inventorystring, std::ios_base::binary);
-		IGameDef *gamedef = m_env->getGameDef();
-		InventoryItem *item = InventoryItem::deSerialize(is, gamedef);
-		infostream<<__FUNCTION_NAME<<": m_inventorystring=\""
-				<<m_inventorystring<<"\" -> item="<<item
+		IItemDefManager *idef = m_env->getGameDef()->idef();
+		InventoryItem item;
+		item.deSerialize(m_itemstring, idef);
+		infostream<<__FUNCTION_NAME<<": m_itemstring=\""<<m_itemstring
+				<<"\" -> item=\""<<item.getItemString()<<"\""
 				<<std::endl;
 		return item;
 	}
 	catch(SerializationError &e)
 	{
 		infostream<<__FUNCTION_NAME<<": serialization error: "
-				<<"m_inventorystring=\""<<m_inventorystring<<"\""<<std::endl;
-		return NULL;
+				<<"m_itemstring=\""<<m_itemstring<<"\""<<std::endl;
+		return InventoryItem();
 	}
 }
 
 void ItemSAO::punch(ServerActiveObject *puncher, float time_from_last_punch)
 {
-	InventoryItem *item = createInventoryItem();
-	bool fits = puncher->addToInventory(item);
-	if(fits)
-		m_removed = true;
-	else
-		delete item;
+	InventoryItem item = createInventoryItem();
+	Inventory *inv = puncher->getInventory();
+	if(inv != NULL)
+	{
+		std::string wieldlist = puncher->getWieldList();
+		InventoryItem leftover = inv->addItem(wieldlist, item);
+		if(leftover.empty())
+		{
+			m_removed = true;
+		}
+		else
+		{
+			m_itemstring = leftover.getItemString();
+			// TODO send the new itemstring to clients?
+		}
+	}
 }
 
 /*
@@ -436,14 +446,16 @@ std::string RatSAO::getStaticData()
 
 void RatSAO::punch(ServerActiveObject *puncher, float time_from_last_punch)
 {
-	std::istringstream is("CraftItem rat 1", std::ios_base::binary);
-	IGameDef *gamedef = m_env->getGameDef();
-	InventoryItem *item = InventoryItem::deSerialize(is, gamedef);
-	bool fits = puncher->addToInventory(item);
-	if(fits)
-		m_removed = true;
-	else
-		delete item;
+	IItemDefManager *idef = m_env->getGameDef()->idef();
+	InventoryItem item("rat", 1, 0, "", idef);
+	Inventory *inv = puncher->getInventory();
+	if(inv != NULL)
+	{
+		std::string wieldlist = puncher->getWieldList();
+		InventoryItem leftover = inv->addItem(wieldlist, item);
+		if(leftover.empty())
+			m_removed = true;
+	}
 }
 
 /*
@@ -703,14 +715,17 @@ void Oerkki1SAO::punch(ServerActiveObject *puncher, float time_from_last_punch)
 	mp.crackiness = -1.0;
 	mp.cuttability = 1.0;
 
-	ToolDiggingProperties tp;
-	puncher->getWieldDiggingProperties(&tp);
+	IItemDefManager *idef = m_env->getGameDef()->idef();
+        InventoryItem punchitem = puncher->getWieldedItem();
+        ToolDiggingProperties tp =
+	                punchitem.getToolDiggingProperties(idef);
 
 	HittingProperties hitprop = getHittingProperties(&mp, &tp,
 			time_from_last_punch);
 
 	doDamage(hitprop.hp);
-	puncher->damageWieldedItem(hitprop.wear);
+	punchitem.addWear(hitprop.wear, idef);
+	puncher->setWieldedItem(punchitem);
 }
 
 void Oerkki1SAO::doDamage(u16 d)
@@ -1393,14 +1408,17 @@ void MobV2SAO::punch(ServerActiveObject *puncher, float time_from_last_punch)
 	mp.crackiness = -1.0;
 	mp.cuttability = 1.0;
 
-	ToolDiggingProperties tp;
-	puncher->getWieldDiggingProperties(&tp);
+	IItemDefManager *idef = m_env->getGameDef()->idef();
+        InventoryItem punchitem = puncher->getWieldedItem();
+        ToolDiggingProperties tp =
+	                punchitem.getToolDiggingProperties(idef);
 
 	HittingProperties hitprop = getHittingProperties(&mp, &tp,
 			time_from_last_punch);
 
 	doDamage(hitprop.hp);
-	puncher->damageWieldedItem(hitprop.wear);
+	punchitem.addWear(hitprop.wear, idef);
+	puncher->setWieldedItem(punchitem);
 }
 
 bool MobV2SAO::isPeaceful()
