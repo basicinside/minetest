@@ -256,13 +256,19 @@ std::string serializeJsonString(const std::string &plain)
 			default:
 			{
 				if(c >= 32 && c <= 126)
+				{
 					os<<c;
+				}
 				else
-					os<<"\\u"<<std::hex<<std::setw(4)<<((int) c);
+				{
+					u32 cnum = (u32) (u8) c;
+					os<<"\\u"<<std::hex<<std::setw(4)<<std::setfill('0')<<cnum;
+				}
 				break;
 			}
 		}
 	}
+	os<<"\"";
 	return os.str();
 }
 
@@ -280,7 +286,7 @@ std::string deSerializeJsonString(std::istream &is)
 	// Parse characters
 	for(;;)
 	{
-		is >> c;
+		c = is.get();
 		if(is.eof())
 			throw SerializationError("JSON string ended prematurely");
 		if(c == '"')
@@ -289,7 +295,7 @@ std::string deSerializeJsonString(std::istream &is)
 		}
 		else if(c == '\\')
 		{
-			is >> c2;
+			c2 = is.get();
 			if(is.eof())
 				throw SerializationError("JSON string ended prematurely");
 			switch(c2)
@@ -303,13 +309,13 @@ std::string deSerializeJsonString(std::istream &is)
 				case 'u':
 				{
 					char hexdigits[4+1];
-					is.get(hexdigits, 4);
+					is.read(hexdigits, 4);
 					if(is.eof())
 						throw SerializationError("JSON string ended prematurely");
 					hexdigits[4] = 0;
 					std::istringstream tmp_is(hexdigits, std::ios::binary);
 					int hexnumber;
-					tmp_is>>std::hex>>hexnumber;
+					tmp_is >> std::hex >> hexnumber;
 					os<<((char)hexnumber);
 					break;
 				}

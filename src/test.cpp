@@ -168,22 +168,33 @@ struct TestSettings
 
 struct TestSerialization
 {
+	// To be used like this:
+	//   mkstr("Some\0string\0with\0embedded\0nuls")
+	// since std::string("...") doesn't work as expected in that case.
+	template<size_t N> std::string mkstr(const char (&s)[N])
+	{
+		return std::string(s, N - 1);
+	}
+
 	void Run()
 	{
 		// Tests some serialization primitives
-		
-		assert(serializeString("") == "\0\0");
-		assert(serializeWideString(L"") == "\0\0");
-		assert(serializeLongString("") == "\0\0\0\0");
+
+		assert(serializeString("") == mkstr("\0\0"));
+		assert(serializeWideString(L"") == mkstr("\0\0"));
+		assert(serializeLongString("") == mkstr("\0\0\0\0"));
 		assert(serializeJsonString("") == "\"\"");
 		
 		std::string teststring = "Hello world!";
-		assert(serializeString(teststring) == "\0\14Hello world!");
+		assert(serializeString(teststring) ==
+			mkstr("\0\14Hello world!"));
 		assert(serializeWideString(narrow_to_wide(teststring)) ==
-			"\0\14\0H\0e\0l\0l\0o\0 \0w\0o\0r\0l\0d\0!");
-		assert(serializeLongString(teststring) == ("\0\0\0\14Hello world!"));
-		assert(serializeJsonString(teststring) == "\"Hello world!\"");
-		
+			mkstr("\0\14\0H\0e\0l\0l\0o\0 \0w\0o\0r\0l\0d\0!"));
+		assert(serializeLongString(teststring) ==
+			mkstr("\0\0\0\14Hello world!"));
+		assert(serializeJsonString(teststring) ==
+			"\"Hello world!\"");
+
 		std::string teststring2;
 		std::wstring teststring2_w;
 		std::string teststring2_w_encoded;
@@ -201,13 +212,16 @@ struct TestSerialization
 			teststring2_w = tmp_os_w.str();
 			teststring2_w_encoded = tmp_os_w_encoded.str();
 		}
-		assert(serializeString(teststring2) == ("\1\0" + teststring2));
-		assert(serializeWideString(teststring2_w) == ("\1\0" + teststring2_w_encoded));
-		assert(serializeLongString(teststring2) == ("\0\0\1\0" + teststring2));
+		assert(serializeString(teststring2) ==
+			mkstr("\1\0") + teststring2);
+		assert(serializeWideString(teststring2_w) ==
+			mkstr("\1\0") + teststring2_w_encoded);
+		assert(serializeLongString(teststring2) ==
+			mkstr("\0\0\1\0") + teststring2);
 		assert(serializeJsonString(teststring2) ==
-			std::string("\"") +
+			mkstr("\"") +
 			"\\u0000\\u0001\\u0002\\u0003\\u0004\\u0005\\u0006\\u0007" +
-			"\\b\\t\\n\\u000b\f\r\\u000e\\u000f" +
+			"\\b\\t\\n\\u000b\\f\\r\\u000e\\u000f" +
 			"\\u0010\\u0011\\u0012\\u0013\\u0014\\u0015\\u0016\\u0017" +
 			"\\u0018\\u0019\\u001a\\u001b\\u001c\\u001d\\u001e\\u001f" +
 			" !\\\"" + teststring2.substr(0x23, 0x2f-0x23) +
@@ -254,6 +268,7 @@ struct TestSerialization
 		}
 		{
 			std::istringstream is(serializeJsonString(teststring2), std::ios::binary);
+			//dstream<<serializeJsonString(deSerializeJsonString(is));
 			assert(deSerializeJsonString(is) == teststring2);
 			assert(!is.eof());
 			is.get();
