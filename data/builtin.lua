@@ -182,7 +182,7 @@ minetest.nodedef_default = {
 	climbable = false,
 	buildable_to = false,
 	wall_mounted = false,
-	dug_item = "",
+	--dug_item intentionally not defined here
 	extra_dug_item = "",
 	extra_dug_item_rarity = 2,
 	metadata_name = "",
@@ -217,7 +217,7 @@ minetest.craftitemdef_default = {
 	-- Interaction callbacks
 	on_place = minetest.item_place,
 	on_drop = minetest.item_drop,
-	on_use = nil,
+	--on_use = ...,
 }
 
 minetest.tooldef_default = {
@@ -234,7 +234,7 @@ minetest.tooldef_default = {
 	-- Interaction callbacks
 	on_place = minetest.item_place,
 	on_drop = minetest.item_drop,
-	on_use = nil,
+	--on_use = ...,
 }
 
 minetest.noneitemdef_default = {  -- This is used for the hand and unknown items
@@ -249,9 +249,9 @@ minetest.noneitemdef_default = {  -- This is used for the hand and unknown items
 	tool_digging_properties = nil,
 
 	-- Interaction callbacks
-	on_place = nil,
-	on_drop = nil,
-	on_use = nil,
+	--on_place = ...,
+	--on_drop = ...,
+	--on_use = ...,
 }
 
 
@@ -356,18 +356,23 @@ function minetest.register_item(name, itemdef)
 
 	-- Apply defaults and add to registered_* table
 	if itemdef.type == "node" then
-		setmetatable(itemdef, {__index = minetest.nodedef_default, __newindex = {}})
+		setmetatable(itemdef, {__index = minetest.nodedef_default})
 		minetest.registered_nodes[itemdef.name] = itemdef
 	elseif itemdef.type == "craft" then
-		setmetatable(itemdef, {__index = minetest.craftitemdef_default, __newindex = {}})
+		setmetatable(itemdef, {__index = minetest.craftitemdef_default})
 		minetest.registered_craftitems[itemdef.name] = itemdef
 	elseif itemdef.type == "tool" then
-		setmetatable(itemdef, {__index = minetest.tooldef_default, __newindex = {}})
+		setmetatable(itemdef, {__index = minetest.tooldef_default})
 		minetest.registered_tools[itemdef.name] = itemdef
 	elseif itemdef.type == "none" then
-		setmetatable(itemdef, {__index = minetest.noneitemdef_default, __newindex = {}})
+		setmetatable(itemdef, {__index = minetest.noneitemdef_default})
 	else
 		error("Unable to register item: Type is invalid: " .. dump(itemdef))
+	end
+
+	-- Default dug item
+	if itemdef.type == "node" and itemdef.dug_item == nil then
+		itemdef.dug_item = ItemStack({name=itemdef.name}):to_string()
 	end
 
 	-- Legacy stuff
@@ -386,6 +391,9 @@ function minetest.register_item(name, itemdef)
 		--	burntime=itemdef.furnace_burntime
 		--})
 	end
+
+	-- Disable all further modifications
+	getmetatable(itemdef).__newindex = {}
 
 	minetest.log("Registering item: " .. itemdef.name)
 	minetest.registered_items[itemdef.name] = itemdef
@@ -483,7 +491,19 @@ end
 minetest.register_item(":", {
 	type = "none",
 	wield_image = "wieldhand.png",
-	tool_digging_properties = {},
+	tool_digging_properties = {
+		full_punch_interval = 2.0,
+		basetime = 0.5,
+		dt_weight = 1,
+		dt_crackiness = 0,
+		dt_crumbliness = -1,
+		dt_cuttability = 0,
+		basedurability = 50,
+		dd_weight = 0,
+		dd_crackiness = 0,
+		dd_crumbliness = 0,
+		dd_cuttability = 0,
+	}
 })
 
 minetest.register_item(":unknown", {

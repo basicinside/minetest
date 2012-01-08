@@ -23,11 +23,12 @@ bucket.liquids = {}
 --   inventory_image = texture of the new bucket item (ignored if itemname == nil)
 -- This function can be called from any mod (that depends on bucket).
 function bucket.register_liquid(source, flowing, itemname, inventory_image)
-	bucket.liquids[source] = bucket.liquids[flowing] = {
+	bucket.liquids[source] = {
 		source = source,
 		flowing = flowing,
 		itemname = itemname,
 	}
+	bucket.liquids[flowing] = bucket.liquids[source]
 
 	if itemname ~= nil then
 		minetest.register_craftitem(itemname, {
@@ -44,7 +45,7 @@ function bucket.register_liquid(source, flowing, itemname, inventory_image)
 				if bucket.liquids[n.name] == nil then
 					-- Not a liquid
 					minetest.env:add_node(pointed_thing.above, {name=source})
-				elseif n.name != source then
+				elseif n.name ~= source then
 					-- It's a liquid
 					minetest.env:add_node(pointed_thing.under, {name=source})
 				end
@@ -68,7 +69,7 @@ minetest.register_craftitem("bucket:bucket_empty", {
 		-- Check if pointing to a liquid source
 		n = minetest.env:get_node(pointed_thing.under)
 		liquiddef = bucket.liquids[n.name]
-		if liquiddef != nil and liquiddef.source == n.name and liquiddef.itemname ~= nil then
+		if liquiddef ~= nil and liquiddef.source == n.name and liquiddef.itemname ~= nil then
 			minetest.env:add_node(pointed_thing.under, {name="air"})
 			itemstack:take_item()
 			itemstack:put_item({name=liquiddef.itemname})

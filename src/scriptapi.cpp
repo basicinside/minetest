@@ -717,12 +717,7 @@ static ContentFeatures read_content_features(lua_State *L, int index)
 		index = lua_gettop(L) + 1 + index;
 
 	ContentFeatures f;
-
 	getstringfield(L, index, "name", f.name);
-	
-	// Default to getting the corresponding item when dug
-	InventoryItem default_dug_item(f.name, 1, 0, "", get_server(L)->idef());
-	f.dug_item = default_dug_item.getItemString();
 
 	/* Visual definition */
 
@@ -2496,6 +2491,11 @@ const luaL_reg ObjectRef::methods[] = {
 	method(ObjectRef, right_click),
 	method(ObjectRef, set_hp),
 	method(ObjectRef, get_hp),
+	method(ObjectRef, get_inventory),
+	method(ObjectRef, get_wield_list),
+	method(ObjectRef, get_wield_index),
+	method(ObjectRef, get_wielded_item),
+	method(ObjectRef, set_wielded_item),
 	// LuaEntitySAO-only
 	method(ObjectRef, setvelocity),
 	method(ObjectRef, getvelocity),
@@ -2509,11 +2509,6 @@ const luaL_reg ObjectRef::methods[] = {
 	method(ObjectRef, get_luaentity),
 	// Player-only
 	method(ObjectRef, get_player_name),
-	method(ObjectRef, get_inventory),
-	method(ObjectRef, get_wield_list),
-	method(ObjectRef, get_wield_index),
-	method(ObjectRef, get_wielded_item),
-	method(ObjectRef, set_wielded_item),
 	method(ObjectRef, get_look_dir),
 	method(ObjectRef, get_look_pitch),
 	method(ObjectRef, get_look_yaw),
