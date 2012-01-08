@@ -310,7 +310,7 @@ local function check_modname_prefix(name)
 		return name:sub(2)
 	else
 		-- Modname prefix enforcement
-		local expected_prefix = minetest.get_current_modname() + ":"
+		local expected_prefix = minetest.get_current_modname() .. ":"
 		if name:sub(1, #expected_prefix) ~= expected_prefix then
 			error("Name " .. name .. " does not follow naming conventions: " ..
 				"\"modname:\" or \":\" prefix required")
@@ -371,7 +371,7 @@ function minetest.register_item(name, itemdef)
 	end
 
 	-- Legacy stuff
-	if itemdef.cookresult_itemstring != nil and itemdef.cookresult_itemstring != "" then
+	if itemdef.cookresult_itemstring ~= nil and itemdef.cookresult_itemstring ~= "" then
 		--minetest.register_craft({
 		--	type="cooking",
 		--	output=itemdef.cookresult_itemstring,
@@ -379,7 +379,7 @@ function minetest.register_item(name, itemdef)
 		--	cooktime=itemdef.furnace_cooktime
 		--})
 	end
-	if itemdef.furnace_burntime != nil and itemdef.furnace_burntime >= 0 then
+	if itemdef.furnace_burntime ~= nil and itemdef.furnace_burntime >= 0 then
 		--minetest.register_craft({
 		--	type="fuel",
 		--	recipe=itemdef.name,
@@ -387,7 +387,7 @@ function minetest.register_item(name, itemdef)
 		--})
 	end
 
-	log("Registering item: " .. itemdef.name)
+	minetest.log("Registering item: " .. itemdef.name)
 	minetest.registered_items[itemdef.name] = itemdef
 	minetest.registered_aliases[itemdef.name] = nil
 	register_item_raw(itemdef)
@@ -451,11 +451,11 @@ function minetest.register_alias(name, convert_to)
 	if forbidden_item_names[name] then
 		error("Unable to register alias: Name is forbidden: " .. name)
 	end
-	if minetest.registered_items[name] != nil then
-		log("WARNING: Not registering alias, item with same name is " ..
-			"already defined: " .. name .. " -> " .. convert_to)
+	if minetest.registered_items[name] ~= nil then
+		minetest.log("WARNING: Not registering alias, item with same name" ..
+			" is already defined: " .. name .. " -> " .. convert_to)
 	else
-		log("Registering alias: " .. name .. " -> " .. convert_to)
+		minetest.log("Registering alias: " .. name .. " -> " .. convert_to)
 		minetest.registered_aliases[name] = convert_to
 		register_alias_raw(name, convert_to)
 	end
