@@ -77,10 +77,9 @@ public:
 	virtual Inventory* getInventory();
 	virtual const Inventory* getInventory() const;
 	virtual InventoryLocation getInventoryLocation() const;
+	virtual void setInventoryModified();
 	virtual std::string getWieldList() const;
 	virtual int getWieldIndex() const;
-	virtual InventoryItem getWieldedItem() const;
-	virtual bool setWieldedItem(const InventoryItem &item);
 	virtual void setWieldIndex(int i);
 
 	virtual void setHP(s16 hp_);

@@ -151,6 +151,8 @@ public:
 	{ return NULL; }
 	virtual InventoryLocation getInventoryLocation() const
 	{ return InventoryLocation(); }
+	virtual void setInventoryModified()
+	{}
 	virtual std::string getWieldList() const
 	{ return ""; }
 	virtual int getWieldIndex() const

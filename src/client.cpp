@@ -250,9 +250,6 @@ Client::Client(
 	// Update node textures
 	m_nodedef->updateTextures(m_tsrc);
 
-	// Start threads after setting up content definitions
-	m_mesh_update_thread.Start();
-
 	/*
 		Add local player
 	*/
@@ -1249,14 +1246,9 @@ void Client::ProcessData(u8 *data, u32 datasize, u16 sender_peer_id)
 		std::string datastring((char*)&data[2], datasize-2);
 		std::istringstream is(datastring, std::ios_base::binary);
 
-
-		// Stop threads while updating content definitions
-		m_mesh_update_thread.setRun(false);
-		// Process the remaining TextureSource queue to let MeshUpdateThread
-		// get it's remaining textures and thus let it stop
-		while(m_mesh_update_thread.IsRunning()){
-			m_tsrc->processQueue();
-		}
+		// Mesh update thread must be stopped while
+		// updating content definitions
+		assert(!m_mesh_update_thread.IsRunning());
 
 		int num_textures = readU16(is);
 
@@ -1336,7 +1328,7 @@ void Client::ProcessData(u8 *data, u32 datasize, u16 sender_peer_id)
 								<<name << ": server ->"<<sha1_texture <<" client -> "<<digest_string<<std::endl;
 					}
 
-					delete(digest);
+					free(digest);
 				}
 			}
 
@@ -1348,9 +1340,6 @@ void Client::ProcessData(u8 *data, u32 datasize, u16 sender_peer_id)
 			}
 
 		}
-		// Resume threads
-		m_mesh_update_thread.setRun(true);
-		m_mesh_update_thread.Start();
 
 		ClientEvent event;
 		event.type = CE_TEXTURES_UPDATED;
@@ -1400,14 +1389,10 @@ void Client::ProcessData(u8 *data, u32 datasize, u16 sender_peer_id)
 		std::string datastring((char*)&data[2], datasize-2);
 		std::istringstream is(datastring, std::ios_base::binary);
 
-		// Stop threads while updating content definitions
-		m_mesh_update_thread.setRun(false);
-		// Process the remaining TextureSource queue to let MeshUpdateThread
-		// get it's remaining textures and thus let it stop
-		while(m_mesh_update_thread.IsRunning()){
-			m_tsrc->processQueue();
-		}
-		
+		// Mesh update thread must be stopped while
+		// updating content definitions
+		assert(!m_mesh_update_thread.IsRunning());
+
 		/*
 			u16 command
 			u16 total number of texture bunches
@@ -1464,22 +1449,6 @@ void Client::ProcessData(u8 *data, u32 datasize, u16 sender_peer_id)
 			img->drop();
 			rfile->drop();
 		}
-		
-		if(m_nodedef_received && m_textures_received){
-			// Rebuild inherited images and recreate textures
-			m_tsrc->rebuildImagesAndTextures();
-
-			// Update texture atlas
-			if(g_settings->getBool("enable_texture_atlas"))
-				m_tsrc->buildMainAtlas(this);
-			
-			// Update node textures
-			m_nodedef->updateTextures(m_tsrc);
-		}
-
-		// Resume threads
-		m_mesh_update_thread.setRun(true);
-		m_mesh_update_thread.Start();
 
 		ClientEvent event;
 		event.type = CE_TEXTURES_UPDATED;
@@ -1497,29 +1466,13 @@ void Client::ProcessData(u8 *data, u32 datasize, u16 sender_peer_id)
 		std::string datastring((char*)&data[2], datasize-2);
 		std::istringstream is(datastring, std::ios_base::binary);
 
-		m_nodedef_received = true;
-
-		// Stop threads while updating content definitions
-		m_mesh_update_thread.stop();
+		// Mesh update thread must be stopped while
+		// updating content definitions
+		assert(!m_mesh_update_thread.IsRunning());
 
 		std::istringstream tmp_is(deSerializeLongString(is), std::ios::binary);
 		m_nodedef->deSerialize(tmp_is);
-		
-		if(m_textures_received){
-			// Update texture atlas
-			if(g_settings->getBool("enable_texture_atlas"))
-				m_tsrc->buildMainAtlas(this);
-			
-			// Update node textures
-			m_nodedef->updateTextures(m_tsrc);
-		}
-
-		if(m_itemdef_received)
-			m_itemdef->updateTexturesAndMeshes(this);
-		
-		// Resume threads
-		m_mesh_update_thread.setRun(true);
-		m_mesh_update_thread.Start();
+		m_nodedef_received = true;
 	}
 	else if(command == TOCLIENT_CRAFTITEMDEF)
 	{
@@ -1533,25 +1486,13 @@ void Client::ProcessData(u8 *data, u32 datasize, u16 sender_peer_id)
 		std::string datastring((char*)&data[2], datasize-2);
 		std::istringstream is(datastring, std::ios_base::binary);
 
-		m_itemdef_received = true;
+		// Mesh update thread must be stopped while
+		// updating content definitions
+		assert(!m_mesh_update_thread.IsRunning());
 
-		// Stop threads while updating content definitions
-		m_mesh_update_thread.setRun(false);
-		// Process the remaining TextureSource queue to let MeshUpdateThread
-		// get it's remaining textures and thus let it stop
-		while(m_mesh_update_thread.IsRunning()){
-			m_tsrc->processQueue();
-		}
-		
 		std::istringstream tmp_is(deSerializeLongString(is), std::ios::binary);
 		m_itemdef->deSerialize(tmp_is);
-
-		if(m_nodedef_received)
-			m_itemdef->updateTexturesAndMeshes(this);
-		
-		// Resume threads
-		m_mesh_update_thread.setRun(true);
-		m_mesh_update_thread.Start();
+		m_itemdef_received = true;
 	}
 	else
 	{
@@ -2168,6 +2109,32 @@ ClientEvent Client::getClientEvent()
 		return event;
 	}
 	return m_client_event_queue.pop_front();
+}
+
+void Client::afterContentReceived()
+{
+	assert(m_itemdef_received);
+	assert(m_nodedef_received);
+	assert(m_textures_received);
+
+	// Rebuild inherited images and recreate textures
+	m_tsrc->rebuildImagesAndTextures();
+
+	// Update texture atlas
+	if(g_settings->getBool("enable_texture_atlas"))
+		m_tsrc->buildMainAtlas(this);
+
+	// Update node aliases
+	m_nodedef->updateAliases(m_itemdef);
+
+	// Update node textures
+	m_nodedef->updateTextures(m_tsrc);
+
+	// Update item textures and meshes
+	m_itemdef->updateTexturesAndMeshes(this);
+
+	// Start mesh update thread after setting up content definitions
+	m_mesh_update_thread.Start();
 }
 
 float Client::getRTT(void)

@@ -24,7 +24,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "common_irrlicht.h"
 #include <string>
 #include <iostream>
-#include <vector>
+#include <set>
 class IGameDef;
 struct ToolDiggingProperties;
 
@@ -77,10 +77,14 @@ struct ItemDefinition
 		Some helpful methods
 	*/
 	ItemDefinition();
+	ItemDefinition(const ItemDefinition &def);
+	ItemDefinition& operator=(const ItemDefinition &def);
 	~ItemDefinition();
 	void reset();
 	void serialize(std::ostream &os) const;
 	void deSerialize(std::istream &is);
+private:
+	void resetInitial();
 };
 
 class IItemDefManager
@@ -93,6 +97,8 @@ public:
 	virtual const ItemDefinition& get(const std::string &name) const=0;
 	// Get alias definition
 	virtual std::string getAlias(const std::string &name) const=0;
+	// Get set of all defined item names and aliases
+	virtual std::set<std::string> getAll() const=0;
 	// Check if item is known
 	virtual bool isKnown(const std::string &name) const=0;
 
@@ -109,6 +115,8 @@ public:
 	virtual const ItemDefinition& get(const std::string &name) const=0;
 	// Get alias definition
 	virtual std::string getAlias(const std::string &name) const=0;
+	// Get set of all defined item names and aliases
+	virtual std::set<std::string> getAll() const=0;
 	// Check if item is known
 	virtual bool isKnown(const std::string &name) const=0;
 

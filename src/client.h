@@ -323,6 +323,8 @@ public:
 	bool nodedefReceived()
 	{ return m_nodedef_received; }
 	
+	void afterContentReceived();
+
 	float getRTT(void);
 
 	// IGameDef interface

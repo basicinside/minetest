@@ -161,7 +161,7 @@ MapNode::MapNode(INodeDefManager *ndef, const std::string &name,
 		u8 a_param1, u8 a_param2)
 {
 	content_t id = CONTENT_IGNORE;
-	ndef->getId(name, id);  // FIXME NDEF_GETID
+	ndef->getId(name, id);
 	param1 = a_param1;
 	param2 = a_param2;
 	// Set content (param0 and (param2&0xf0)) after other params

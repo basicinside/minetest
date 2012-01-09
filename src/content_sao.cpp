@@ -251,6 +251,7 @@ void ItemSAO::punch(ServerActiveObject *puncher, float time_from_last_punch)
 	{
 		std::string wieldlist = puncher->getWieldList();
 		InventoryItem leftover = inv->addItem(wieldlist, item);
+		puncher->setInventoryModified();
 		if(leftover.empty())
 		{
 			m_removed = true;

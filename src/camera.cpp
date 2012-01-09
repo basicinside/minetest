@@ -78,7 +78,7 @@ Camera::Camera(scene::ISceneManager* smgr, MapDrawControl& draw_control):
 	// all other 3D scene nodes and before the GUI.
 	m_wieldmgr = smgr->createNewSceneManager();
 	m_wieldmgr->addCameraSceneNode();
-	m_wieldnode = m_wieldmgr->addMeshSceneNode(NULL);
+	m_wieldnode = m_wieldmgr->addMeshSceneNode(createCubeMesh(v3f(1,1,1)), NULL);  // need a dummy mesh
 
 	updateSettings();
 }
@@ -458,7 +458,17 @@ void Camera::setDigging(s32 button)
 
 void Camera::wield(const InventoryItem &item, IGameDef *gamedef)
 {
-	m_wieldnode->setMesh(gamedef->idef()->get(item.name).wield_mesh);
+	IItemDefManager *idef = gamedef->idef();
+	scene::IMesh *wield_mesh = item.getDefinition(idef).wield_mesh;
+	if(wield_mesh)
+	{
+		m_wieldnode->setMesh(wield_mesh);
+		m_wieldnode->setVisible(true);
+	}
+	else
+	{
+		m_wieldnode->setVisible(false);
+	}
 }
 
 void Camera::drawWieldedTool()

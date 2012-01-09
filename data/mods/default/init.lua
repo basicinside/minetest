@@ -116,10 +116,6 @@
 -- ^ location = eg. {type="player", name="celeron55"}
 --                  {type="node", pos={x=, y=, z=}}
 --
--- stackstring_take_item(stackstring) -> stackstring, item
--- stackstring_put_item(stackstring, item) -> stackstring, success
--- stackstring_put_stackstring(stackstring, stackstring) -> stackstring, success
---
 -- minetest.digprop_constanttime(time)
 -- minetest.digprop_stonelike(toughness)
 -- minetest.digprop_dirtlike(toughness)
@@ -889,7 +885,6 @@ minetest.register_craft({
 minetest.register_node("default:stone", {
 	description = "Stone",
 	tile_images = {"default_stone.png"},
-	inventory_image = minetest.inventorycube("default_stone.png"),
 	paramtype = "mineral",
 	is_ground_content = true,
 	material = minetest.digprop_stonelike(1.0),
@@ -899,7 +894,6 @@ minetest.register_node("default:stone", {
 minetest.register_node("default:dirt_with_grass", {
 	description = "Dirt with grass",
 	tile_images = {"default_grass.png", "default_dirt.png", "default_dirt.png^default_grass_side.png"},
-	inventory_image = minetest.inventorycube("default_dirt.png^default_grass_side.png"),
 	is_ground_content = true,
 	material = minetest.digprop_dirtlike(1.0),
 	dug_item = 'node "default:dirt" 1',
@@ -908,7 +902,6 @@ minetest.register_node("default:dirt_with_grass", {
 minetest.register_node("default:dirt_with_grass_footsteps", {
 	description = "Dirt with grass and footsteps",
 	tile_images = {"default_grass_footsteps.png", "default_dirt.png", "default_dirt.png^default_grass_side.png"},
-	inventory_image = "default_grass_footsteps.png",
 	is_ground_content = true,
 	material = minetest.digprop_dirtlike(1.0),
 	dug_item = 'node "default:dirt" 1',
@@ -917,7 +910,6 @@ minetest.register_node("default:dirt_with_grass_footsteps", {
 minetest.register_node("default:dirt", {
 	description = "Dirt",
 	tile_images = {"default_dirt.png"},
-	inventory_image = minetest.inventorycube("default_dirt.png"),
 	is_ground_content = true,
 	material = minetest.digprop_dirtlike(1.0),
 })
@@ -925,7 +917,6 @@ minetest.register_node("default:dirt", {
 minetest.register_node("default:sand", {
 	description = "Sand",
 	tile_images = {"default_sand.png"},
-	inventory_image = minetest.inventorycube("default_sand.png"),
 	is_ground_content = true,
 	material = minetest.digprop_dirtlike(1.0),
 	cookresult_itemstring = 'node "default:glass" 1',
@@ -934,7 +925,6 @@ minetest.register_node("default:sand", {
 minetest.register_node("default:gravel", {
 	description = "Gravel",
 	tile_images = {"default_gravel.png"},
-	inventory_image = minetest.inventorycube("default_gravel.png"),
 	is_ground_content = true,
 	material = minetest.digprop_gravellike(1.0),
 })
@@ -942,7 +932,6 @@ minetest.register_node("default:gravel", {
 minetest.register_node("default:sandstone", {
 	description = "Sandstone",
 	tile_images = {"default_sandstone.png"},
-	inventory_image = minetest.inventorycube("default_sandstone.png"),
 	is_ground_content = true,
 	material = minetest.digprop_dirtlike(1.0),  -- FIXME should this be stonelike?
 	dug_item = 'node "default:sand" 1',  -- FIXME is this intentional?
@@ -951,7 +940,6 @@ minetest.register_node("default:sandstone", {
 minetest.register_node("default:clay", {
 	description = "Clay",
 	tile_images = {"default_clay.png"},
-	inventory_image = minetest.inventorycube("default_clay.png"),
 	is_ground_content = true,
 	material = minetest.digprop_dirtlike(1.0),
 	dug_item = 'craft "default:clay_lump" 4',
@@ -960,7 +948,6 @@ minetest.register_node("default:clay", {
 minetest.register_node("default:brick", {
 	description = "Brick",
 	tile_images = {"default_brick.png"},
-	inventory_image = minetest.inventorycube("default_brick.png"),
 	is_ground_content = true,
 	material = minetest.digprop_stonelike(1.0),
 	dug_item = 'craft "default:clay_brick" 4',
@@ -969,7 +956,6 @@ minetest.register_node("default:brick", {
 minetest.register_node("default:tree", {
 	description = "Tree",
 	tile_images = {"default_tree_top.png", "default_tree_top.png", "default_tree.png"},
-	inventory_image = minetest.inventorycube("default_tree_top.png", "default_tree.png", "default_tree.png"),
 	is_ground_content = true,
 	material = minetest.digprop_woodlike(1.0),
 	cookresult_itemstring = 'craft "default:coal_lump" 1',
@@ -979,7 +965,6 @@ minetest.register_node("default:tree", {
 minetest.register_node("default:jungletree", {
 	description = "Jungle Tree",
 	tile_images = {"default_jungletree_top.png", "default_jungletree_top.png", "default_jungletree.png"},
-	inventory_image = minetest.inventorycube("default_jungletree_top.png", "default_jungletree.png", "default_jungletree.png"),
 	is_ground_content = true,
 	material = minetest.digprop_woodlike(1.0),
 	cookresult_itemstring = 'craft "default:coal_lump" 1',
@@ -992,6 +977,7 @@ minetest.register_node("default:junglegrass", {
 	visual_scale = 1.3,
 	tile_images = {"default_junglegrass.png"},
 	inventory_image = "default_junglegrass.png",
+	wield_image = "default_junglegrass.png",
 	paramtype = "light",
 	walkable = false,
 	material = minetest.digprop_leaveslike(1.0),
@@ -1003,7 +989,6 @@ minetest.register_node("default:leaves", {
 	drawtype = "allfaces_optional",
 	visual_scale = 1.3,
 	tile_images = {"default_leaves.png"},
-	inventory_image = minetest.inventorycube("default_leaves.png"),
 	paramtype = "light",
 	material = minetest.digprop_leaveslike(1.0),
 	extra_dug_item = 'node "default:sapling" 1',
@@ -1014,7 +999,6 @@ minetest.register_node("default:leaves", {
 minetest.register_node("default:cactus", {
 	description = "Cactus",
 	tile_images = {"default_cactus_top.png", "default_cactus_top.png", "default_cactus_side.png"},
-	inventory_image = minetest.inventorycube("default_cactus_top.png", "default_cactus_side.png", "default_cactus_side.png"),
 	is_ground_content = true,
 	material = minetest.digprop_woodlike(0.75),
 	furnace_burntime = 15,
@@ -1025,6 +1009,7 @@ minetest.register_node("default:papyrus", {
 	drawtype = "plantlike",
 	tile_images = {"default_papyrus.png"},
 	inventory_image = "default_papyrus.png",
+	wield_image = "default_papyrus.png",
 	paramtype = "light",
 	is_ground_content = true,
 	walkable = false,
@@ -1035,7 +1020,6 @@ minetest.register_node("default:papyrus", {
 minetest.register_node("default:bookshelf", {
 	description = "Bookshelf",
 	tile_images = {"default_wood.png", "default_wood.png", "default_bookshelf.png"},
-	inventory_image = minetest.inventorycube("default_wood.png", "default_bookshelf.png", "default_bookshelf.png"),
 	is_ground_content = true,
 	material = minetest.digprop_woodlike(0.75),
 	furnace_burntime = 30,
@@ -1045,7 +1029,6 @@ minetest.register_node("default:glass", {
 	description = "Glass",
 	drawtype = "glasslike",
 	tile_images = {"default_glass.png"},
-	inventory_image = minetest.inventorycube("default_glass.png"),
 	paramtype = "light",
 	sunlight_propagates = true,
 	is_ground_content = true,
@@ -1057,6 +1040,7 @@ minetest.register_node("default:fence_wood", {
 	drawtype = "fencelike",
 	tile_images = {"default_wood.png"},
 	inventory_image = "default_fence.png",
+	wield_image = "default_fence.png",
 	paramtype = "light",
 	is_ground_content = true,
 	selection_box = {
@@ -1072,6 +1056,7 @@ minetest.register_node("default:rail", {
 	drawtype = "raillike",
 	tile_images = {"default_rail.png", "default_rail_curved.png", "default_rail_t_junction.png", "default_rail_crossing.png"},
 	inventory_image = "default_rail.png",
+	wield_image = "default_rail.png",
 	paramtype = "light",
 	is_ground_content = true,
 	walkable = false,
@@ -1087,6 +1072,7 @@ minetest.register_node("default:ladder", {
 	drawtype = "signlike",
 	tile_images = {"default_ladder.png"},
 	inventory_image = "default_ladder.png",
+	wield_image = "default_ladder.png",
 	paramtype = "light",
 	is_ground_content = true,
 	wall_mounted = true,
@@ -1105,7 +1091,6 @@ minetest.register_node("default:ladder", {
 minetest.register_node("default:wood", {
 	description = "Wood",
 	tile_images = {"default_wood.png"},
-	inventory_image = minetest.inventorycube("default_wood.png"),
 	is_ground_content = true,
 	furnace_burntime = 7,
 	material = minetest.digprop_woodlike(0.75),
@@ -1114,7 +1099,6 @@ minetest.register_node("default:wood", {
 minetest.register_node("default:mese", {
 	description = "Mese",
 	tile_images = {"default_mese.png"},
-	inventory_image = minetest.inventorycube("default_mese.png"),
 	is_ground_content = true,
 	furnace_burntime = 30,
 	material = minetest.digprop_stonelike(0.5),
@@ -1123,7 +1107,6 @@ minetest.register_node("default:mese", {
 minetest.register_node("default:cloud", {
 	description = "Cloud",
 	tile_images = {"default_cloud.png"},
-	inventory_image = minetest.inventorycube("default_cloud.png"),
 	is_ground_content = true,
 })
 
@@ -1132,7 +1115,7 @@ minetest.register_node("default:water_flowing", {
 	drawtype = "flowingliquid",
 	tile_images = {"default_water.png"},
 	alpha = WATER_ALPHA,
-	inventory_image = minetest.inventorycube("default_water.png"),
+	--inventory_image = minetest.inventorycube("default_water.png"),
 	paramtype = "light",
 	walkable = false,
 	pointable = false,
@@ -1154,7 +1137,7 @@ minetest.register_node("default:water_source", {
 	drawtype = "liquid",
 	tile_images = {"default_water.png"},
 	alpha = WATER_ALPHA,
-	inventory_image = minetest.inventorycube("default_water.png"),
+	--inventory_image = minetest.inventorycube("default_water.png"),
 	paramtype = "light",
 	walkable = false,
 	pointable = false,
@@ -1175,7 +1158,7 @@ minetest.register_node("default:lava_flowing", {
 	description = "Lava (flowing)",
 	drawtype = "flowingliquid",
 	tile_images = {"default_lava.png"},
-	inventory_image = minetest.inventorycube("default_lava.png"),
+	--inventory_image = minetest.inventorycube("default_lava.png"),
 	paramtype = "light",
 	light_source = LIGHT_MAX - 1,
 	walkable = false,
@@ -1198,7 +1181,7 @@ minetest.register_node("default:lava_source", {
 	description = "Lava",
 	drawtype = "liquid",
 	tile_images = {"default_lava.png"},
-	inventory_image = minetest.inventorycube("default_lava.png"),
+	--inventory_image = minetest.inventorycube("default_lava.png"),
 	paramtype = "light",
 	light_source = LIGHT_MAX - 1,
 	walkable = false,
@@ -1223,6 +1206,7 @@ minetest.register_node("default:torch", {
 	drawtype = "torchlike",
 	tile_images = {"default_torch_on_floor.png", "default_torch_on_ceiling.png", "default_torch.png"},
 	inventory_image = "default_torch_on_floor.png",
+	wield_image = "default_torch_on_floor.png",
 	paramtype = "light",
 	sunlight_propagates = true,
 	walkable = false,
@@ -1243,6 +1227,7 @@ minetest.register_node("default:sign_wall", {
 	drawtype = "signlike",
 	tile_images = {"default_sign_wall.png"},
 	inventory_image = "default_sign_wall.png",
+	wield_image = "default_sign_wall.png",
 	paramtype = "light",
 	sunlight_propagates = true,
 	walkable = false,
@@ -1262,7 +1247,6 @@ minetest.register_node("default:chest", {
 	description = "Chest",
 	tile_images = {"default_chest_top.png", "default_chest_top.png", "default_chest_side.png",
 		"default_chest_side.png", "default_chest_side.png", "default_chest_front.png"},
-	inventory_image = minetest.inventorycube("default_chest_top.png", "default_chest_front.png", "default_chest_side.png"),
 	paramtype = "facedir_simple",
 	metadata_name = "chest",
 	material = minetest.digprop_woodlike(1.0),
@@ -1273,7 +1257,6 @@ minetest.register_node("default:chest_locked", {
 	description = "Locked Chest",
 	tile_images = {"default_chest_top.png", "default_chest_top.png", "default_chest_side.png",
 		"default_chest_side.png", "default_chest_side.png", "default_chest_lock.png"},
-	inventory_image = minetest.inventorycube("default_chest_top.png", "default_chest_lock.png", "default_chest_side.png"),
 	paramtype = "facedir_simple",
 	metadata_name = "locked_chest",
 	material = minetest.digprop_woodlike(1.0),
@@ -1284,7 +1267,6 @@ minetest.register_node("default:furnace", {
 	description = "Furnace",
 	tile_images = {"default_furnace_side.png", "default_furnace_side.png", "default_furnace_side.png",
 		"default_furnace_side.png", "default_furnace_side.png", "default_furnace_front.png"},
-	inventory_image = minetest.inventorycube("default_furnace_side.png", "default_furnace_front.png", "default_furnace_side.png"),
 	paramtype = "facedir_simple",
 	metadata_name = "furnace",
 	material = minetest.digprop_stonelike(3.0),
@@ -1293,7 +1275,6 @@ minetest.register_node("default:furnace", {
 minetest.register_node("default:cobble", {
 	description = "Cobble",
 	tile_images = {"default_cobble.png"},
-	inventory_image = minetest.inventorycube("default_cobble.png"),
 	is_ground_content = true,
 	cookresult_itemstring = 'node "default:stone" 1',
 	material = minetest.digprop_stonelike(0.9),
@@ -1302,7 +1283,6 @@ minetest.register_node("default:cobble", {
 minetest.register_node("default:mossycobble", {
 	description = "Mossy Cobble",
 	tile_images = {"default_mossycobble.png"},
-	inventory_image = minetest.inventorycube("default_mossycobble.png"),
 	is_ground_content = true,
 	material = minetest.digprop_stonelike(0.8),
 })
@@ -1310,7 +1290,6 @@ minetest.register_node("default:mossycobble", {
 minetest.register_node("default:steelblock", {
 	description = "Steel Block",
 	tile_images = {"default_steel_block.png"},
-	inventory_image = minetest.inventorycube("default_steel_block.png"),
 	is_ground_content = true,
 	material = minetest.digprop_stonelike(5.0),
 })
@@ -1339,6 +1318,7 @@ minetest.register_node("default:sapling", {
 	visual_scale = 1.0,
 	tile_images = {"default_sapling.png"},
 	inventory_image = "default_sapling.png",
+	wield_image = "default_sapling.png",
 	paramtype = "light",
 	walkable = false,
 	material = minetest.digprop_constanttime(0.0),
@@ -1354,7 +1334,6 @@ minetest.register_node("default:apple", {
 	paramtype = "light",
 	sunlight_propagates = true,
 	walkable = false,
-	dug_item = 'craft "default:apple" 1',
 	material = minetest.digprop_constanttime(0.0),
 	furnace_burntime = 3,
 	on_use = minetest.item_eat(4),
@@ -1365,42 +1344,52 @@ minetest.register_node("default:apple", {
 --
 
 minetest.register_craftitem("default:stick", {
+	description = "Stick",
 	inventory_image = "default_stick.png",
 	--furnace_burntime = ...,
 })
 
 minetest.register_craftitem("default:paper", {
+	description = "Paper",
 	inventory_image = "default_paper.png",
 })
 
 minetest.register_craftitem("default:book", {
+	description = "Book",
 	inventory_image = "default_book.png",
 })
 
 minetest.register_craftitem("default:coal_lump", {
+	description = "Lump of coal",
 	inventory_image = "default_coal_lump.png",
 	furnace_burntime = 40;
 })
 
 minetest.register_craftitem("default:iron_lump", {
+	description = "Lump of iron",
 	inventory_image = "default_iron_lump.png",
 	cookresult_itemstring = 'craft "default:steel_ingot" 1',
 })
 
 minetest.register_craftitem("default:clay_lump", {
+	description = "Lump of clay",
 	inventory_image = "default_clay_lump.png",
 	cookresult_itemstring = 'craft "default:clay_brick" 1',
 })
 
 minetest.register_craftitem("default:steel_ingot", {
+	description = "Steel ingot",
 	inventory_image = "default_steel_ingot.png",
 })
 
 minetest.register_craftitem("default:clay_brick", {
+	description = "Clay brick",
+	inventory_image = "default_steel_ingot.png",
 	inventory_image = "default_clay_brick.png",
 })
 
 minetest.register_craftitem("default:scorched_stuff", {
+	description = "Scorched stuff",
 	inventory_image = "default_scorched_stuff.png",
 })
 
@@ -1539,21 +1528,23 @@ local function handle_give_command(cmd, giver, receiver, stackstring)
 	minetest.debug("DEBUG: "..cmd..' invoked, stackstring="'..stackstring..'"')
 	minetest.log(cmd..' invoked, stackstring="'..stackstring..'"')
 	local itemstack = ItemStack(stackstring)
-	if itemstack.is_empty() then
+	if itemstack:is_empty() then
 		minetest.chat_send_player(giver, 'error: cannot give an empty item')
 		return
-	elseif not itemstack.is_known() then
+	elseif not itemstack:is_known() then
 		minetest.chat_send_player(giver, 'error: cannot give an unknown item')
 		return
 	end
-	local receiver = minetest.env:get_player_by_name(receiver)
-	if receiver == nil then
+	local receiverref = minetest.env:get_player_by_name(receiver)
+	if receiverref == nil then
 		minetest.chat_send_player(giver, receiver..' is not a known player')
 		return
 	end
-	local leftover = player:get_inventory():add_item(itemstack)
-	if leftover.is_empty() then
+	local leftover = receiverref:get_inventory():add_item("main", itemstack)
+	if leftover:is_empty() then
 		partiality = ""
+	elseif leftover:get_count() == itemstack:get_count() then
+		partiality = "could not be "
 	else
 		partiality = "partially "
 	end

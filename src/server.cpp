@@ -932,6 +932,9 @@ Server::Server(
 	// Read Textures and calculate sha1 sums
 	PrepareTextures();
 
+	// Apply item aliases in the node definition manager
+	m_nodedef->updateAliases(m_itemdef);
+
 	// Initialize Environment
 	
 	m_env = new ServerEnvironment(new ServerMap(mapsavedir, this), m_lua,
@@ -4086,7 +4089,7 @@ void Server::PrepareTextures() {
 				unsigned char *digest = sha1.getDigest();
 				std::string digest_string = base64_encode(digest, 20);
 
-				delete(digest);
+				free(digest);
 
 				// Put in list
 				this->m_Textures[tname] = TextureInformation(tpath,digest_string);

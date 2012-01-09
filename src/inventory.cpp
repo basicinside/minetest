@@ -60,15 +60,15 @@ static std::string serializeJsonStringIfNeeded(const std::string &s)
 static std::string deSerializeJsonStringIfNeeded(std::istream &is)
 {
 	std::ostringstream tmp_os;
+	bool expect_initial_quote = true;
 	bool is_json = false;
 	bool was_backslash = false;
 	for(;;)
 	{
-		char c;
-		is >> c;
+		char c = is.get();
 		if(is.eof())
 			break;
-		if(tmp_os.str().empty() && c == '"')
+		if(expect_initial_quote && c == '"')
 		{
 			tmp_os << c;
 			is_json = true;
@@ -96,6 +96,7 @@ static std::string deSerializeJsonStringIfNeeded(std::istream &is)
 				tmp_os << c;
 			}
 		}
+		expect_initial_quote = false;
 	}
 	if(is_json)
 	{

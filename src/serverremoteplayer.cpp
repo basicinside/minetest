@@ -84,6 +84,11 @@ InventoryLocation ServerRemotePlayer::getInventoryLocation() const
 	return loc;
 }
 
+void ServerRemotePlayer::setInventoryModified()
+{
+	m_inventory_not_sent = true;
+}
+
 std::string ServerRemotePlayer::getWieldList() const
 {
 	return "main";
@@ -92,19 +97,6 @@ std::string ServerRemotePlayer::getWieldList() const
 int ServerRemotePlayer::getWieldIndex() const
 {
 	return m_wield_index;
-}
-
-InventoryItem ServerRemotePlayer::getWieldedItem() const
-{
-	return ServerActiveObject::getWieldedItem();
-}
-
-bool ServerRemotePlayer::setWieldedItem(const InventoryItem &item)
-{
-	bool succeeded = ServerActiveObject::setWieldedItem(item);
-	if(succeeded)
-		m_inventory_not_sent = true;
-	return succeeded;
 }
 
 void ServerRemotePlayer::setWieldIndex(int i)

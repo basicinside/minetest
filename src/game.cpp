@@ -854,6 +854,12 @@ void the_game(
 	}
 
 	/*
+		After all content has been received:
+		Update cached textures, meshes and materials
+	*/
+	client.afterContentReceived();
+
+	/*
 		Create skybox
 	*/
 	float old_brightness = 1.0;
@@ -2245,6 +2251,7 @@ void the_game(
 		{
 			//infostream<<"Updating local inventory"<<std::endl;
 			client.getLocalInventory(local_inventory);
+			local_inventory.serialize(dstream);
 			
 			update_wielded_item_trigger = true;
 		}

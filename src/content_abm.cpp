@@ -53,7 +53,7 @@ public:
 				!ndef->get(n_top).isLiquid() &&
 				n_top.getLightBlend(env->getDayNightRatio(), ndef) >= 13)
 		{
-			n.setContent(ndef->getId("dirt_with_grass"));  // FIXME NDEF_GETID
+			n.setContent(ndef->getId("dirt_with_grass"));
 			map->addNodeWithEvent(p, n);
 		}
 	}
@@ -82,7 +82,7 @@ public:
 		if(!ndef->get(n_top).light_propagates ||
 				ndef->get(n_top).isLiquid())
 		{
-			n.setContent(ndef->getId("dirt"));  // FIXME NDEF_GETID
+			n.setContent(ndef->getId("dirt"));
 			map->addNodeWithEvent(p, n);
 		}
 	}
@@ -116,7 +116,7 @@ public:
 				0, myrand_range(-2, 2));
 		MapNode n1 = map->getNodeNoEx(p1);
 		MapNode n1b = map->getNodeNoEx(p1+v3s16(0,-1,0));
-		if(n1b.getContent() == ndef->getId("dirt_with_grass") &&  // FIXME NDEF_GETID
+		if(n1b.getContent() == ndef->getId("dirt_with_grass") &&
 				n1.getContent() == CONTENT_AIR)
 		{
 			v3f pos = intToFloat(p1, BS);

@@ -39,23 +39,61 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 */
 ItemDefinition::ItemDefinition()
 {
+	resetInitial();
+}
+
+ItemDefinition::ItemDefinition(const ItemDefinition &def)
+{
+	resetInitial();
+	*this = def;
+}
+
+ItemDefinition& ItemDefinition::operator=(const ItemDefinition &def)
+{
+	if(this == &def)
+		return *this;
+
+	reset();
+
+	type = def.type;
+	name = def.name;
+	description = def.description;
+	inventory_image = def.inventory_image;
+	wield_image = def.wield_image;
+	wield_scale = def.wield_scale;
+	stack_max = def.stack_max;
+	usable = def.usable;
+	liquids_pointable = def.liquids_pointable;
+	if(def.tool_digging_properties)
+	{
+		tool_digging_properties = new ToolDiggingProperties(
+				*def.tool_digging_properties);
+	}
+#ifndef SERVER
+	inventory_texture = def.inventory_texture;
+	if(def.wield_mesh)
+	{
+		wield_mesh = def.wield_mesh;
+		wield_mesh->grab();
+	}
+#endif
+	return *this;
+}
+
+ItemDefinition::~ItemDefinition()
+{
+	reset();
+}
+
+void ItemDefinition::resetInitial()
+{
 	// Initialize pointers to NULL so reset() does not delete undefined pointers
 	tool_digging_properties = NULL;
 #ifndef SERVER
 	inventory_texture = NULL;
 	wield_mesh = NULL;
 #endif
-
 	reset();
-}
-
-ItemDefinition::~ItemDefinition()
-{
-	delete tool_digging_properties;
-#ifndef SERVER
-	if(wield_mesh)
-		wield_mesh->drop();
-#endif
 }
 
 void ItemDefinition::reset()
@@ -104,7 +142,7 @@ void ItemDefinition::serialize(std::ostream &os) const
 		tool_digging_properties->serialize(tmp_os);
 		tool_digging_properties_s = tmp_os.str();
 	}
-	os<<serializeLongString(tool_digging_properties_s);
+	os<<serializeString(tool_digging_properties_s);
 }
 
 void ItemDefinition::deSerialize(std::istream &is)
@@ -125,7 +163,7 @@ void ItemDefinition::deSerialize(std::istream &is)
 	stack_max = readS16(is);
 	usable = readU8(is);
 	liquids_pointable = readU8(is);
-	std::string tool_digging_properties_s = deSerializeLongString(is);
+	std::string tool_digging_properties_s = deSerializeString(is);
 	if(!tool_digging_properties_s.empty())
 	{
 		std::istringstream tmp_is(tool_digging_properties_s, std::ios::binary);
@@ -137,6 +175,8 @@ void ItemDefinition::deSerialize(std::istream &is)
 /*
 	CItemDefManager
 */
+
+// SUGG: Support chains of aliases?
 
 class CItemDefManager: public IWritableItemDefManager
 {
@@ -151,7 +191,7 @@ public:
 	virtual const ItemDefinition& get(const std::string &name_) const
 	{
 		// Convert name according to possible alias
-		std::string name = getAlias(name);
+		std::string name = getAlias(name_);
 		// Get the definition
 		std::map<std::string, ItemDefinition*>::const_iterator i;
 		i = m_item_definitions.find(name);
@@ -168,10 +208,27 @@ public:
 			return i->second;
 		return name;
 	}
+	virtual std::set<std::string> getAll() const
+	{
+		std::set<std::string> result;
+		for(std::map<std::string, ItemDefinition*>::const_iterator
+				i = m_item_definitions.begin();
+				i != m_item_definitions.end(); i++)
+		{
+			result.insert(i->first);
+		}
+		for(std::map<std::string, std::string>::const_iterator
+				i = m_aliases.begin();
+				i != m_aliases.end(); i++)
+		{
+			result.insert(i->first);
+		}
+		return result;
+	}
 	virtual bool isKnown(const std::string &name_) const
 	{
 		// Convert name according to possible alias
-		std::string name = getAlias(name);
+		std::string name = getAlias(name_);
 		// Get the definition
 		std::map<std::string, ItemDefinition*>::const_iterator i;
 		return m_item_definitions.find(name) != m_item_definitions.end();
@@ -273,7 +330,11 @@ public:
 				def->wield_mesh->drop();
 				def->wield_mesh = NULL;
 			}
-			if(def->wield_image != "" || def->inventory_image != "")
+			if(def->type == ITEM_NODE && def->wield_image == "")
+			{
+				need_node_mesh = true;
+			}
+			else if(def->wield_image != "" || def->inventory_image != "")
 			{
 				std::string imagename;
 				if(def->wield_image != "")
@@ -291,10 +352,6 @@ public:
 						<<def->name<<std::endl;
 				}
 			}
-			else if(def->type == ITEM_NODE)
-			{
-				need_node_mesh = true;
-			}
 
 			if(need_node_mesh)
 			{
@@ -306,7 +363,7 @@ public:
 					makeMapBlockMesh(&mesh_make_data, gamedef);
 				// Scale and translate into a unit cube centered on the origin
 				scaleMesh(node_mesh, v3f(1.0/BS, 1.0/BS, 1.0/BS));
-				translateMesh(node_mesh, v3f(-1.5, -1.5, -1.5));
+				translateMesh(node_mesh, v3f(-1.0, -1.0, -1.0));
 				// Scale to proper wield mesh proportions
 				scaleMesh(node_mesh, v3f(30.0, 30.0, 30.0) * def->wield_scale);
 
@@ -314,7 +371,6 @@ public:
 				if(def->wield_mesh == NULL)
 				{
 					def->wield_mesh = node_mesh;
-					def->wield_mesh->grab(); // increase refcount
 				}
 
 				if(def->inventory_texture == NULL)
@@ -325,7 +381,8 @@ public:
 					def->inventory_texture = tsrc->getTextureRaw("treeprop.png");
 				}
 
-				node_mesh->drop();
+				if(node_mesh != NULL && node_mesh != def->wield_mesh)
+					node_mesh->drop();
 			}
 		}
 #endif

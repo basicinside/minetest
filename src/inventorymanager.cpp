@@ -101,7 +101,7 @@ void InventoryLocation::deSerialize(std::istream &is)
 
 void InventoryLocation::deSerialize(std::string s)
 {
-	std::istringstream is(std::ios::binary);
+	std::istringstream is(s, std::ios::binary);
 	deSerialize(is);
 }
 

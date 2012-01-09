@@ -29,6 +29,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "tile.h"
 #endif
 #include "materials.h" // MaterialProperties
+class IItemDefManager;
 class ITextureSource;
 class IGameDef;
 
@@ -252,6 +253,12 @@ public:
 			const ContentFeatures &def)=0;
 	// If returns CONTENT_IGNORE, could not allocate id
 	virtual content_t allocateDummy(const std::string &name)=0;
+
+	/*
+		Update item alias mapping.
+		Call after updating item definitions.
+	*/
+	virtual void updateAliases(IItemDefManager *idef)=0;
 
 	/*
 		Update tile textures to latest return values of TextueSource.

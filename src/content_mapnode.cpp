@@ -259,7 +259,7 @@ content_t legacy_get_id(const std::string &oldname, INodeDefManager *ndef)
 	if(newname == "")
 		return CONTENT_IGNORE;
 	content_t id;
-	bool found = ndef->getId(newname, id); // FIXME NDEF_GETID
+	bool found = ndef->getId(newname, id);
 	if(!found)
 		return CONTENT_IGNORE;
 	return id;

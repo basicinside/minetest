@@ -20,7 +20,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "nodedef.h"
 
 #include "main.h" // For g_settings
-#include "nodemetadata.h"
+#include "itemdef.h"
 #ifndef SERVER
 #include "tile.h"
 #endif
@@ -248,6 +248,7 @@ public:
 	void clear()
 	{
 		m_name_id_mapping.clear();
+		m_name_id_mapping_with_aliases.clear();
 
 		for(u16 i=0; i<=MAX_CONTENT; i++)
 		{
@@ -270,7 +271,7 @@ public:
 			// Insert directly into containers
 			content_t c = CONTENT_AIR;
 			m_content_features[c] = f;
-			m_name_id_mapping.set(c, f.name);
+			addNameIdMapping(c, f.name);
 		}
 		// Set CONTENT_IGNORE
 		{
@@ -288,7 +289,7 @@ public:
 			// Insert directly into containers
 			content_t c = CONTENT_IGNORE;
 			m_content_features[c] = f;
-			m_name_id_mapping.set(c, f.name);
+			addNameIdMapping(c, f.name);
 		}
 	}
 	// CONTENT_IGNORE = not found
@@ -337,8 +338,12 @@ public:
 	}
 	virtual bool getId(const std::string &name, content_t &result) const
 	{
-		// Note: Item aliases are not followed.
-		return m_name_id_mapping.getId(name, result);
+		std::map<std::string, content_t>::const_iterator
+			i = m_name_id_mapping_with_aliases.find(name);
+		if(i == m_name_id_mapping_with_aliases.end())
+			return false;
+		result = i->second;
+		return true;
 	}
 	virtual content_t getId(const std::string &name) const
 	{
@@ -375,14 +380,14 @@ public:
 		}
 		m_content_features[c] = def;
 		if(def.name != "")
-			m_name_id_mapping.set(c, def.name);
+			addNameIdMapping(c, def.name);
 	}
 	virtual content_t set(const std::string &name,
 			const ContentFeatures &def)
 	{
 		assert(name == def.name);
 		u16 id = CONTENT_IGNORE;
-		bool found = m_name_id_mapping.getId(name, id);
+		bool found = m_name_id_mapping.getId(name, id);  // ignore aliases
 		if(!found){
 			// Determine if full param2 is required
 			bool require_full_param2 = (
@@ -399,7 +404,7 @@ public:
 			if(id == CONTENT_IGNORE)
 				return CONTENT_IGNORE;
 			if(name != "")
-				m_name_id_mapping.set(id, name);
+				addNameIdMapping(id, name);
 		}
 		set(id, def);
 		return id;
@@ -413,6 +418,23 @@ public:
 		f.material.diggability = DIGGABLE_CONSTANT;
 		f.material.constant_time = 0.5;
 		return set(name, f);
+	}
+	virtual void updateAliases(IItemDefManager *idef)
+	{
+		std::set<std::string> all = idef->getAll();
+		m_name_id_mapping_with_aliases.clear();
+		for(std::set<std::string>::iterator
+				i = all.begin(); i != all.end(); i++)
+		{
+			std::string name = *i;
+			std::string convert_to = idef->getAlias(name);
+			content_t id;
+			if(m_name_id_mapping.getId(convert_to, id))
+			{
+				m_name_id_mapping_with_aliases.insert(
+						std::make_pair(name, id));
+			}
+		}
 	}
 	virtual void updateTextures(ITextureSource *tsrc)
 	{
@@ -573,14 +595,24 @@ public:
 			ContentFeatures *f = &m_content_features[i];
 			f->deSerialize(tmp_is);
 			if(f->name != "")
-				m_name_id_mapping.set(i, f->name);
+				addNameIdMapping(i, f->name);
 		}
+	}
+private:
+	void addNameIdMapping(content_t i, std::string name)
+	{
+		m_name_id_mapping.set(i, name);
+		m_name_id_mapping_with_aliases.insert(std::make_pair(name, i));
 	}
 private:
 	// Features indexed by id
 	ContentFeatures m_content_features[MAX_CONTENT+1];
 	// A mapping for fast converting back and forth between names and ids
 	NameIdMapping m_name_id_mapping;
+	// Like m_name_id_mapping, but only from names to ids, and includes
+	// item aliases too. Updated by updateAliases()
+	// Note: Not serialized.
+	std::map<std::string, content_t> m_name_id_mapping_with_aliases;
 };
 
 IWritableNodeDefManager* createNodeDefManager()

@@ -44,6 +44,7 @@ void drawInventoryItem(video::IVideoDriver *driver,
 	video::ITexture *texture = def.inventory_texture;
 
 	// Draw the inventory texture
+	if(texture != NULL)
 	{
 		const video::SColor color(255,255,255,255);
 		const video::SColor colors[] = {color,color,color,color};
@@ -76,10 +77,11 @@ void drawInventoryItem(video::IVideoDriver *driver,
 		//   wear = 0.5: yellow
 		//   wear = 1.0: red
 		video::SColor color(255,255,255,255);
-		//if(0 <= wear && wear <= 0.5)
-		//	color.set(255, wear*2*255, 255, 0);
-		//else if(0.5 <= wear && wear <= 1.0)
-		//	color.set(255, 255, (1.0-wear)*2*255, 255, 0);
+		int wear_i = floor(wear * 511);
+		if(0 <= wear_i && wear_i <= 255)
+			color.set(255, wear_i, 255, 0);
+		else if(256 <= wear_i && wear_i <= 511)
+			color.set(255, 255, (511-wear_i)*2, 0);
 
 		driver->draw2DRectangle(color, progressrect, clip);
 	}

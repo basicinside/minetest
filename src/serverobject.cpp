@@ -88,6 +88,7 @@ bool ServerActiveObject::setWieldedItem(const InventoryItem &item)
 		if (list)
 		{
 			list->changeItem(getWieldIndex(), item);
+			setInventoryModified();
 			return true;
 		}
 	}

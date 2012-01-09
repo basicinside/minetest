@@ -558,7 +558,7 @@ void correctBlockNodeIds(const NameIdMapping *nimap, MapBlock *block,
 			continue;
 		}
 		content_t global_id;
-		found = nodedef->getId(name, global_id); // FIXME NDEF_GETID
+		found = nodedef->getId(name, global_id);
 		if(!found){
 			global_id = gamedef->allocateUnknownNodeId(name);
 			if(global_id == CONTENT_IGNORE){

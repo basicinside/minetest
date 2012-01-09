@@ -23,7 +23,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include <iostream>
 #include <sstream>
 #include <string>
-#include <set>
+#include <vector>
 #include "common_irrlicht.h"
 #include "debug.h"
 #include "itemdef.h"
