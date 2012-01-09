@@ -49,9 +49,7 @@ function bucket.register_liquid(source, flowing, itemname, inventory_image)
 					-- It's a liquid
 					minetest.env:add_node(pointed_thing.under, {name=source})
 				end
-				itemstack:take_item()
-				itemstack:put_item({name="bucket:bucket_empty"})
-				return itemstack
+				return {name="bucket:bucket_empty"}
 			end
 		})
 	end
@@ -71,9 +69,7 @@ minetest.register_craftitem("bucket:bucket_empty", {
 		liquiddef = bucket.liquids[n.name]
 		if liquiddef ~= nil and liquiddef.source == n.name and liquiddef.itemname ~= nil then
 			minetest.env:add_node(pointed_thing.under, {name="air"})
-			itemstack:take_item()
-			itemstack:put_item({name=liquiddef.itemname})
-			return itemstack
+			return {name=liquiddef.itemname}
 		end
 	end,
 })

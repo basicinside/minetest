@@ -1367,7 +1367,8 @@ minetest.register_craftitem("default:coal_lump", {
 
 minetest.register_craftitem("default:iron_lump", {
 	description = "Lump of iron",
-	inventory_image = "default_iron_lump.png",
+	--inventory_image = "default_iron_lump.png",
+	inventory_image = minetest.inventorycube("default_lava.png", "default_water.png", "default_mese.png"),
 	cookresult_itemstring = 'craft "default:steel_ingot" 1',
 })
 
@@ -1550,12 +1551,12 @@ local function handle_give_command(cmd, giver, receiver, stackstring)
 	end
 	if giver == receiver then
 		minetest.chat_send_player(giver, '"'..stackstring
-			..'" '..partiality..' added to inventory.');
+			..'" '..partiality..'added to inventory.');
 	else
 		minetest.chat_send_player(giver, '"'..stackstring
-			..'" '..partiality..' added to '..receiver..'\'s inventory.');
+			..'" '..partiality..'added to '..receiver..'\'s inventory.');
 		minetest.chat_send_player(receiver, '"'..stackstring
-			..'" '..partiality..' added to inventory.');
+			..'" '..partiality..'added to inventory.');
 	end
 end
 
@@ -1608,6 +1609,21 @@ minetest.register_on_chat_message(function(name, message)
 		minetest.chat_send_player(name, '"'..entityname
 				..'" spawned.');
 		return true -- Handled chat message
+	end
+	local cmd = "/pulverize"
+	if message:sub(0, #cmd) == cmd then
+		local player = minetest.env:get_player_by_name(name)
+		if player == nil then
+			print("Unable to pulverize, player is nil")
+			return true -- Handled chat message
+		end
+		if player:get_wielded_item():is_empty() then
+			minetest.chat_send_player(name, 'Unable to pulverize, no item in hand.')
+		else
+			player:set_wielded_item(nil)
+			minetest.chat_send_player(name, 'An item was pulverized.')
+		end
+		return true
 	end
 end)
 

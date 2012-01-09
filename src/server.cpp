@@ -2867,23 +2867,26 @@ void Server::ProcessData(u8 *data, u32 datasize, u16 peer_id)
 
 		}
 
+		v3f pointed_pos_under = player_pos;
+		v3f pointed_pos_above = player_pos;
+		if(pointed.type == POINTEDTHING_NODE)
+		{
+			pointed_pos_under = intToFloat(p_under, BS);
+			pointed_pos_above = intToFloat(p_above, BS);
+		}
+		else if(pointed.type == POINTEDTHING_OBJECT)
+		{
+			pointed_pos_under = pointed_object->getBasePosition();
+			pointed_pos_above = pointed_pos_under;
+		}
+
 		/*
 			Check that target is reasonably close
 			(only when digging or placing things)
 		*/
 		if(action == 0 || action == 2 || action == 3)
 		{
-			v3f pointed_pos = player_pos;
-			if(pointed.type == POINTEDTHING_NODE)
-			{
-				pointed_pos = intToFloat(p_under, BS);
-			}
-			else if(pointed.type == POINTEDTHING_OBJECT)
-			{
-				pointed_pos = pointed_object->getBasePosition();
-			}
-
-			float d = player_pos.getDistanceFrom(pointed_pos);
+			float d = player_pos.getDistanceFrom(pointed_pos_under);
 			float max_d = BS * 10; // Just some large enough value
 			if(d > max_d){
 				actionstream<<"Player "<<player->getName()
@@ -2893,7 +2896,7 @@ void Server::ProcessData(u8 *data, u32 datasize, u16 peer_id)
 						<<". ignoring."<<std::endl;
 				// Re-send block to revert change on client-side
 				RemoteClient *client = getClient(peer_id);
-				v3s16 blockpos = getNodeBlockPos(floatToInt(pointed_pos, BS));
+				v3s16 blockpos = getNodeBlockPos(floatToInt(pointed_pos_under, BS));
 				client->SetBlockNotSent(blockpos);
 				// Do nothing else
 				return;

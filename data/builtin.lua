@@ -124,9 +124,7 @@ function minetest.item_place(itemstack, placer, pointed_thing)
 	return itemstack
 end
 
-function minetest.item_drop(itemstack, dropper)
-	playerpos = dropper:getpos()
-	pos = {x=playerpos.x, y=playerpos.y+0.5, z=playerpos.z}
+function minetest.item_drop(itemstack, dropper, pos)
 	minetest.env:add_item(pos, itemstack)
 	return ""
 end
@@ -395,7 +393,7 @@ function minetest.register_item(name, itemdef)
 	-- Disable all further modifications
 	getmetatable(itemdef).__newindex = {}
 
-	minetest.log("Registering item: " .. itemdef.name)
+	--minetest.log("Registering item: " .. itemdef.name)
 	minetest.registered_items[itemdef.name] = itemdef
 	minetest.registered_aliases[itemdef.name] = nil
 	register_item_raw(itemdef)
@@ -463,7 +461,7 @@ function minetest.register_alias(name, convert_to)
 		minetest.log("WARNING: Not registering alias, item with same name" ..
 			" is already defined: " .. name .. " -> " .. convert_to)
 	else
-		minetest.log("Registering alias: " .. name .. " -> " .. convert_to)
+		--minetest.log("Registering alias: " .. name .. " -> " .. convert_to)
 		minetest.registered_aliases[name] = convert_to
 		register_alias_raw(name, convert_to)
 	end

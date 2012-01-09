@@ -117,6 +117,7 @@ ItemSAO::ItemSAO(ServerEnvironment *env, v3f pos,
 		const std::string itemstring):
 	ServerActiveObject(env, pos),
 	m_itemstring(itemstring),
+	m_itemstring_changed(false),
 	m_speed_f(0,0,0),
 	m_last_sent_position(0,0,0)
 {
@@ -175,17 +176,23 @@ void ItemSAO::step(float dtime, bool send_recommended)
 		m_last_sent_position = pos_f;
 
 		std::ostringstream os(std::ios::binary);
-		char buf[6];
 		// command (0 = update position)
-		buf[0] = 0;
-		os.write(buf, 1);
+		writeU8(os, 0);
 		// pos
-		writeS32((u8*)buf, m_base_position.X*1000);
-		os.write(buf, 4);
-		writeS32((u8*)buf, m_base_position.Y*1000);
-		os.write(buf, 4);
-		writeS32((u8*)buf, m_base_position.Z*1000);
-		os.write(buf, 4);
+		writeV3F1000(os, m_base_position);
+		// create message and add to list
+		ActiveObjectMessage aom(getId(), false, os.str());
+		m_messages_out.push_back(aom);
+	}
+	if(m_itemstring_changed)
+	{
+		m_itemstring_changed = false;
+
+		std::ostringstream os(std::ios::binary);
+		// command (1 = update itemstring)
+		writeU8(os, 1);
+		// itemstring
+		os<<serializeString(m_itemstring);
 		// create message and add to list
 		ActiveObjectMessage aom(getId(), false, os.str());
 		m_messages_out.push_back(aom);
@@ -195,17 +202,10 @@ void ItemSAO::step(float dtime, bool send_recommended)
 std::string ItemSAO::getClientInitializationData()
 {
 	std::ostringstream os(std::ios::binary);
-	char buf[6];
 	// version
-	buf[0] = 0;
-	os.write(buf, 1);
+	writeU8(os, 0);
 	// pos
-	writeS32((u8*)buf, m_base_position.X*1000);
-	os.write(buf, 4);
-	writeS32((u8*)buf, m_base_position.Y*1000);
-	os.write(buf, 4);
-	writeS32((u8*)buf, m_base_position.Z*1000);
-	os.write(buf, 4);
+	writeV3F1000(os, m_base_position);
 	// itemstring
 	os<<serializeString(m_itemstring);
 	return os.str();
@@ -215,10 +215,8 @@ std::string ItemSAO::getStaticData()
 {
 	infostream<<__FUNCTION_NAME<<std::endl;
 	std::ostringstream os(std::ios::binary);
-	char buf[1];
 	// version
-	buf[0] = 0;
-	os.write(buf, 1);
+	writeU8(os, 0);
 	// itemstring
 	os<<serializeString(m_itemstring);
 	return os.str();
@@ -259,7 +257,7 @@ void ItemSAO::punch(ServerActiveObject *puncher, float time_from_last_punch)
 		else
 		{
 			m_itemstring = leftover.getItemString();
-			// TODO send the new itemstring to clients?
+			m_itemstring_changed = true;
 		}
 	}
 }
@@ -454,6 +452,7 @@ void RatSAO::punch(ServerActiveObject *puncher, float time_from_last_punch)
 	{
 		std::string wieldlist = puncher->getWieldList();
 		InventoryItem leftover = inv->addItem(wieldlist, item);
+		puncher->setInventoryModified();
 		if(leftover.empty())
 			m_removed = true;
 	}

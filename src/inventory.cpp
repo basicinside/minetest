@@ -116,13 +116,19 @@ InventoryItem::InventoryItem(std::string name_, u16 count_,
 	count = count_;
 	wear = wear_;
 	metadata = metadata_;
+
 	if(name.empty() || count == 0)
 		clear();
+	else if(itemdef->get(name).type == ITEM_TOOL)
+		count = 1;
 }
 
 void InventoryItem::serialize(std::ostream &os) const
 {
 	DSTACK(__FUNCTION_NAME);
+
+	if(empty())
+		return;
 
 	// Check how many parts of the itemstring are needed
 	int parts = 1;
@@ -288,6 +294,8 @@ void InventoryItem::deSerialize(std::istream &is, IItemDefManager *itemdef)
 
 	if(name.empty() || count == 0)
 		clear();
+	else if(itemdef->get(name).type == ITEM_TOOL)
+		count = 1;
 }
 
 void InventoryItem::deSerialize(const std::string &str, IItemDefManager *itemdef)

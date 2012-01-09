@@ -306,7 +306,8 @@ void IDropAction::apply(InventoryManager *mgr, ServerActiveObject *player)
 		Drop the item
 	*/
 	InventoryItem item = list_from->getItem(from_i);
-	if(scriptapi_item_on_drop(player->getEnv()->getLua(), item, player))
+	if(scriptapi_item_on_drop(player->getEnv()->getLua(), item, player,
+				player->getBasePosition() + v3f(0,1,0)))
 	{
 		// Apply returned ItemStack
 		if(g_settings->getBool("creative_mode") == false

@@ -304,6 +304,8 @@ public:
 
 		ITextureSource *tsrc = gamedef->getTextureSource();
 		INodeDefManager *nodedef = gamedef->getNodeDefManager();
+		IrrlichtDevice *device = tsrc->getDevice();
+		video::IVideoDriver *driver = device->getVideoDriver();
 
 		for(std::map<std::string, ItemDefinition*>::iterator
 				i = m_item_definitions.begin();
@@ -336,13 +338,17 @@ public:
 			}
 			else if(def->wield_image != "" || def->inventory_image != "")
 			{
+				// Extrude the wield image into a mesh
+
 				std::string imagename;
 				if(def->wield_image != "")
 					imagename = def->wield_image;
 				else
 					imagename = def->inventory_image;
 
-				def->wield_mesh = tsrc->getTextureExtruded(imagename,
+				def->wield_mesh = createExtrudedMesh(
+						tsrc->getTextureRaw(imagename),
+						driver,
 						def->wield_scale * v3f(40.0, 40.0, 4.0));
 				if(def->wield_mesh == NULL)
 				{
@@ -355,33 +361,70 @@ public:
 
 			if(need_node_mesh)
 			{
-				// Draw the node to make a wield mesh
+				/*
+				 	Make a mesh from the node
+				*/
 				MeshMakeData mesh_make_data;
 				MapNode mesh_make_node(nodedef, def->name);
 				mesh_make_data.fillSingleNode(1000, &mesh_make_node);
 				scene::IMesh *node_mesh =
 					makeMapBlockMesh(&mesh_make_data, gamedef);
-				// Scale and translate into a unit cube centered on the origin
+				setMeshColor(node_mesh, video::SColor(255, 255, 255, 255));
+
+				/*
+					Scale and translate the mesh so it's a unit cube
+					centered on the origin
+				*/
 				scaleMesh(node_mesh, v3f(1.0/BS, 1.0/BS, 1.0/BS));
 				translateMesh(node_mesh, v3f(-1.0, -1.0, -1.0));
-				// Scale to proper wield mesh proportions
-				scaleMesh(node_mesh, v3f(30.0, 30.0, 30.0) * def->wield_scale);
 
-				// Set the wield mesh
-				if(def->wield_mesh == NULL)
+				/*
+					Draw node mesh into a render target texture
+				*/
+				if(def->inventory_texture == NULL && node_mesh != NULL)
 				{
+					core::dimension2d<u32> dim(64,64);
+					std::string rtt_texture_name = "INVENTORY_"
+						+ def->name + "_RTT";
+					v3f camera_position(0, 1.0, -1.5);
+					camera_position.rotateXZBy(45);
+					v3f camera_lookat(0, 0, 0);
+					core::CMatrix4<f32> camera_projection_matrix;
+					// Set orthogonal projection
+					camera_projection_matrix.buildProjectionMatrixOrthoLH(
+							1.65, 1.65, 0, 100);
+
+					video::SColorf ambient_light(0.2,0.2,0.2);
+					v3f light_position(10, 100, -50);
+					video::SColorf light_color(0.5,0.5,0.5);
+					f32 light_radius = 1000;
+
+					def->inventory_texture = generateTextureFromMesh(
+						node_mesh, device, dim, rtt_texture_name,
+						camera_position,
+						camera_lookat,
+						camera_projection_matrix,
+						ambient_light,
+						light_position,
+						light_color,
+						light_radius);
+					// Note: might have returned NULL
+				}
+
+				/*
+					Use the node mesh as the wield mesh
+				*/
+				if(def->wield_mesh == NULL && node_mesh != NULL)
+				{
+					// Scale to proper wield mesh proportions
+					scaleMesh(node_mesh, v3f(30.0, 30.0, 30.0)
+							* def->wield_scale);
 					def->wield_mesh = node_mesh;
+					def->wield_mesh->grab();
 				}
 
-				if(def->inventory_texture == NULL)
-				{
-					// TODO: somehow render the wield mesh.
-					// But let the texture source cache the texture!
-					//def->inventory_texture = tsrc->getTextureRaw("...");
-					def->inventory_texture = tsrc->getTextureRaw("treeprop.png");
-				}
 
-				if(node_mesh != NULL && node_mesh != def->wield_mesh)
+				if(node_mesh != NULL)
 					node_mesh->drop();
 			}
 		}

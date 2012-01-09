@@ -53,6 +53,7 @@ public:
 	float getMinimumSavedMovement(){ return 0.1*BS; }
 private:
 	std::string m_itemstring;
+	bool m_itemstring_changed;
 	v3f m_speed_f;
 	v3f m_last_sent_position;
 	IntervalLimiter m_move_interval;

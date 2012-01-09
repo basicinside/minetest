@@ -68,7 +68,7 @@ void scriptapi_get_creative_inventory(lua_State *L, ServerRemotePlayer *player);
 
 /* item callbacks */
 bool scriptapi_item_on_drop(lua_State *L, InventoryItem &item,
-		ServerActiveObject *dropper);
+		ServerActiveObject *dropper, v3f pos);
 bool scriptapi_item_on_place(lua_State *L, InventoryItem &item,
 		ServerActiveObject *placer, const PointedThing &pointed);
 bool scriptapi_item_on_use(lua_State *L, InventoryItem &item,

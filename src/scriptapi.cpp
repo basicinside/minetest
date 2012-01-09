@@ -690,6 +690,8 @@ static ItemDefinition read_item_definition(lua_State *L, int index)
 	def.usable = lua_isfunction(L, -1);
 	lua_pop(L, 1);
 
+	getboolfield(L, index, "liquids_pointable", def.liquids_pointable);
+
 	lua_getfield(L, index, "tool_digging_properties");
 	if(lua_istable(L, -1)){
 		def.tool_digging_properties = new ToolDiggingProperties(
@@ -3605,7 +3607,7 @@ static bool get_item_callback(lua_State *L,
 }
 
 bool scriptapi_item_on_drop(lua_State *L, InventoryItem &item,
-		ServerActiveObject *dropper)
+		ServerActiveObject *dropper, v3f pos)
 {
 	realitycheck(L);
 	assert(lua_checkstack(L, 20));
@@ -3618,7 +3620,8 @@ bool scriptapi_item_on_drop(lua_State *L, InventoryItem &item,
 	// Call function
 	ItemStack::create(L, item);
 	objectref_get_or_create(L, dropper);
-	if(lua_pcall(L, 2, 1, 0))
+	pushFloatPos(L, pos);
+	if(lua_pcall(L, 3, 1, 0))
 		script_error(L, "error: %s", lua_tostring(L, -1));
 	if(!lua_isnil(L, -1))
 		item = read_item(L, -1);

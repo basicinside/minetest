@@ -247,9 +247,6 @@ Client::Client(
 	else
 		infostream<<"Not building texture atlas."<<std::endl;
 	
-	// Update node textures
-	m_nodedef->updateTextures(m_tsrc);
-
 	/*
 		Add local player
 	*/

@@ -2251,7 +2251,6 @@ void the_game(
 		{
 			//infostream<<"Updating local inventory"<<std::endl;
 			client.getLocalInventory(local_inventory);
-			local_inventory.serialize(dstream);
 			
 			update_wielded_item_trigger = true;
 		}

@@ -240,8 +240,8 @@ static void makeFastFace(TileSpec tile, u8 li0, u8 li1, u8 li2, u8 li3, v3f p,
 	else if(scale.Y < 0.999 || scale.Y > 1.001) abs_scale = scale.Y;
 	else if(scale.Z < 0.999 || scale.Z > 1.001) abs_scale = scale.Z;
 
-	v3f zerovector = v3f(0,0,0);
-	
+	v3f normal(dir.X, dir.Y, dir.Z);
+
 	u8 alpha = tile.alpha;
 	/*u8 alpha = 255;
 	if(tile.id == TILE_WATER)
@@ -263,16 +263,16 @@ static void makeFastFace(TileSpec tile, u8 li0, u8 li1, u8 li2, u8 li3, v3f p,
 	face.vertices[3] = video::S3DVertex(vertex_pos[3], v3f(0,1,0), c,
 			core::vector2d<f32>(x0+w*abs_scale, y0));*/
 
-	face.vertices[0] = video::S3DVertex(vertex_pos[0], v3f(0,1,0),
+	face.vertices[0] = video::S3DVertex(vertex_pos[0], normal,
 			MapBlock_LightColor(alpha, li0),
 			core::vector2d<f32>(x0+w*abs_scale, y0+h));
-	face.vertices[1] = video::S3DVertex(vertex_pos[1], v3f(0,1,0),
+	face.vertices[1] = video::S3DVertex(vertex_pos[1], normal,
 			MapBlock_LightColor(alpha, li1),
 			core::vector2d<f32>(x0, y0+h));
-	face.vertices[2] = video::S3DVertex(vertex_pos[2], v3f(0,1,0),
+	face.vertices[2] = video::S3DVertex(vertex_pos[2], normal,
 			MapBlock_LightColor(alpha, li2),
 			core::vector2d<f32>(x0, y0));
-	face.vertices[3] = video::S3DVertex(vertex_pos[3], v3f(0,1,0),
+	face.vertices[3] = video::S3DVertex(vertex_pos[3], normal,
 			MapBlock_LightColor(alpha, li3),
 			core::vector2d<f32>(x0+w*abs_scale, y0));
 

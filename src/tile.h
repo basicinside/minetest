@@ -110,7 +110,7 @@ public:
 		{return AtlasPointer(0);}
 	virtual video::ITexture* getTextureRaw(const std::string &name)
 		{return NULL;}
-	virtual scene::IAnimatedMesh* getTextureExtruded(const std::string &name, v3f scale)
+	virtual IrrlichtDevice* getDevice()
 		{return NULL;}
 	virtual void updateAP(AtlasPointer &ap){};
 };
@@ -128,7 +128,7 @@ public:
 		{return AtlasPointer(0);}
 	virtual video::ITexture* getTextureRaw(const std::string &name)
 		{return NULL;}
-	virtual scene::IAnimatedMesh* getTextureExtruded(const std::string &name, v3f scale)
+	virtual IrrlichtDevice* getDevice()
 		{return NULL;}
 	virtual void updateAP(AtlasPointer &ap){};
 

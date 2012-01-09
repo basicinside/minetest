@@ -78,10 +78,11 @@ void drawInventoryItem(video::IVideoDriver *driver,
 		//   wear = 1.0: red
 		video::SColor color(255,255,255,255);
 		int wear_i = floor(wear * 511);
-		if(0 <= wear_i && wear_i <= 255)
+		wear_i = MYMIN(wear_i + 10, 511);
+		if(wear_i <= 255)
 			color.set(255, wear_i, 255, 0);
-		else if(256 <= wear_i && wear_i <= 511)
-			color.set(255, 255, (511-wear_i)*2, 0);
+		else
+			color.set(255, 255, 511-wear_i, 0);
 
 		driver->draw2DRectangle(color, progressrect, clip);
 	}

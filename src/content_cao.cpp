@@ -173,6 +173,8 @@ public:
 	void updateLight(u8 light_at_pos);
 	v3s16 getLightPosition();
 	void updateNodePos();
+	void updateInfoText();
+	void updateTexture();
 
 	void step(float dtime, ClientEnvironment *env);
 
@@ -596,33 +598,13 @@ void ItemCAO::addToScene(scene::ISceneManager *smgr, ITextureSource *tsrc,
 	buf->drop();
 	m_node = smgr->addMeshSceneNode(mesh, NULL);
 	mesh->drop();
-	// Set it to use the materials of the meshbuffers directly.
-	// This is needed for changing the texture in the future
-	m_node->setReadOnlyMaterials(true);
 	updateNodePos();
 
 	/*
 		Update image of node
 	*/
 
-	// Create an inventory item to see what is its image
-	std::istringstream is(m_itemstring, std::ios_base::binary);
-	video::ITexture *texture = NULL;
-	try{
-		IItemDefManager *idef = m_gamedef->idef();
-		InventoryItem item;
-		item.deSerialize(is, idef);
-		texture = item.getDefinition(idef).inventory_texture;
-	}
-	catch(SerializationError &e)
-	{
-		infostream<<"WARNING: "<<__FUNCTION_NAME
-				<<": error deSerializing itemstring \""
-				<<m_itemstring<<std::endl;
-	}
-	
-	// Set meshbuffer texture
-	buf->getMaterial().setTexture(0, texture);
+	updateTexture();
 }
 
 void ItemCAO::removeFromScene()
@@ -657,6 +639,51 @@ void ItemCAO::updateNodePos()
 	m_node->setPosition(m_position);
 }
 
+void ItemCAO::updateInfoText()
+{
+	try{
+		IItemDefManager *idef = m_gamedef->idef();
+		InventoryItem item;
+		item.deSerialize(m_itemstring, idef);
+		if(item.isKnown(idef))
+			m_infotext = item.getDefinition(idef).description;
+		else
+			m_infotext = "Unknown item: '" + m_itemstring + "'";
+		if(item.count >= 2)
+			m_infotext += " (" + itos(item.count) + ")";
+	}
+	catch(SerializationError &e)
+	{
+		m_infotext = "Unknown item: '" + m_itemstring + "'";
+	}
+}
+
+void ItemCAO::updateTexture()
+{
+	if(m_node == NULL)
+		return;
+
+	// Create an inventory item to see what is its image
+	std::istringstream is(m_itemstring, std::ios_base::binary);
+	video::ITexture *texture = NULL;
+	try{
+		IItemDefManager *idef = m_gamedef->idef();
+		InventoryItem item;
+		item.deSerialize(is, idef);
+		texture = item.getDefinition(idef).inventory_texture;
+	}
+	catch(SerializationError &e)
+	{
+		infostream<<"WARNING: "<<__FUNCTION_NAME
+				<<": error deSerializing itemstring \""
+				<<m_itemstring<<std::endl;
+	}
+	
+	// Set meshbuffer texture
+	m_node->getMaterial(0).setTexture(0, texture);
+}
+
+
 void ItemCAO::step(float dtime, ClientEnvironment *env)
 {
 	if(m_node)
@@ -684,6 +711,13 @@ void ItemCAO::processMessage(const std::string &data)
 		m_position = readV3F1000(is);
 		updateNodePos();
 	}
+	if(cmd == 1)
+	{
+		// itemstring
+		m_itemstring = deSerializeString(is);
+		updateInfoText();
+		updateTexture();
+	}
 }
 
 void ItemCAO::initialize(const std::string &data)
@@ -704,25 +738,7 @@ void ItemCAO::initialize(const std::string &data)
 	}
 	
 	updateNodePos();
-	
-	/*
-		Set infotext to item name if item cannot be deserialized
-	*/
-	try{
-		IItemDefManager *idef = m_gamedef->idef();
-		InventoryItem item;
-		item.deSerialize(m_itemstring, idef);
-		if(item.isKnown(idef))
-			m_infotext = item.getDefinition(idef).description;
-		else
-			m_infotext = "Unknown item: '" + m_itemstring + "'";
-		if(item.count >= 2)
-			m_infotext += " (" + itos(item.count) + ")";
-	}
-	catch(SerializationError &e)
-	{
-		m_infotext = "Unknown item: '" + m_itemstring + "'";
-	}
+	updateInfoText();
 }
 
 /*

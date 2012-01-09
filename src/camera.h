@@ -26,8 +26,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "tile.h"
 #include "utility.h"
 #include <ICameraSceneNode.h>
-#include <IMeshCache.h>
-#include <IAnimatedMesh.h>
 
 class LocalPlayer;
 struct MapDrawControl;

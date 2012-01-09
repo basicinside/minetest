@@ -148,6 +148,9 @@ void ContentFeatures::reset()
 	damage_per_second = 0;
 	selection_box = NodeBox();
 	material = MaterialProperties();
+	// Make unknown blocks diggable
+	material.diggability = DIGGABLE_CONSTANT;
+	material.constant_time = 0.5;
 }
 
 void ContentFeatures::serialize(std::ostream &os)
@@ -517,7 +520,7 @@ public:
 
 			// Tile textures
 			for(u16 j=0; j<6; j++){
-				f->tiles[j].texture = tsrc->getTexture(f->tname_tiles[j]);
+				f->tiles[j].texture = tsrc->getTexture(tname_tiles[j]);
 				f->tiles[j].alpha = f->alpha;
 				if(f->alpha == 255)
 					f->tiles[j].material_type = MATERIAL_ALPHA_SIMPLE;
