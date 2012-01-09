@@ -360,11 +360,13 @@ static TileSpec getNodeTile(MapNode mn, v3s16 p, v3s16 face_dir,
 	NodeMod mod;
 	if(temp_mods.get(p, &mod))
 	{
+		#if 0  // NODEMOD_CHANGECONTENT isn't used at the moment
 		if(mod.type == NODEMOD_CHANGECONTENT)
 		{
 			MapNode mn2(mod.param);
 			spec = getTile(mn2, face_dir, tsrc, ndef);
 		}
+		#endif
 		if(mod.type == NODEMOD_CRACK)
 		{
 			/*
@@ -399,12 +401,7 @@ static content_t getNodeContent(v3s16 p, MapNode mn, NodeModMap &temp_mods)
 	/*
 		Check temporary modifications on this node
 	*/
-	/*core::map<v3s16, NodeMod>::Node *n;
-	n = m_temp_mods.find(p);
-	// If modified
-	if(n != NULL)
-	{
-		struct NodeMod mod = n->getValue();*/
+	#if 0  // NODEMOD_CHANGECONTENT isn't used at the moment
 	NodeMod mod;
 	if(temp_mods.get(p, &mod))
 	{
@@ -428,6 +425,7 @@ static content_t getNodeContent(v3s16 p, MapNode mn, NodeModMap &temp_mods)
 			*/
 		}
 	}
+	#endif
 
 	return mn.getContent();
 }
