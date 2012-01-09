@@ -1113,10 +1113,10 @@ minetest.register_node("default:cloud", {
 
 minetest.register_node("default:water_flowing", {
 	description = "Water (flowing)",
+	inventory_image = minetest.inventorycube("default_water.png"),
 	drawtype = "flowingliquid",
 	tile_images = {"default_water.png"},
 	alpha = WATER_ALPHA,
-	--inventory_image = minetest.inventorycube("default_water.png"),
 	paramtype = "light",
 	walkable = false,
 	pointable = false,
@@ -1135,10 +1135,10 @@ minetest.register_node("default:water_flowing", {
 
 minetest.register_node("default:water_source", {
 	description = "Water",
+	inventory_image = minetest.inventorycube("default_water.png"),
 	drawtype = "liquid",
 	tile_images = {"default_water.png"},
 	alpha = WATER_ALPHA,
-	--inventory_image = minetest.inventorycube("default_water.png"),
 	paramtype = "light",
 	walkable = false,
 	pointable = false,
@@ -1157,9 +1157,9 @@ minetest.register_node("default:water_source", {
 
 minetest.register_node("default:lava_flowing", {
 	description = "Lava (flowing)",
+	inventory_image = minetest.inventorycube("default_lava.png"),
 	drawtype = "flowingliquid",
 	tile_images = {"default_lava.png"},
-	--inventory_image = minetest.inventorycube("default_lava.png"),
 	paramtype = "light",
 	light_source = LIGHT_MAX - 1,
 	walkable = false,
@@ -1180,9 +1180,9 @@ minetest.register_node("default:lava_flowing", {
 
 minetest.register_node("default:lava_source", {
 	description = "Lava",
+	inventory_image = minetest.inventorycube("default_lava.png"),
 	drawtype = "liquid",
 	tile_images = {"default_lava.png"},
-	--inventory_image = minetest.inventorycube("default_lava.png"),
 	paramtype = "light",
 	light_source = LIGHT_MAX - 1,
 	walkable = false,
