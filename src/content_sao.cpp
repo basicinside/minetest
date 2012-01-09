@@ -243,6 +243,13 @@ InventoryItem ItemSAO::createInventoryItem()
 
 void ItemSAO::punch(ServerActiveObject *puncher, float time_from_last_punch)
 {
+	// Allow removing items in creative mode
+	if(g_settings->getBool("creative_mode") == true)
+	{
+		m_removed = true;
+		return;
+	}
+
 	InventoryItem item = createInventoryItem();
 	Inventory *inv = puncher->getInventory();
 	if(inv != NULL)
@@ -445,6 +452,13 @@ std::string RatSAO::getStaticData()
 
 void RatSAO::punch(ServerActiveObject *puncher, float time_from_last_punch)
 {
+	// Allow removing rats in creative mode
+	if(g_settings->getBool("creative_mode") == true)
+	{
+		m_removed = true;
+		return;
+	}
+
 	IItemDefManager *idef = m_env->getGameDef()->idef();
 	InventoryItem item("rat", 1, 0, "", idef);
 	Inventory *inv = puncher->getInventory();
@@ -724,8 +738,11 @@ void Oerkki1SAO::punch(ServerActiveObject *puncher, float time_from_last_punch)
 			time_from_last_punch);
 
 	doDamage(hitprop.hp);
-	punchitem.addWear(hitprop.wear, idef);
-	puncher->setWieldedItem(punchitem);
+	if(g_settings->getBool("creative_mode") == false)
+	{
+		punchitem.addWear(hitprop.wear, idef);
+		puncher->setWieldedItem(punchitem);
+	}
 }
 
 void Oerkki1SAO::doDamage(u16 d)
@@ -1417,8 +1434,11 @@ void MobV2SAO::punch(ServerActiveObject *puncher, float time_from_last_punch)
 			time_from_last_punch);
 
 	doDamage(hitprop.hp);
-	punchitem.addWear(hitprop.wear, idef);
-	puncher->setWieldedItem(punchitem);
+	if(g_settings->getBool("creative_mode") == false)
+	{
+		punchitem.addWear(hitprop.wear, idef);
+		puncher->setWieldedItem(punchitem);
+	}
 }
 
 bool MobV2SAO::isPeaceful()

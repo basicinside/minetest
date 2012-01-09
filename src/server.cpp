@@ -2359,13 +2359,6 @@ void Server::ProcessData(u8 *data, u32 datasize, u16 peer_id)
 	}
 	else if(command == TOSERVER_INVENTORY_ACTION)
 	{
-		/*// Ignore inventory changes if in creative mode
-		if(g_settings->getBool("creative_mode") == true)
-		{
-			infostream<<"TOSERVER_INVENTORY_ACTION: ignoring in creative mode"
-					<<std::endl;
-			return;
-		}*/
 		// Strip command and create a stream
 		std::string datastring((char*)&data[2], datasize-2);
 		infostream<<"TOSERVER_INVENTORY_ACTION: data="<<datastring<<std::endl;
@@ -2383,8 +2376,7 @@ void Server::ProcessData(u8 *data, u32 datasize, u16 peer_id)
 		/*
 			Handle restrictions and special cases of the move action
 		*/
-		if(a->getType() == IACTION_MOVE
-				&& g_settings->getBool("creative_mode") == false)
+		if(a->getType() == IACTION_MOVE)
 		{
 			InventoryList *rlist = player->inventory.getList("craftresult");
 			assert(rlist);
@@ -2428,7 +2420,8 @@ void Server::ProcessData(u8 *data, u32 datasize, u16 peer_id)
 			*/
 			if(from_inv_is_current_player
 					&& ma->from_list == "craftresult"
-					&& player->craftresult_is_preview)
+					&& player->craftresult_is_preview
+					&& g_settings->getBool("creative_mode") == false)
 			{
 				InventoryItem crafting_result;
 				bool crafting_possible = GetCraftingResult(peer_id,
@@ -2496,8 +2489,8 @@ void Server::ProcessData(u8 *data, u32 datasize, u16 peer_id)
 			// Disallow moving items in elsewhere than player's inventory
 			// if not allowed to interact
 			if((getPlayerPrivs(player) & PRIV_INTERACT) == 0
-					&& (ma->from_inv.type != InventoryLocation::CURRENT_PLAYER
-					|| ma->to_inv.type != InventoryLocation::CURRENT_PLAYER))
+					&& (from_inv_is_current_player
+					|| to_inv_is_current_player))
 			{
 				infostream<<"Cannot move outside of player's inventory: "
 						<<"No interact privilege"<<std::endl;
