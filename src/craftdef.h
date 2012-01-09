@@ -134,8 +134,8 @@ public:
 	virtual std::string dump() const=0;
 
 protected:
-	virtual void serializeSubclass(std::ostream &os) const=0;
-	virtual void deSerializeSubclass(std::istream &is, int version)=0;
+	virtual void serializeBody(std::ostream &os) const=0;
+	virtual void deSerializeBody(std::istream &is, int version)=0;
 };
 
 /*
@@ -167,8 +167,8 @@ public:
 	virtual std::string dump() const;
 
 protected:
-	virtual void serializeSubclass(std::ostream &os) const;
-	virtual void deSerializeSubclass(std::istream &is, int version);
+	virtual void serializeBody(std::ostream &os) const;
+	virtual void deSerializeBody(std::istream &is, int version);
 
 private:
 	// Output itemstring
@@ -208,8 +208,8 @@ public:
 	virtual std::string dump() const;
 
 protected:
-	virtual void serializeSubclass(std::ostream &os) const;
-	virtual void deSerializeSubclass(std::istream &is, int version);
+	virtual void serializeBody(std::ostream &os) const;
+	virtual void deSerializeBody(std::istream &is, int version);
 
 private:
 	// Output itemstring
@@ -245,8 +245,8 @@ public:
 	virtual std::string dump() const;
 
 protected:
-	virtual void serializeSubclass(std::ostream &os) const;
-	virtual void deSerializeSubclass(std::istream &is, int version);
+	virtual void serializeBody(std::ostream &os) const;
+	virtual void deSerializeBody(std::istream &is, int version);
 
 private:
 	// This is a constant that is added to the wear of the result.
@@ -283,8 +283,8 @@ public:
 	virtual std::string dump() const;
 
 protected:
-	virtual void serializeSubclass(std::ostream &os) const;
-	virtual void deSerializeSubclass(std::istream &is, int version);
+	virtual void serializeBody(std::ostream &os) const;
+	virtual void deSerializeBody(std::istream &is, int version);
 
 private:
 	// Output itemstring
@@ -318,8 +318,8 @@ public:
 	virtual std::string dump() const;
 
 protected:
-	virtual void serializeSubclass(std::ostream &os) const;
-	virtual void deSerializeSubclass(std::istream &is, int version);
+	virtual void serializeBody(std::ostream &os) const;
+	virtual void deSerializeBody(std::istream &is, int version);
 
 private:
 	// Recipe itemstring
@@ -336,9 +336,14 @@ class ICraftDefManager
 public:
 	ICraftDefManager(){}
 	virtual ~ICraftDefManager(){}
+
+	// The main crafting function
 	virtual bool getCraftResult(CraftInput &input, CraftOutput &output,
 			bool decrementInput, IGameDef *gamedef) const=0;
 	
+	// Print crafting recipes for debugging
+	virtual std::string dump() const=0;
+
 	virtual void serialize(std::ostream &os) const=0;
 };
 
@@ -351,6 +356,9 @@ public:
 	// The main crafting function
 	virtual bool getCraftResult(CraftInput &input, CraftOutput &output,
 			bool decrementInput, IGameDef *gamedef) const=0;
+
+	// Print crafting recipes for debugging
+	virtual std::string dump() const=0;
 
 	// Add a crafting definition.
 	// After calling this, the pointer belongs to the manager.

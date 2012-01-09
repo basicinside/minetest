@@ -1029,6 +1029,7 @@ minetest.register_node("default:glass", {
 	description = "Glass",
 	drawtype = "glasslike",
 	tile_images = {"default_glass.png"},
+	inventory_image = minetest.inventorycube("default_glass.png"),
 	paramtype = "light",
 	sunlight_propagates = true,
 	is_ground_content = true,
@@ -1367,8 +1368,7 @@ minetest.register_craftitem("default:coal_lump", {
 
 minetest.register_craftitem("default:iron_lump", {
 	description = "Lump of iron",
-	--inventory_image = "default_iron_lump.png",
-	inventory_image = minetest.inventorycube("default_lava.png", "default_water.png", "default_mese.png"),
+	inventory_image = "default_iron_lump.png",
 	cookresult_itemstring = 'craft "default:steel_ingot" 1',
 })
 
@@ -1399,7 +1399,7 @@ minetest.register_craftitem("default:scorched_stuff", {
 --
 
 minetest.add_to_creative_inventory('default:pick_mese')
-minetest.add_to_creative_inventory('default:pick_stee')
+minetest.add_to_creative_inventory('default:pick_steel')
 minetest.add_to_creative_inventory('default:axe_steel')
 minetest.add_to_creative_inventory('default:shovel_steel')
 

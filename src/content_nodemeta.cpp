@@ -335,7 +335,7 @@ FurnaceNodeMetadata::FurnaceNodeMetadata(IGameDef *gamedef):
 	
 	m_inventory = NULL;
 
-	m_infotext = "Furnace";
+	m_infotext = "Furnace is inactive";
 
 	m_step_accumulator = 0;
 	m_fuel_totaltime = 0;
@@ -364,17 +364,21 @@ NodeMetadata* FurnaceNodeMetadata::create(std::istream &is, IGameDef *gamedef)
 	d->m_inventory = new Inventory(gamedef->idef());
 	d->m_inventory->deSerialize(is);
 
-	int temp;
+	int temp = 0;
 	is>>temp;
 	d->m_fuel_totaltime = (float)temp/10;
+	temp = 0;
 	is>>temp;
 	d->m_fuel_time = (float)temp/10;
+	temp = 0;
 	is>>temp;
 	d->m_src_totaltime = (float)temp/10;
+	temp = 0;
 	is>>temp;
 	d->m_src_time = (float)temp/10;
 
-	d->m_infotext = deSerializeString(is);
+	if(!is.eof())
+		d->m_infotext = deSerializeJsonString(is);
 
 	return d;
 }
@@ -394,7 +398,7 @@ void FurnaceNodeMetadata::serializeBody(std::ostream &os)
 	os<<itos(m_fuel_time*10)<<" ";
 	os<<itos(m_src_totaltime*10)<<" ";
 	os<<itos(m_src_time*10)<<" ";
-	os<<serializeString(m_infotext);
+	os<<serializeJsonString(m_infotext);
 }
 std::string FurnaceNodeMetadata::infoText()
 {
@@ -460,11 +464,6 @@ bool FurnaceNodeMetadata::step(float dtime)
 		{
 			changed = true;
 			m_fuel_time += dtime;
-			if(m_fuel_time >= m_fuel_totaltime)
-			{
-				m_fuel_time = 0;
-				m_fuel_totaltime = 0;
-			}
 		}
 
 		std::string infotext;
@@ -476,15 +475,17 @@ bool FurnaceNodeMetadata::step(float dtime)
 				changed = true;
 				m_src_time += dtime;
 				m_src_totaltime = cooktime;
-				infotext = "Furnace is active";
+				infotext = "Furnace is cooking";
 			}
 			else if(getBurnResult(true, burntime))
 			{
 				// Fuel inserted
 				changed = true;
-				m_fuel_time = dtime;
+				m_fuel_time = 0;
 				m_fuel_totaltime = burntime;
-				infotext = "Furnace is active";
+				//m_src_time += dtime;
+				//m_src_totaltime = cooktime;
+				infotext = "Furnace is cooking";
 			}
 			else
 			{
@@ -509,6 +510,8 @@ bool FurnaceNodeMetadata::step(float dtime)
 			m_src_time = 0;
 			if(cookable)
 				infotext = "Furnace is overloaded";
+			else if(burning)
+				infotext = "Furnace is active";
 			else
 				infotext = "Furnace is inactive";
 		}
@@ -522,8 +525,15 @@ bool FurnaceNodeMetadata::step(float dtime)
 
 		if(infotext != m_infotext)
 		{
+			dstream<<"Infotext: "<<infotext<<std::endl;
 			m_infotext = infotext;
 			changed = true;
+		}
+
+		if(burning && m_fuel_time >= m_fuel_totaltime)
+		{
+			m_fuel_time = 0;
+			m_fuel_totaltime = 0;
 		}
 
 		if(!changed)

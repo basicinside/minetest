@@ -134,14 +134,18 @@ static Server* get_server(lua_State *L)
 {
 	// Get server from registry
 	lua_getfield(L, LUA_REGISTRYINDEX, "minetest_server");
-	return (Server*)lua_touserdata(L, -1);
+	Server *server = (Server*)lua_touserdata(L, -1);
+	lua_pop(L, 1);
+	return server;
 }
 
 static ServerEnvironment* get_env(lua_State *L)
 {
 	// Get environment from registry
 	lua_getfield(L, LUA_REGISTRYINDEX, "minetest_env");
-	return (ServerEnvironment*)lua_touserdata(L, -1);
+	ServerEnvironment *env = (ServerEnvironment*)lua_touserdata(L, -1);
+	lua_pop(L, 1);
+	return env;
 }
 
 static void objectref_get(lua_State *L, u16 id)
@@ -251,13 +255,13 @@ static int getintfield_default(lua_State *L, int table,
 	return result;
 }
 
-/*static float getfloatfield_default(lua_State *L, int table,
+static float getfloatfield_default(lua_State *L, int table,
 		const char *fieldname, float default_)
 {
 	float result = default_;
 	getfloatfield(L, table, fieldname, result);
 	return result;
-}*/
+}
 
 static bool getboolfield_default(lua_State *L, int table,
 		const char *fieldname, bool default_)
@@ -896,6 +900,7 @@ static InventoryItem read_item(lua_State *L, int index);
 static void inventory_set_list_from_lua(Inventory *inv, const char *name,
 		lua_State *L, int tableindex, int forcesize=-1)
 {
+	dstream<<"inventory_set_list_from_lua\n";
 	if(tableindex < 0)
 		tableindex = lua_gettop(L) + 1 + tableindex;
 	// If nil, delete list
@@ -906,9 +911,8 @@ static void inventory_set_list_from_lua(Inventory *inv, const char *name,
 	// Otherwise set list
 	std::vector<InventoryItem> items;
 	luaL_checktype(L, tableindex, LUA_TTABLE);
-	int table = tableindex;
 	lua_pushnil(L);
-	while(lua_next(L, table) != 0){
+	while(lua_next(L, tableindex) != 0){
 		// key at index -2 and value at index -1
 		items.push_back(read_item(L, -1));
 		// removes value, keeps key for next iteration
@@ -928,6 +932,7 @@ static void inventory_set_list_from_lua(Inventory *inv, const char *name,
 		invlist->deleteItem(index);
 		index++;
 	}
+	dstream<<"inventory_set_list_from_lua done\n";
 }
 
 static void inventory_get_list_to_lua(Inventory *inv, const char *name,
@@ -3039,73 +3044,230 @@ static int l_register_alias_raw(lua_State *L)
 	return 0; /* number of results */
 }
 
+// helper for register_craft
+static bool read_craft_recipe_shaped(lua_State *L, int index,
+		int &width, std::vector<std::string> &recipe)
+{
+	if(index < 0)
+		index = lua_gettop(L) + 1 + index;
+
+	if(!lua_istable(L, index))
+		return false;
+
+	lua_pushnil(L);
+	int rowcount = 0;
+	while(lua_next(L, index) != 0){
+		int colcount = 0;
+		// key at index -2 and value at index -1
+		if(!lua_istable(L, -1))
+			return false;
+		int table2 = lua_gettop(L);
+		lua_pushnil(L);
+		while(lua_next(L, table2) != 0){
+			// key at index -2 and value at index -1
+			if(!lua_isstring(L, -1))
+				return false;
+			recipe.push_back(lua_tostring(L, -1));
+			// removes value, keeps key for next iteration
+			lua_pop(L, 1);
+			colcount++;
+		}
+		if(rowcount == 0){
+			width = colcount;
+		} else {
+			if(colcount != width)
+				return false;
+		}
+		// removes value, keeps key for next iteration
+		lua_pop(L, 1);
+		rowcount++;
+	}
+	return width != 0;
+}
+
+// helper for register_craft
+static bool read_craft_recipe_shapeless(lua_State *L, int index,
+		std::vector<std::string> &recipe)
+{
+	if(index < 0)
+		index = lua_gettop(L) + 1 + index;
+
+	if(!lua_istable(L, index))
+		return false;
+
+	lua_pushnil(L);
+	while(lua_next(L, index) != 0){
+		// key at index -2 and value at index -1
+		if(!lua_isstring(L, -1))
+			return false;
+		recipe.push_back(lua_tostring(L, -1));
+		// removes value, keeps key for next iteration
+		lua_pop(L, 1);
+	}
+	return true;
+}
+
+// helper for register_craft
+static bool read_craft_replacements(lua_State *L, int index,
+		CraftReplacements &replacements)
+{
+	if(index < 0)
+		index = lua_gettop(L) + 1 + index;
+
+	if(!lua_istable(L, index))
+		return false;
+
+	lua_pushnil(L);
+	while(lua_next(L, index) != 0){
+		// key at index -2 and value at index -1
+		if(!lua_istable(L, -1))
+			return false;
+		lua_rawgeti(L, -1, 1);
+		if(!lua_isstring(L, -1))
+			return false;
+		std::string replace_from = lua_tostring(L, -1);
+		lua_pop(L, 1);
+		lua_rawgeti(L, -1, 2);
+		if(!lua_isstring(L, -1))
+			return false;
+		std::string replace_to = lua_tostring(L, -1);
+		lua_pop(L, 1);
+		replacements.pairs.push_back(
+				std::make_pair(replace_from, replace_to));
+		// removes value, keeps key for next iteration
+		lua_pop(L, 1);
+	}
+	return true;
+}
 // register_craft({output=item, recipe={{item00,item10},{item01,item11}})
 static int l_register_craft(lua_State *L)
 {
 	//infostream<<"register_craft"<<std::endl;
 	luaL_checktype(L, 1, LUA_TTABLE);
-	int table0 = 1;
+	int table = 1;
 
 	// Get the writable craft definition manager from the server
 	IWritableCraftDefManager *craftdef =
 			get_server(L)->getWritableCraftDefManager();
 	
-	std::string output;
-	int width = 0;
-	std::vector<std::string> input;
+	std::string type = getstringfield_default(L, table, "type", "shaped");
 
-	lua_getfield(L, table0, "output");
-	luaL_checktype(L, -1, LUA_TSTRING);
-	if(lua_isstring(L, -1))
-		output = lua_tostring(L, -1);
-	lua_pop(L, 1);
+	/*
+		CraftDefinitionShaped
+	*/
+	if(type == "shaped"){
+		std::string output = getstringfield_default(L, table, "output", "");
+		if(output == "")
+			throw LuaError(L, "Crafting definition is missing an output");
 
-	lua_getfield(L, table0, "recipe");
-	luaL_checktype(L, -1, LUA_TTABLE);
-	if(lua_istable(L, -1)){
-		int table1 = lua_gettop(L);
-		lua_pushnil(L);
-		int rowcount = 0;
-		while(lua_next(L, table1) != 0){
-			int colcount = 0;
-			// key at index -2 and value at index -1
-			luaL_checktype(L, -1, LUA_TTABLE);
-			if(lua_istable(L, -1)){
-				int table2 = lua_gettop(L);
-				lua_pushnil(L);
-				while(lua_next(L, table2) != 0){
-					// key at index -2 and value at index -1
-					luaL_checktype(L, -1, LUA_TSTRING);
-					input.push_back(lua_tostring(L, -1));
-					// removes value, keeps key for next iteration
-					lua_pop(L, 1);
-					colcount++;
-				}
-			}
-			if(rowcount == 0){
-				width = colcount;
-			} else {
-				if(colcount != width){
-					std::string error;
-					error += "Invalid crafting recipe (output=\""
-							+ output + "\")";
-					throw LuaError(L, error);
-				}
-			}
-			// removes value, keeps key for next iteration
-			lua_pop(L, 1);
-			rowcount++;
+		int width = 0;
+		std::vector<std::string> recipe;
+		lua_getfield(L, table, "recipe");
+		if(lua_isnil(L, -1))
+			throw LuaError(L, "Crafting definition is missing a recipe"
+					" (output=\"" + output + "\")");
+		if(!read_craft_recipe_shaped(L, -1, width, recipe))
+			throw LuaError(L, "Invalid crafting recipe"
+					" (output=\"" + output + "\")");
+
+		CraftReplacements replacements;
+		lua_getfield(L, table, "replacements");
+		if(!lua_isnil(L, -1))
+		{
+			if(!read_craft_replacements(L, -1, replacements))
+				throw LuaError(L, "Invalid replacements"
+						" (output=\"" + output + "\")");
 		}
+
+		CraftDefinition *def = new CraftDefinitionShaped(
+				output, width, recipe, replacements);
+		craftdef->registerCraft(def);
 	}
+	/*
+		CraftDefinitionShapeless
+	*/
+	else if(type == "shapeless"){
+		std::string output = getstringfield_default(L, table, "output", "");
+		if(output == "")
+			throw LuaError(L, "Crafting definition (shapeless)"
+					" is missing an output");
+
+		std::vector<std::string> recipe;
+		lua_getfield(L, table, "recipe");
+		if(lua_isnil(L, -1))
+			throw LuaError(L, "Crafting definition (shapeless)"
+					" is missing a recipe"
+					" (output=\"" + output + "\")");
+		if(!read_craft_recipe_shapeless(L, -1, recipe))
+			throw LuaError(L, "Invalid crafting recipe"
+					" (output=\"" + output + "\")");
+
+		CraftReplacements replacements;
+		lua_getfield(L, table, "replacements");
+		if(!lua_isnil(L, -1))
+		{
+			if(!read_craft_replacements(L, -1, replacements))
+				throw LuaError(L, "Invalid replacements"
+						" (output=\"" + output + "\")");
+		}
+
+		CraftDefinition *def = new CraftDefinitionShapeless(
+				output, recipe, replacements);
+		craftdef->registerCraft(def);
+	}
+	/*
+		CraftDefinitionToolRepair
+	*/
+	else if(type == "toolrepair"){
+		float additional_wear = getfloatfield_default(L, table,
+				"additional_wear", 0.0);
+
+		CraftDefinition *def = new CraftDefinitionToolRepair(
+				additional_wear);
+		craftdef->registerCraft(def);
+	}
+	/*
+		CraftDefinitionCooking
+	*/
+	else if(type == "cooking"){
+		std::string output = getstringfield_default(L, table, "output", "");
+		if(output == "")
+			throw LuaError(L, "Crafting definition (cooking)"
+					" is missing an output");
+
+		std::string recipe = getstringfield_default(L, table, "recipe", "");
+		if(recipe == "")
+			throw LuaError(L, "Crafting definition (cooking)"
+					" is missing a recipe"
+					" (output=\"" + output + "\")");
+
+		float cooktime = getfloatfield_default(L, table, "cooktime", 3.0);
+
+		CraftDefinition *def = new CraftDefinitionCooking(
+				output, recipe, cooktime);
+		craftdef->registerCraft(def);
+	}
+	/*
+		CraftDefinitionFuel
+	*/
+	else if(type == "fuel"){
+		std::string recipe = getstringfield_default(L, table, "recipe", "");
+		if(recipe == "")
+			throw LuaError(L, "Crafting definition (fuel)"
+					" is missing a recipe");
+
+		float burntime = getfloatfield_default(L, table, "burntime", 3.0);
+
+		CraftDefinition *def = new CraftDefinitionFuel(
+				recipe, burntime);
+		craftdef->registerCraft(def);
+	}
+	else
+	{
+		throw LuaError(L, "Unknown crafting definition type: \"" + type + "\"");
+	}
+
 	lua_pop(L, 1);
-
-	// TODO: Support replacements and shapeless/toolrepair/smelting/fuel recipes
-
-	CraftReplacements replacements;
-	CraftDefinition *def = new CraftDefinitionShaped(output,
-			width, input, replacements);
-	craftdef->registerCraft(def);
-
 	return 0; /* number of results */
 }
 

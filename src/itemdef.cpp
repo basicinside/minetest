@@ -362,10 +362,19 @@ public:
 			if(need_node_mesh)
 			{
 				/*
+					Get node properties
+				*/
+				content_t id = nodedef->getId(def->name);
+				const ContentFeatures &f = nodedef->get(id);
+
+				/*
 				 	Make a mesh from the node
 				*/
 				MeshMakeData mesh_make_data;
-				MapNode mesh_make_node(nodedef, def->name);
+				MapNode mesh_make_node(
+					id,
+					(f.param_type == CPT_LIGHT) ? 0xee : 0,
+					0);
 				mesh_make_data.fillSingleNode(1000, &mesh_make_node);
 				scene::IMesh *node_mesh =
 					makeMapBlockMesh(&mesh_make_data, gamedef);

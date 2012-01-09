@@ -114,7 +114,8 @@ static std::multiset<std::string> craftMakeMultiset(const std::vector<std::strin
 			i = names.begin();
 			i != names.end(); i++)
 	{
-		set.insert(*i);
+		if(*i != "")
+			set.insert(*i);
 	}
 	return set;
 }
@@ -284,7 +285,7 @@ void CraftDefinition::serialize(std::ostream &os) const
 {
 	writeU8(os, 1); // version
 	os<<serializeString(getName());
-	serializeSubclass(os);
+	serializeBody(os);
 }
 
 CraftDefinition* CraftDefinition::deSerialize(std::istream &is)
@@ -319,7 +320,7 @@ CraftDefinition* CraftDefinition::deSerialize(std::istream &is)
 		infostream<<"Unknown CraftDefinition name=\""<<name<<"\""<<std::endl;
                 throw SerializationError("Unknown CraftDefinition name");
 	}
-	def->deSerializeSubclass(is, version);
+	def->deSerializeBody(is, version);
 	return def;
 }
 
@@ -410,7 +411,7 @@ std::string CraftDefinitionShaped::dump() const
 	return os.str();
 }
 
-void CraftDefinitionShaped::serializeSubclass(std::ostream &os) const
+void CraftDefinitionShaped::serializeBody(std::ostream &os) const
 {
 	os<<serializeString(output);
 	writeU16(os, width);
@@ -425,7 +426,7 @@ void CraftDefinitionShaped::serializeSubclass(std::ostream &os) const
 	}
 }
 
-void CraftDefinitionShaped::deSerializeSubclass(std::istream &is, int version)
+void CraftDefinitionShaped::deSerializeBody(std::istream &is, int version)
 {
 	if(version != 1) throw SerializationError(
 			"unsupported CraftDefinitionShaped version");
@@ -490,7 +491,7 @@ std::string CraftDefinitionShapeless::dump() const
 	return os.str();
 }
 
-void CraftDefinitionShapeless::serializeSubclass(std::ostream &os) const
+void CraftDefinitionShapeless::serializeBody(std::ostream &os) const
 {
 	os<<serializeString(output);
 	writeU16(os, recipe.size());
@@ -504,7 +505,7 @@ void CraftDefinitionShapeless::serializeSubclass(std::ostream &os) const
 	}
 }
 
-void CraftDefinitionShapeless::deSerializeSubclass(std::istream &is, int version)
+void CraftDefinitionShapeless::deSerializeBody(std::istream &is, int version)
 {
 	if(version != 1) throw SerializationError(
 			"unsupported CraftDefinitionShapeless version");
@@ -548,9 +549,11 @@ static InventoryItem craftToolRepair(
 	s32 new_wear = 65536 - new_uses + floor(additional_wear * 65536 + 0.5);
 	if(new_wear >= 65536)
 		return InventoryItem();
+	if(new_wear < 0)
+		new_wear = 0;
 
 	InventoryItem repaired = item1;
-	repaired.wear = MYMAX(new_wear, 0);
+	repaired.wear = new_wear;
 	return repaired;
 }
 
@@ -616,12 +619,12 @@ std::string CraftDefinitionToolRepair::dump() const
 	return os.str();
 }
 
-void CraftDefinitionToolRepair::serializeSubclass(std::ostream &os) const
+void CraftDefinitionToolRepair::serializeBody(std::ostream &os) const
 {
 	writeF1000(os, additional_wear);
 }
 
-void CraftDefinitionToolRepair::deSerializeSubclass(std::istream &is, int version)
+void CraftDefinitionToolRepair::deSerializeBody(std::istream &is, int version)
 {
 	if(version != 1) throw SerializationError(
 			"unsupported CraftDefinitionToolRepair version");
@@ -667,20 +670,20 @@ void CraftDefinitionCooking::decrementInput(CraftInput &input, IGameDef *gamedef
 std::string CraftDefinitionCooking::dump() const
 {
 	std::ostringstream os(std::ios::binary);
-	os<<"(Cooking, output=\""<<output
+	os<<"(cooking, output=\""<<output
 		<<"\", recipe=\""<<recipe
 		<<"\", cooktime="<<cooktime<<")";
 	return os.str();
 }
 
-void CraftDefinitionCooking::serializeSubclass(std::ostream &os) const
+void CraftDefinitionCooking::serializeBody(std::ostream &os) const
 {
 	os<<serializeString(output);
 	os<<serializeString(recipe);
 	writeF1000(os, cooktime);
 }
 
-void CraftDefinitionCooking::deSerializeSubclass(std::istream &is, int version)
+void CraftDefinitionCooking::deSerializeBody(std::istream &is, int version)
 {
 	if(version != 1) throw SerializationError(
 			"unsupported CraftDefinitionCooking version");
@@ -733,13 +736,13 @@ std::string CraftDefinitionFuel::dump() const
 	return os.str();
 }
 
-void CraftDefinitionFuel::serializeSubclass(std::ostream &os) const
+void CraftDefinitionFuel::serializeBody(std::ostream &os) const
 {
 	os<<serializeString(recipe);
 	writeF1000(os, burntime);
 }
 
-void CraftDefinitionFuel::deSerializeSubclass(std::istream &is, int version)
+void CraftDefinitionFuel::deSerializeBody(std::istream &is, int version)
 {
 	if(version != 1) throw SerializationError(
 			"unsupported CraftDefinitionFuel version");
@@ -809,6 +812,18 @@ public:
 			}
 		}
 		return false;
+	}
+	virtual std::string dump() const
+	{
+		std::ostringstream os(std::ios::binary);
+		os<<"Crafting definitions:\n";
+		for(std::vector<CraftDefinition*>::const_iterator
+				i = m_craft_definitions.begin();
+				i != m_craft_definitions.end(); i++)
+		{
+			os<<(*i)->dump()<<"\n";
+		}
+		return os.str();
 	}
 	virtual void registerCraft(CraftDefinition *def)
 	{

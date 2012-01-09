@@ -252,7 +252,6 @@ minetest.noneitemdef_default = {  -- This is used for the hand and unknown items
 	--on_use = ...,
 }
 
-
 --
 -- Make raw registration functions inaccessible to anyone except builtin.lua
 --
@@ -375,19 +374,19 @@ function minetest.register_item(name, itemdef)
 
 	-- Legacy stuff
 	if itemdef.cookresult_itemstring ~= nil and itemdef.cookresult_itemstring ~= "" then
-		--minetest.register_craft({
-		--	type="cooking",
-		--	output=itemdef.cookresult_itemstring,
-		--	recipe=itemdef.name,
-		--	cooktime=itemdef.furnace_cooktime
-		--})
+		minetest.register_craft({
+			type="cooking",
+			output=itemdef.cookresult_itemstring,
+			recipe=itemdef.name,
+			cooktime=itemdef.furnace_cooktime
+		})
 	end
 	if itemdef.furnace_burntime ~= nil and itemdef.furnace_burntime >= 0 then
-		--minetest.register_craft({
-		--	type="fuel",
-		--	recipe=itemdef.name,
-		--	burntime=itemdef.furnace_burntime
-		--})
+		minetest.register_craft({
+			type="fuel",
+			recipe=itemdef.name,
+			burntime=itemdef.furnace_burntime
+		})
 	end
 
 	-- Disable all further modifications
@@ -619,6 +618,7 @@ minetest.creative_inventory = {}
 
 minetest.add_to_creative_inventory = function(itemstring)
 	table.insert(minetest.creative_inventory, itemstring)
+	dump2(minetest.creative_inventory)
 end
 
 --
