@@ -297,8 +297,10 @@ local forbidden_item_names = {
 	NodeItem = true,
 	node = true,
 	CraftItem = true,
+	craft = true,
 	MBOItem = true,
 	ToolItem = true,
+	tool = true,
 }
 
 local function check_modname_prefix(name)
