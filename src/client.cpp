@@ -1203,7 +1203,7 @@ void Client::ProcessData(u8 *data, u32 datasize, u16 sender_peer_id)
 			} else {
 				InventoryList *inv = player->inventory.getList("main");
 				std::string itemstring(deSerializeString(is));
-				InventoryItem item;
+				ItemStack item;
 				item.deSerialize(itemstring, m_itemdef);
 				inv->changeItem(0, item);
 				if(itemstring.empty())

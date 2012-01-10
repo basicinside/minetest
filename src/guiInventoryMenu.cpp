@@ -30,9 +30,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include <IGUIFont.h>
 #include "log.h"
 
-void drawInventoryItem(video::IVideoDriver *driver,
+void drawItemStack(video::IVideoDriver *driver,
 		gui::IGUIFont *font,
-		const InventoryItem &item,
+		const ItemStack &item,
 		const core::rect<s32> &rect,
 		const core::rect<s32> *clip,
 		IGameDef *gamedef)
@@ -269,7 +269,7 @@ void GUIInventoryMenu::drawList(const ListDrawSpec &s)
 		s32 y = (i/s.geom.X) * spacing.Y;
 		v2s32 p(x,y);
 		core::rect<s32> rect = imgrect + s.pos + p;
-		InventoryItem item;
+		ItemStack item;
 		if(ilist)
 			item = ilist->getItem(i);
 
@@ -305,7 +305,7 @@ void GUIInventoryMenu::drawList(const ListDrawSpec &s)
 
 		if(!item.empty())
 		{
-			drawInventoryItem(driver, font, item,
+			drawItemStack(driver, font, item,
 					rect, &AbsoluteClippingRect, m_gamedef);
 		}
 

@@ -30,9 +30,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 class IGameDef;
 class InventoryManager;
 
-void drawInventoryItem(video::IVideoDriver *driver,
+void drawItemStack(video::IVideoDriver *driver,
 		gui::IGUIFont *font,
-		const InventoryItem &item,
+		const ItemStack &item,
 		const core::rect<s32> &rect,
 		const core::rect<s32> *clip,
 		IGameDef *gamedef);

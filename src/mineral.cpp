@@ -48,14 +48,14 @@ std::string mineral_block_texture(u8 mineral)
 	return mineral_textures[mineral];
 }
 
-InventoryItem getDiggedMineralItem(u8 mineral, IGameDef *gamedef)
+ItemStack getDiggedMineralItem(u8 mineral, IGameDef *gamedef)
 {
 	if(mineral == MINERAL_COAL)
-		return InventoryItem("default:coal_lump", 1, 0, "", gamedef->idef());
+		return ItemStack("default:coal_lump", 1, 0, "", gamedef->idef());
 	else if(mineral == MINERAL_IRON)
-		return InventoryItem("default:iron_lump", 1, 0, "", gamedef->idef());
+		return ItemStack("default:iron_lump", 1, 0, "", gamedef->idef());
 	else
-		return InventoryItem();
+		return ItemStack();
 }
 
 

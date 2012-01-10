@@ -174,7 +174,7 @@ void draw_hotbar(video::IVideoDriver *driver, gui::IGUIFont *font,
 
 	for(s32 i=0; i<itemcount; i++)
 	{
-		const InventoryItem &item = mainlist->getItem(i);
+		const ItemStack &item = mainlist->getItem(i);
 		
 		core::rect<s32> rect = imgrect + pos
 				+ v2s32(padding+i*(imgsize+padding*2), padding);
@@ -235,7 +235,7 @@ void draw_hotbar(video::IVideoDriver *driver, gui::IGUIFont *font,
 
 		video::SColor bgcolor2(128,0,0,0);
 		driver->draw2DRectangle(bgcolor2, rect, NULL);
-		drawInventoryItem(driver, font, item, rect, NULL, gamedef);
+		drawItemStack(driver, font, item, rect, NULL, gamedef);
 	}
 	
 	/*
@@ -1690,7 +1690,7 @@ void the_game(
 			- Is it a usable item?
 			- Can it point to liquids?
 		*/
-		InventoryItem playeritem;
+		ItemStack playeritem;
 		bool playeritem_usable = false;
 		bool playeritem_liquids_pointable = false;
 		{
@@ -2259,7 +2259,7 @@ void the_game(
 			update_wielded_item_trigger = false;
 			// Update wielded tool
 			InventoryList *mlist = local_inventory.getList("main");
-			InventoryItem item;
+			ItemStack item;
 			if(mlist != NULL)
 				item = mlist->getItem(client.getPlayerItem());
 			camera.wield(item, gamedef);

@@ -42,7 +42,7 @@ Some planning
 */
 
 class ServerEnvironment;
-class InventoryItem;
+class ItemStack;
 class Player;
 struct ToolDiggingProperties;
 
@@ -157,8 +157,8 @@ public:
 	{ return ""; }
 	virtual int getWieldIndex() const
 	{ return 0; }
-	virtual InventoryItem getWieldedItem() const;
-	virtual bool setWieldedItem(const InventoryItem &item);
+	virtual ItemStack getWieldedItem() const;
+	virtual bool setWieldedItem(const ItemStack &item);
 
 	/*
 		Number of players which know about this object. Object won't be

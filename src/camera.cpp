@@ -456,7 +456,7 @@ void Camera::setDigging(s32 button)
 		m_digging_button = button;
 }
 
-void Camera::wield(const InventoryItem &item, IGameDef *gamedef)
+void Camera::wield(const ItemStack &item, IGameDef *gamedef)
 {
 	IItemDefManager *idef = gamedef->idef();
 	scene::IMesh *wield_mesh = item.getDefinition(idef).wield_mesh;

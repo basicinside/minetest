@@ -895,7 +895,7 @@ static ContentFeatures read_content_features(lua_State *L, int index)
 	Inventory stuff
 */
 
-static InventoryItem read_item(lua_State *L, int index);
+static ItemStack read_item(lua_State *L, int index);
 
 static void inventory_set_list_from_lua(Inventory *inv, const char *name,
 		lua_State *L, int tableindex, int forcesize=-1)
@@ -909,7 +909,7 @@ static void inventory_set_list_from_lua(Inventory *inv, const char *name,
 		return;
 	}
 	// Otherwise set list
-	std::vector<InventoryItem> items;
+	std::vector<ItemStack> items;
 	luaL_checktype(L, tableindex, LUA_TTABLE);
 	lua_pushnil(L);
 	while(lua_next(L, tableindex) != 0){
@@ -921,7 +921,7 @@ static void inventory_set_list_from_lua(Inventory *inv, const char *name,
 	int listsize = (forcesize != -1) ? forcesize : items.size();
 	InventoryList *invlist = inv->addList(name, listsize);
 	int index = 0;
-	for(std::vector<InventoryItem>::const_iterator
+	for(std::vector<ItemStack>::const_iterator
 			i = items.begin(); i != items.end(); i++){
 		if(forcesize != -1 && index == forcesize)
 			break;
@@ -951,7 +951,7 @@ static void inventory_get_list_to_lua(Inventory *inv, const char *name,
 	lua_newtable(L);
 	int table = lua_gettop(L);
 	for(u32 i=0; i<invlist->getSize(); i++){
-		InventoryItem item = invlist->getItem(i);
+		ItemStack item = invlist->getItem(i);
 		lua_pushvalue(L, table_insert);
 		lua_pushvalue(L, table);
 		lua_pushstring(L, item.getItemString().c_str());
@@ -967,13 +967,13 @@ static void inventory_get_list_to_lua(Inventory *inv, const char *name,
 #define method(class, name) {#name, class::l_##name}
 
 /*
-	ItemStack
+	LuaItemStack
 */
 
-class ItemStack
+class LuaItemStack
 {
 private:
-	InventoryItem m_stack;
+	ItemStack m_stack;
 
 	static const char className[];
 	static const luaL_reg methods[];
@@ -983,7 +983,7 @@ private:
 	// garbage collector
 	static int gc_object(lua_State *L)
 	{
-		ItemStack *o = *(ItemStack **)(lua_touserdata(L, 1));
+		LuaItemStack *o = *(LuaItemStack **)(lua_touserdata(L, 1));
 		delete o;
 		return 0;
 	}
@@ -991,8 +991,8 @@ private:
 	// is_empty(self) -> true/false
 	static int l_is_empty(lua_State *L)
 	{
-		ItemStack *o = checkobject(L, 1);
-		InventoryItem &item = o->m_stack;
+		LuaItemStack *o = checkobject(L, 1);
+		ItemStack &item = o->m_stack;
 		lua_pushboolean(L, item.empty());
 		return 1;
 	}
@@ -1000,8 +1000,8 @@ private:
 	// get_name(self) -> string
 	static int l_get_name(lua_State *L)
 	{
-		ItemStack *o = checkobject(L, 1);
-		InventoryItem &item = o->m_stack;
+		LuaItemStack *o = checkobject(L, 1);
+		ItemStack &item = o->m_stack;
 		lua_pushstring(L, item.name.c_str());
 		return 1;
 	}
@@ -1009,8 +1009,8 @@ private:
 	// get_count(self) -> number
 	static int l_get_count(lua_State *L)
 	{
-		ItemStack *o = checkobject(L, 1);
-		InventoryItem &item = o->m_stack;
+		LuaItemStack *o = checkobject(L, 1);
+		ItemStack &item = o->m_stack;
 		lua_pushinteger(L, item.count);
 		return 1;
 	}
@@ -1018,8 +1018,8 @@ private:
 	// get_wear(self) -> number
 	static int l_get_wear(lua_State *L)
 	{
-		ItemStack *o = checkobject(L, 1);
-		InventoryItem &item = o->m_stack;
+		LuaItemStack *o = checkobject(L, 1);
+		ItemStack &item = o->m_stack;
 		lua_pushinteger(L, item.wear);
 		return 1;
 	}
@@ -1027,8 +1027,8 @@ private:
 	// get_metadata(self) -> string
 	static int l_get_metadata(lua_State *L)
 	{
-		ItemStack *o = checkobject(L, 1);
-		InventoryItem &item = o->m_stack;
+		LuaItemStack *o = checkobject(L, 1);
+		ItemStack &item = o->m_stack;
 		lua_pushlstring(L, item.metadata.c_str(), item.metadata.size());
 		return 1;
 	}
@@ -1036,7 +1036,7 @@ private:
 	// clear(self) -> true
 	static int l_clear(lua_State *L)
 	{
-		ItemStack *o = checkobject(L, 1);
+		LuaItemStack *o = checkobject(L, 1);
 		o->m_stack.clear();
 		lua_pushboolean(L, true);
 		return 1;
@@ -1045,7 +1045,7 @@ private:
 	// replace(self, itemstack or itemstring or table or nil) -> true
 	static int l_replace(lua_State *L)
 	{
-		ItemStack *o = checkobject(L, 1);
+		LuaItemStack *o = checkobject(L, 1);
 		o->m_stack = read_item(L, 2);
 		lua_pushboolean(L, true);
 		return 1;
@@ -1054,7 +1054,7 @@ private:
 	// to_string(self) -> string
 	static int l_to_string(lua_State *L)
 	{
-		ItemStack *o = checkobject(L, 1);
+		LuaItemStack *o = checkobject(L, 1);
 		std::string itemstring = o->m_stack.getItemString();
 		lua_pushstring(L, itemstring.c_str());
 		return 1;
@@ -1063,8 +1063,8 @@ private:
 	// to_table(self) -> table or nil
 	static int l_to_table(lua_State *L)
 	{
-		ItemStack *o = checkobject(L, 1);
-		const InventoryItem &item = o->m_stack;
+		LuaItemStack *o = checkobject(L, 1);
+		const ItemStack &item = o->m_stack;
 		if(item.empty())
 		{
 			lua_pushnil(L);
@@ -1087,8 +1087,8 @@ private:
 	// get_stack_max(self) -> number
 	static int l_get_stack_max(lua_State *L)
 	{
-		ItemStack *o = checkobject(L, 1);
-		InventoryItem &item = o->m_stack;
+		LuaItemStack *o = checkobject(L, 1);
+		ItemStack &item = o->m_stack;
 		lua_pushinteger(L, item.getStackMax(get_server(L)->idef()));
 		return 1;
 	}
@@ -1096,8 +1096,8 @@ private:
 	// get_free_space(self) -> number
 	static int l_get_free_space(lua_State *L)
 	{
-		ItemStack *o = checkobject(L, 1);
-		InventoryItem &item = o->m_stack;
+		LuaItemStack *o = checkobject(L, 1);
+		ItemStack &item = o->m_stack;
 		lua_pushinteger(L, item.freeSpace(get_server(L)->idef()));
 		return 1;
 	}
@@ -1106,8 +1106,8 @@ private:
 	// Checks if the item is defined.
 	static int l_is_known(lua_State *L)
 	{
-		ItemStack *o = checkobject(L, 1);
-		InventoryItem &item = o->m_stack;
+		LuaItemStack *o = checkobject(L, 1);
+		ItemStack &item = o->m_stack;
 		bool is_known = item.isKnown(get_server(L)->idef());
 		lua_pushboolean(L, is_known);
 		return 1;
@@ -1118,8 +1118,8 @@ private:
 	// or a fallback one (name="unknown")
 	static int l_get_definition(lua_State *L)
 	{
-		ItemStack *o = checkobject(L, 1);
-		InventoryItem &item = o->m_stack;
+		LuaItemStack *o = checkobject(L, 1);
+		ItemStack &item = o->m_stack;
 
 		// Get minetest.registered_items[name]
 		lua_getglobal(L, "minetest");
@@ -1139,8 +1139,8 @@ private:
 	// Returns those of the hand ("") if this item has none associated.
 	static int l_get_tool_digging_properties(lua_State *L)
 	{
-		ItemStack *o = checkobject(L, 1);
-		InventoryItem &item = o->m_stack;
+		LuaItemStack *o = checkobject(L, 1);
+		ItemStack &item = o->m_stack;
 		const ToolDiggingProperties &prop =
 			item.getToolDiggingProperties(get_server(L)->idef());
 		push_tool_digging_properties(L, prop);
@@ -1153,8 +1153,8 @@ private:
 	// Returns true if the item is (or was) a tool.
 	static int l_add_wear(lua_State *L)
 	{
-		ItemStack *o = checkobject(L, 1);
-		InventoryItem &item = o->m_stack;
+		LuaItemStack *o = checkobject(L, 1);
+		ItemStack &item = o->m_stack;
 		int amount = lua_tointeger(L, 2);
 		bool result = item.addWear(amount, get_server(L)->idef());
 		lua_pushboolean(L, result);
@@ -1165,10 +1165,10 @@ private:
 	// Returns leftover item stack
 	static int l_add_item(lua_State *L)
 	{
-		ItemStack *o = checkobject(L, 1);
-		InventoryItem &item = o->m_stack;
-		InventoryItem newitem = read_item(L, 2);
-		InventoryItem leftover = item.addItem(newitem, get_server(L)->idef());
+		LuaItemStack *o = checkobject(L, 1);
+		ItemStack &item = o->m_stack;
+		ItemStack newitem = read_item(L, 2);
+		ItemStack leftover = item.addItem(newitem, get_server(L)->idef());
 		create(L, leftover);
 		return 1;
 	}
@@ -1178,10 +1178,10 @@ private:
 	// Second return value is the would-be-left-over item stack
 	static int l_item_fits(lua_State *L)
 	{
-		ItemStack *o = checkobject(L, 1);
-		InventoryItem &item = o->m_stack;
-		InventoryItem newitem = read_item(L, 2);
-		InventoryItem restitem;
+		LuaItemStack *o = checkobject(L, 1);
+		ItemStack &item = o->m_stack;
+		ItemStack newitem = read_item(L, 2);
+		ItemStack restitem;
 		bool fits = item.itemFits(newitem, &restitem, get_server(L)->idef());
 		lua_pushboolean(L, fits);  // first return value
 		create(L, restitem);       // second return value
@@ -1191,12 +1191,12 @@ private:
 	// take_item(self, takecount=1) -> itemstack
 	static int l_take_item(lua_State *L)
 	{
-		ItemStack *o = checkobject(L, 1);
-		InventoryItem &item = o->m_stack;
+		LuaItemStack *o = checkobject(L, 1);
+		ItemStack &item = o->m_stack;
 		u32 takecount = 1;
 		if(!lua_isnone(L, 2))
 			takecount = lua_tointeger(L, 2);
-		InventoryItem taken = item.takeItem(takecount);
+		ItemStack taken = item.takeItem(takecount);
 		create(L, taken);
 		return 1;
 	}
@@ -1204,62 +1204,62 @@ private:
 	// peek_item(self, peekcount=1) -> itemstack
 	static int l_peek_item(lua_State *L)
 	{
-		ItemStack *o = checkobject(L, 1);
-		InventoryItem &item = o->m_stack;
+		LuaItemStack *o = checkobject(L, 1);
+		ItemStack &item = o->m_stack;
 		u32 peekcount = 1;
 		if(!lua_isnone(L, 2))
 			peekcount = lua_tointeger(L, 2);
-		InventoryItem peekaboo = item.peekItem(peekcount);
+		ItemStack peekaboo = item.peekItem(peekcount);
 		create(L, peekaboo);
 		return 1;
 	}
 
 public:
-	ItemStack(const InventoryItem &item):
+	LuaItemStack(const ItemStack &item):
 		m_stack(item)
 	{
 	}
 
-	~ItemStack()
+	~LuaItemStack()
 	{
 	}
 
-	const InventoryItem& getItem() const
+	const ItemStack& getItem() const
 	{
 		return m_stack;
 	}
-	InventoryItem& getItem()
+	ItemStack& getItem()
 	{
 		return m_stack;
 	}
 	
-	// ItemStack(itemstack or itemstring or table or nil)
-	// Creates an ItemStack and leaves it on top of stack
+	// LuaItemStack(itemstack or itemstring or table or nil)
+	// Creates an LuaItemStack and leaves it on top of stack
 	static int create_object(lua_State *L)
 	{
-		InventoryItem item = read_item(L, 1);
-		ItemStack *o = new ItemStack(item);
+		ItemStack item = read_item(L, 1);
+		LuaItemStack *o = new LuaItemStack(item);
 		*(void **)(lua_newuserdata(L, sizeof(void *))) = o;
 		luaL_getmetatable(L, className);
 		lua_setmetatable(L, -2);
 		return 1;
 	}
 	// Not callable from Lua
-	static int create(lua_State *L, const InventoryItem &item)
+	static int create(lua_State *L, const ItemStack &item)
 	{
-		ItemStack *o = new ItemStack(item);
+		LuaItemStack *o = new LuaItemStack(item);
 		*(void **)(lua_newuserdata(L, sizeof(void *))) = o;
 		luaL_getmetatable(L, className);
 		lua_setmetatable(L, -2);
 		return 1;
 	}
 
-	static ItemStack* checkobject(lua_State *L, int narg)
+	static LuaItemStack* checkobject(lua_State *L, int narg)
 	{
 		luaL_checktype(L, narg, LUA_TUSERDATA);
 		void *ud = luaL_checkudata(L, narg, className);
 		if(!ud) luaL_typerror(L, narg, className);
-		return *(ItemStack**)ud;  // unbox pointer
+		return *(LuaItemStack**)ud;  // unbox pointer
 	}
 
 	static void Register(lua_State *L)
@@ -1286,47 +1286,47 @@ public:
 		luaL_openlib(L, 0, methods, 0);  // fill methodtable
 		lua_pop(L, 1);  // drop methodtable
 
-		// Can be created from Lua (ItemStack(itemstring))
+		// Can be created from Lua (LuaItemStack(itemstack or itemstring or table or nil))
 		lua_register(L, className, create_object);
 	}
 };
-const char ItemStack::className[] = "ItemStack";
-const luaL_reg ItemStack::methods[] = {
-	method(ItemStack, is_empty),
-	method(ItemStack, get_name),
-	method(ItemStack, get_count),
-	method(ItemStack, get_wear),
-	method(ItemStack, get_metadata),
-	method(ItemStack, clear),
-	method(ItemStack, replace),
-	method(ItemStack, to_string),
-	method(ItemStack, to_table),
-	method(ItemStack, get_stack_max),
-	method(ItemStack, get_free_space),
-	method(ItemStack, is_known),
-	method(ItemStack, get_definition),
-	method(ItemStack, get_tool_digging_properties),
-	method(ItemStack, add_wear),
-	method(ItemStack, add_item),
-	method(ItemStack, item_fits),
-	method(ItemStack, take_item),
-	method(ItemStack, peek_item),
+const char LuaItemStack::className[] = "LuaItemStack";
+const luaL_reg LuaItemStack::methods[] = {
+	method(LuaItemStack, is_empty),
+	method(LuaItemStack, get_name),
+	method(LuaItemStack, get_count),
+	method(LuaItemStack, get_wear),
+	method(LuaItemStack, get_metadata),
+	method(LuaItemStack, clear),
+	method(LuaItemStack, replace),
+	method(LuaItemStack, to_string),
+	method(LuaItemStack, to_table),
+	method(LuaItemStack, get_stack_max),
+	method(LuaItemStack, get_free_space),
+	method(LuaItemStack, is_known),
+	method(LuaItemStack, get_definition),
+	method(LuaItemStack, get_tool_digging_properties),
+	method(LuaItemStack, add_wear),
+	method(LuaItemStack, add_item),
+	method(LuaItemStack, item_fits),
+	method(LuaItemStack, take_item),
+	method(LuaItemStack, peek_item),
 	{0,0}
 };
 
-static InventoryItem read_item(lua_State *L, int index)
+static ItemStack read_item(lua_State *L, int index)
 {
 	if(index < 0)
 		index = lua_gettop(L) + 1 + index;
 
 	if(lua_isnil(L, index))
 	{
-		return InventoryItem();
+		return ItemStack();
 	}
 	else if(lua_isuserdata(L, index))
 	{
-		// Convert from ItemStack
-		ItemStack *o = ItemStack::checkobject(L, index);
+		// Convert from LuaItemStack
+		LuaItemStack *o = LuaItemStack::checkobject(L, index);
 		return o->getItem();
 	}
 	else if(lua_isstring(L, index))
@@ -1336,7 +1336,7 @@ static InventoryItem read_item(lua_State *L, int index)
 		IItemDefManager *idef = get_server(L)->idef();
 		try
 		{
-			InventoryItem item;
+			ItemStack item;
 			item.deSerialize(itemstring, idef);
 			return item;
 		}
@@ -1344,7 +1344,7 @@ static InventoryItem read_item(lua_State *L, int index)
 		{
 			infostream<<"WARNING: unable to create item from itemstring"
 					<<": "<<itemstring<<std::endl;
-			return InventoryItem();
+			return ItemStack();
 		}
 	}
 	else if(lua_istable(L, index))
@@ -1355,11 +1355,11 @@ static InventoryItem read_item(lua_State *L, int index)
 		int count = getintfield_default(L, index, "count", 1);
 		int wear = getintfield_default(L, index, "wear", 0);
 		std::string metadata = getstringfield_default(L, index, "metadata", "");
-		return InventoryItem(name, count, wear, metadata, idef);
+		return ItemStack(name, count, wear, metadata, idef);
 	}
 	else
 	{
-		throw LuaError(L, "Expecting ItemStack, string, table or nil");
+		throw LuaError(L, "Expecting itemstack, itemstring, table or nil");
 	}
 }
 
@@ -1455,10 +1455,10 @@ private:
 		const char *listname = luaL_checkstring(L, 2);
 		int i = luaL_checknumber(L, 3) - 1;
 		InventoryList *list = getlist(L, ref, listname);
-		InventoryItem item;
+		ItemStack item;
 		if(list != NULL && i >= 0 && i < (int) list->getSize())
 			item = list->getItem(i);
-		ItemStack::create(L, item);
+		LuaItemStack::create(L, item);
 		return 1;
 	}
 
@@ -1468,7 +1468,7 @@ private:
 		InvRef *ref = checkobject(L, 1);
 		const char *listname = luaL_checkstring(L, 2);
 		int i = luaL_checknumber(L, 3) - 1;
-		InventoryItem newitem = read_item(L, 4);
+		ItemStack newitem = read_item(L, 4);
 		InventoryList *list = getlist(L, ref, listname);
 		if(list != NULL && i >= 0 && i < (int) list->getSize()){
 			list->changeItem(i, newitem);
@@ -1512,15 +1512,15 @@ private:
 	{
 		InvRef *ref = checkobject(L, 1);
 		const char *listname = luaL_checkstring(L, 2);
-		InventoryItem item = read_item(L, 3);
+		ItemStack item = read_item(L, 3);
 		InventoryList *list = getlist(L, ref, listname);
 		if(list){
-			InventoryItem leftover = list->addItem(item);
+			ItemStack leftover = list->addItem(item);
 			if(leftover.count != item.count)
 				reportInventoryChange(L, ref);
-			ItemStack::create(L, leftover);
+			LuaItemStack::create(L, leftover);
 		} else {
-			ItemStack::create(L, item);
+			LuaItemStack::create(L, item);
 		}
 		return 1;
 	}
@@ -1531,7 +1531,7 @@ private:
 	{
 		InvRef *ref = checkobject(L, 1);
 		const char *listname = luaL_checkstring(L, 2);
-		InventoryItem item = read_item(L, 3);
+		ItemStack item = read_item(L, 3);
 		InventoryList *list = getlist(L, ref, listname);
 		if(list){
 			lua_pushboolean(L, list->roomForItem(item));
@@ -1547,7 +1547,7 @@ private:
 	{
 		InvRef *ref = checkobject(L, 1);
 		const char *listname = luaL_checkstring(L, 2);
-		InventoryItem item = read_item(L, 3);
+		ItemStack item = read_item(L, 3);
 		InventoryList *list = getlist(L, ref, listname);
 		if(list){
 			lua_pushboolean(L, list->containsItem(item));
@@ -1563,15 +1563,15 @@ private:
 	{
 		InvRef *ref = checkobject(L, 1);
 		const char *listname = luaL_checkstring(L, 2);
-		InventoryItem item = read_item(L, 3);
+		ItemStack item = read_item(L, 3);
 		InventoryList *list = getlist(L, ref, listname);
 		if(list){
-			InventoryItem removed = list->removeItem(item);
+			ItemStack removed = list->removeItem(item);
 			if(!removed.empty())
 				reportInventoryChange(L, ref);
-			ItemStack::create(L, removed);
+			LuaItemStack::create(L, removed);
 		} else {
-			ItemStack::create(L, InventoryItem());
+			LuaItemStack::create(L, ItemStack());
 		}
 		return 1;
 	}
@@ -2224,7 +2224,7 @@ private:
 		ServerActiveObject *co = getobject(ref);
 		if(co == NULL) return 0;
 		// Do it
-		ItemStack::create(L, co->getWieldedItem());
+		LuaItemStack::create(L, co->getWieldedItem());
 		return 1;
 	}
 
@@ -2235,7 +2235,7 @@ private:
 		ServerActiveObject *co = getobject(ref);
 		if(co == NULL) return 0;
 		// Do it
-		InventoryItem item = read_item(L, 2);
+		ItemStack item = read_item(L, 2);
 		bool success = co->setWieldedItem(item);
 		lua_pushboolean(L, success);
 		return 1;
@@ -2695,7 +2695,7 @@ private:
 		// pos
 		v3f pos = checkFloatPos(L, 2);
 		// item
-		InventoryItem item = read_item(L, 3);
+		ItemStack item = read_item(L, 3);
 		if(item.empty() || !item.isKnown(get_server(L)->idef()))
 			return 0;
 		// Do it
@@ -3438,7 +3438,7 @@ void scriptapi_export(lua_State *L, Server *server)
 	lua_setfield(L, -2, "luaentities");
 
 	// Register wrappers
-	ItemStack::Register(L);
+	LuaItemStack::Register(L);
 	InvRef::Register(L);
 	NodeMetaRef::Register(L);
 	ObjectRef::Register(L);
@@ -3798,7 +3798,7 @@ static bool get_item_callback(lua_State *L,
 	}
 }
 
-bool scriptapi_item_on_drop(lua_State *L, InventoryItem &item,
+bool scriptapi_item_on_drop(lua_State *L, ItemStack &item,
 		ServerActiveObject *dropper, v3f pos)
 {
 	realitycheck(L);
@@ -3810,7 +3810,7 @@ bool scriptapi_item_on_drop(lua_State *L, InventoryItem &item,
 		return false;
 
 	// Call function
-	ItemStack::create(L, item);
+	LuaItemStack::create(L, item);
 	objectref_get_or_create(L, dropper);
 	pushFloatPos(L, pos);
 	if(lua_pcall(L, 3, 1, 0))
@@ -3820,7 +3820,7 @@ bool scriptapi_item_on_drop(lua_State *L, InventoryItem &item,
 	return true;
 }
 
-bool scriptapi_item_on_place(lua_State *L, InventoryItem &item,
+bool scriptapi_item_on_place(lua_State *L, ItemStack &item,
 		ServerActiveObject *placer, const PointedThing &pointed)
 {
 	realitycheck(L);
@@ -3832,7 +3832,7 @@ bool scriptapi_item_on_place(lua_State *L, InventoryItem &item,
 		return false;
 
 	// Call function
-	ItemStack::create(L, item);
+	LuaItemStack::create(L, item);
 	objectref_get_or_create(L, placer);
 	push_pointed_thing(L, pointed);
 	if(lua_pcall(L, 3, 1, 0))
@@ -3842,7 +3842,7 @@ bool scriptapi_item_on_place(lua_State *L, InventoryItem &item,
 	return true;
 }
 
-bool scriptapi_item_on_use(lua_State *L, InventoryItem &item,
+bool scriptapi_item_on_use(lua_State *L, ItemStack &item,
 		ServerActiveObject *user, const PointedThing &pointed)
 {
 	realitycheck(L);
@@ -3854,7 +3854,7 @@ bool scriptapi_item_on_use(lua_State *L, InventoryItem &item,
 		return false;
 
 	// Call function
-	ItemStack::create(L, item);
+	LuaItemStack::create(L, item);
 	objectref_get_or_create(L, user);
 	push_pointed_thing(L, pointed);
 	if(lua_pcall(L, 3, 1, 0))

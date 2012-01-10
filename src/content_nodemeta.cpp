@@ -461,7 +461,7 @@ bool FurnaceNodeMetadata::step(float dtime)
 		std::string cookresult;
 		float cooktime;
 		bool cookable = getCookResult(false, cookresult, cooktime);
-		InventoryItem cookresult_item;
+		ItemStack cookresult_item;
 		bool room_available = false;
 		if(cookable)
 		{
@@ -570,7 +570,7 @@ std::string FurnaceNodeMetadata::getInventoryDrawSpecString()
 bool FurnaceNodeMetadata::getCookResult(bool remove,
 		std::string &cookresult, float &cooktime)
 {
-	std::vector<InventoryItem> items;
+	std::vector<ItemStack> items;
 	InventoryList *src_list = m_inventory->getList("src");
 	assert(src_list);
 	items.push_back(src_list->getItem(0));
@@ -588,7 +588,7 @@ bool FurnaceNodeMetadata::getCookResult(bool remove,
 }
 bool FurnaceNodeMetadata::getBurnResult(bool remove, float &burntime)
 {
-	std::vector<InventoryItem> items;
+	std::vector<ItemStack> items;
 	InventoryList *fuel_list = m_inventory->getList("fuel");
 	assert(fuel_list);
 	items.push_back(fuel_list->getItem(0));

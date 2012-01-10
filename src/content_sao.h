@@ -48,7 +48,7 @@ public:
 	void step(float dtime, bool send_recommended);
 	std::string getClientInitializationData();
 	std::string getStaticData();
-	InventoryItem createInventoryItem();
+	ItemStack createItemStack();
 	void punch(ServerActiveObject *puncher, float time_from_last_punch);
 	float getMinimumSavedMovement(){ return 0.1*BS; }
 private:

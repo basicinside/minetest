@@ -186,7 +186,7 @@ void ServerRemotePlayer::punch(ServerActiveObject *puncher,
 	mp.cuttability = 0.5;
 
 	IItemDefManager *idef = m_env->getGameDef()->idef();
-	InventoryItem punchitem = puncher->getWieldedItem();
+	ItemStack punchitem = puncher->getWieldedItem();
 	ToolDiggingProperties tp =
 		punchitem.getToolDiggingProperties(idef);
 

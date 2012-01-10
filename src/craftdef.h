@@ -50,13 +50,13 @@ struct CraftInput
 {
 	CraftMethod method;
 	unsigned int width;
-	std::vector<InventoryItem> items;
+	std::vector<ItemStack> items;
 
 	CraftInput():
 		method(CRAFT_METHOD_NORMAL), width(0), items()
 	{}
 	CraftInput(CraftMethod method_, unsigned int width_,
-			const std::vector<InventoryItem> &items_):
+			const std::vector<ItemStack> &items_):
 		method(method_), width(width_), items(items_)
 	{}
 	std::string dump() const;

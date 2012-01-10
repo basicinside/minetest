@@ -2423,7 +2423,7 @@ void Server::ProcessData(u8 *data, u32 datasize, u16 peer_id)
 					&& player->craftresult_is_preview
 					&& g_settings->getBool("creative_mode") == false)
 			{
-				InventoryItem crafting_result;
+				ItemStack crafting_result;
 				bool crafting_possible = GetCraftingResult(peer_id,
 						crafting_result, false);
 
@@ -3077,7 +3077,7 @@ void Server::ProcessData(u8 *data, u32 datasize, u16 peer_id)
 				InventoryList *mlist = player->inventory.getList("main");
 				if(mlist != NULL)
 				{
-					InventoryItem &item = mlist->getItem(item_i);
+					ItemStack &item = mlist->getItem(item_i);
 
 					// Get digging properties for material and tool
 					ToolDiggingProperties tp =
@@ -3092,7 +3092,7 @@ void Server::ProcessData(u8 *data, u32 datasize, u16 peer_id)
 					Add dug item to inventory
 				*/
 
-				InventoryItem item;
+				ItemStack item;
 
 				if(mineral != MINERAL_NONE)
 					item = getDiggedMineralItem(mineral, this);
@@ -3176,7 +3176,7 @@ void Server::ProcessData(u8 *data, u32 datasize, u16 peer_id)
 				return;
 			}
 
-			InventoryItem item = srp->getWieldedItem();
+			ItemStack item = srp->getWieldedItem();
 
 			if(pointed.type == POINTEDTHING_OBJECT)
 			{
@@ -3334,7 +3334,7 @@ void Server::ProcessData(u8 *data, u32 datasize, u16 peer_id)
 				return;
 			}
 
-			InventoryItem item = srp->getWieldedItem();
+			ItemStack item = srp->getWieldedItem();
 
 			actionstream<<player->getName()<<" uses "<<item.name
 					<<", pointing at "<<pointed.dump()<<std::endl;
@@ -4354,7 +4354,7 @@ void Server::RespawnPlayer(Player *player)
 	SendPlayerHP(player);
 }
 
-bool Server::GetCraftingResult(u16 peer_id, InventoryItem &result, bool decrementInput)
+bool Server::GetCraftingResult(u16 peer_id, ItemStack &result, bool decrementInput)
 {
 	DSTACK(__FUNCTION_NAME);
 	
@@ -4417,9 +4417,9 @@ void Server::UpdateCrafting(u16 peer_id)
 	if(!player->craftresult_is_preview && rlist->getUsedSlots() != 0)
 	{
 		// Grab item out of craftresult
-		InventoryItem item = rlist->changeItem(0, InventoryItem());
+		ItemStack item = rlist->changeItem(0, ItemStack());
 		// Try to put in main
-		InventoryItem leftover = mlist->addItem(item);
+		ItemStack leftover = mlist->addItem(item);
 		// If there are leftovers, put them back to craftresult
 		rlist->addItem(leftover);
 		// Inventory was modified
@@ -4439,7 +4439,7 @@ void Server::UpdateCrafting(u16 peer_id)
 		rlist->clearItems();
 
 		// Put the new preview in
-		InventoryItem crafting_result;
+		ItemStack crafting_result;
 		if(GetCraftingResult(peer_id, crafting_result, false))
 			rlist->addItem(crafting_result);
 	}

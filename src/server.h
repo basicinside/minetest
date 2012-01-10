@@ -595,7 +595,7 @@ private:
 	void HandlePlayerHP(Player *player, s16 damage);
 	void RespawnPlayer(Player *player);
 	
-	bool GetCraftingResult(u16 peer_id, InventoryItem &result, bool decrementInput);
+	bool GetCraftingResult(u16 peer_id, ItemStack &result, bool decrementInput);
 	void UpdateCrafting(u16 peer_id);
 	
 	// When called, connection mutex should be locked

@@ -222,11 +222,11 @@ std::string ItemSAO::getStaticData()
 	return os.str();
 }
 
-InventoryItem ItemSAO::createInventoryItem()
+ItemStack ItemSAO::createItemStack()
 {
 	try{
 		IItemDefManager *idef = m_env->getGameDef()->idef();
-		InventoryItem item;
+		ItemStack item;
 		item.deSerialize(m_itemstring, idef);
 		infostream<<__FUNCTION_NAME<<": m_itemstring=\""<<m_itemstring
 				<<"\" -> item=\""<<item.getItemString()<<"\""
@@ -237,7 +237,7 @@ InventoryItem ItemSAO::createInventoryItem()
 	{
 		infostream<<__FUNCTION_NAME<<": serialization error: "
 				<<"m_itemstring=\""<<m_itemstring<<"\""<<std::endl;
-		return InventoryItem();
+		return ItemStack();
 	}
 }
 
@@ -250,12 +250,12 @@ void ItemSAO::punch(ServerActiveObject *puncher, float time_from_last_punch)
 		return;
 	}
 
-	InventoryItem item = createInventoryItem();
+	ItemStack item = createItemStack();
 	Inventory *inv = puncher->getInventory();
 	if(inv != NULL)
 	{
 		std::string wieldlist = puncher->getWieldList();
-		InventoryItem leftover = inv->addItem(wieldlist, item);
+		ItemStack leftover = inv->addItem(wieldlist, item);
 		puncher->setInventoryModified();
 		if(leftover.empty())
 		{
@@ -460,12 +460,12 @@ void RatSAO::punch(ServerActiveObject *puncher, float time_from_last_punch)
 	}
 
 	IItemDefManager *idef = m_env->getGameDef()->idef();
-	InventoryItem item("rat", 1, 0, "", idef);
+	ItemStack item("rat", 1, 0, "", idef);
 	Inventory *inv = puncher->getInventory();
 	if(inv != NULL)
 	{
 		std::string wieldlist = puncher->getWieldList();
-		InventoryItem leftover = inv->addItem(wieldlist, item);
+		ItemStack leftover = inv->addItem(wieldlist, item);
 		puncher->setInventoryModified();
 		if(leftover.empty())
 			m_removed = true;
@@ -730,7 +730,7 @@ void Oerkki1SAO::punch(ServerActiveObject *puncher, float time_from_last_punch)
 	mp.cuttability = 1.0;
 
 	IItemDefManager *idef = m_env->getGameDef()->idef();
-        InventoryItem punchitem = puncher->getWieldedItem();
+        ItemStack punchitem = puncher->getWieldedItem();
         ToolDiggingProperties tp =
 	                punchitem.getToolDiggingProperties(idef);
 
@@ -1426,7 +1426,7 @@ void MobV2SAO::punch(ServerActiveObject *puncher, float time_from_last_punch)
 	mp.cuttability = 1.0;
 
 	IItemDefManager *idef = m_env->getGameDef()->idef();
-        InventoryItem punchitem = puncher->getWieldedItem();
+        ItemStack punchitem = puncher->getWieldedItem();
         ToolDiggingProperties tp =
 	                punchitem.getToolDiggingProperties(idef);
 

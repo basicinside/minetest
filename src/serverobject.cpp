@@ -67,7 +67,7 @@ void ServerActiveObject::registerType(u16 type, Factory f)
 	m_types.insert(type, f);
 }
 
-InventoryItem ServerActiveObject::getWieldedItem() const
+ItemStack ServerActiveObject::getWieldedItem() const
 {
 	const Inventory *inv = getInventory();
 	if(inv)
@@ -76,10 +76,10 @@ InventoryItem ServerActiveObject::getWieldedItem() const
 		if(list)
 			return list->getItem(getWieldIndex());
 	}
-	return InventoryItem();
+	return ItemStack();
 }
 
-bool ServerActiveObject::setWieldedItem(const InventoryItem &item)
+bool ServerActiveObject::setWieldedItem(const ItemStack &item)
 {
 	Inventory *inv = getInventory();
 	if(inv)

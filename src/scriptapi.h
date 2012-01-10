@@ -30,7 +30,7 @@ class ServerActiveObject;
 class ServerRemotePlayer;
 typedef struct lua_State lua_State;
 struct LuaEntityProperties;
-class InventoryItem;
+class ItemStack;
 struct PointedThing;
 //class IGameDef;
 
@@ -68,11 +68,11 @@ bool scriptapi_on_respawnplayer(lua_State *L, ServerActiveObject *player);
 void scriptapi_get_creative_inventory(lua_State *L, ServerRemotePlayer *player);
 
 /* item callbacks */
-bool scriptapi_item_on_drop(lua_State *L, InventoryItem &item,
+bool scriptapi_item_on_drop(lua_State *L, ItemStack &item,
 		ServerActiveObject *dropper, v3f pos);
-bool scriptapi_item_on_place(lua_State *L, InventoryItem &item,
+bool scriptapi_item_on_place(lua_State *L, ItemStack &item,
 		ServerActiveObject *placer, const PointedThing &pointed);
-bool scriptapi_item_on_use(lua_State *L, InventoryItem &item,
+bool scriptapi_item_on_use(lua_State *L, ItemStack &item,
 		ServerActiveObject *user, const PointedThing &pointed);
 
 /* luaentity */

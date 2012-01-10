@@ -209,9 +209,9 @@ void IMoveAction::apply(InventoryManager *mgr, ServerActiveObject *player)
 	}
 	
 	// Take item from source list
-	InventoryItem item1;
+	ItemStack item1;
 	if(count == 0)
-		item1 = list_from->changeItem(from_i, InventoryItem());
+		item1 = list_from->changeItem(from_i, ItemStack());
 	else
 		item1 = list_from->takeItem(from_i, count);
 
@@ -234,9 +234,9 @@ void IMoveAction::apply(InventoryManager *mgr, ServerActiveObject *player)
 		if(nothing_added)
 		{
 			// Take item from source list
-			item1 = list_from->changeItem(from_i, InventoryItem());
+			item1 = list_from->changeItem(from_i, ItemStack());
 			// Adding was not possible, swap the items.
-			InventoryItem item2 = list_to->changeItem(to_i, item1);
+			ItemStack item2 = list_to->changeItem(to_i, item1);
 			// Put item from destination list to the source list
 			list_from->changeItem(from_i, item2);
 		}
@@ -305,7 +305,7 @@ void IDropAction::apply(InventoryManager *mgr, ServerActiveObject *player)
 	/*
 		Drop the item
 	*/
-	InventoryItem item = list_from->getItem(from_i);
+	ItemStack item = list_from->getItem(from_i);
 	if(scriptapi_item_on_drop(player->getEnv()->getLua(), item, player,
 				player->getBasePosition() + v3f(0,1,0)))
 	{

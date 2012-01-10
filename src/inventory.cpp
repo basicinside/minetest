@@ -29,7 +29,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "nameidmapping.h" // For loading legacy MaterialItems
 
 /*
-	InventoryItem
+	ItemStack
 */
 
 static content_t content_translate_from_19_to_internal(content_t c_from)
@@ -108,7 +108,7 @@ static std::string deSerializeJsonStringIfNeeded(std::istream &is)
 }
 
 
-InventoryItem::InventoryItem(std::string name_, u16 count_,
+ItemStack::ItemStack(std::string name_, u16 count_,
 		u16 wear_, std::string metadata_,
 		IItemDefManager *itemdef)
 {
@@ -123,7 +123,7 @@ InventoryItem::InventoryItem(std::string name_, u16 count_,
 		count = 1;
 }
 
-void InventoryItem::serialize(std::ostream &os) const
+void ItemStack::serialize(std::ostream &os) const
 {
 	DSTACK(__FUNCTION_NAME);
 
@@ -148,7 +148,7 @@ void InventoryItem::serialize(std::ostream &os) const
 		os<<" "<<serializeJsonStringIfNeeded(metadata);
 }
 
-void InventoryItem::deSerialize(std::istream &is, IItemDefManager *itemdef)
+void ItemStack::deSerialize(std::istream &is, IItemDefManager *itemdef)
 {
 	DSTACK(__FUNCTION_NAME);
 
@@ -298,13 +298,13 @@ void InventoryItem::deSerialize(std::istream &is, IItemDefManager *itemdef)
 		count = 1;
 }
 
-void InventoryItem::deSerialize(const std::string &str, IItemDefManager *itemdef)
+void ItemStack::deSerialize(const std::string &str, IItemDefManager *itemdef)
 {
 	std::istringstream is(str, std::ios::binary);
 	deSerialize(is, itemdef);
 }
 
-std::string InventoryItem::getItemString() const
+std::string ItemStack::getItemString() const
 {
 	// Get item string
 	std::ostringstream os(std::ios::binary);
@@ -312,10 +312,10 @@ std::string InventoryItem::getItemString() const
 	return os.str();
 }
 
-InventoryItem InventoryItem::addItem(const InventoryItem &newitem_,
+ItemStack ItemStack::addItem(const ItemStack &newitem_,
 		IItemDefManager *itemdef)
 {
-	InventoryItem newitem = newitem_;
+	ItemStack newitem = newitem_;
 
 	// If the item is empty or the position invalid, bail out
 	if(newitem.empty())
@@ -351,11 +351,11 @@ InventoryItem InventoryItem::addItem(const InventoryItem &newitem_,
 	return newitem;
 }
 
-bool InventoryItem::itemFits(const InventoryItem &newitem_,
-		InventoryItem *restitem,
+bool ItemStack::itemFits(const ItemStack &newitem_,
+		ItemStack *restitem,
 		IItemDefManager *itemdef) const
 {
-	InventoryItem newitem = newitem_;
+	ItemStack newitem = newitem_;
 
 	// If the item is empty or the position invalid, bail out
 	if(newitem.empty())
@@ -390,12 +390,12 @@ bool InventoryItem::itemFits(const InventoryItem &newitem_,
 	return newitem.empty();
 }
 
-InventoryItem InventoryItem::takeItem(u32 takecount)
+ItemStack ItemStack::takeItem(u32 takecount)
 {
 	if(takecount == 0 || count == 0)
-		return InventoryItem();
+		return ItemStack();
 
-	InventoryItem result = *this;
+	ItemStack result = *this;
 	if(takecount >= count)
 	{
 		// Take all
@@ -410,12 +410,12 @@ InventoryItem InventoryItem::takeItem(u32 takecount)
 	return result;
 }
 
-InventoryItem InventoryItem::peekItem(u32 peekcount) const
+ItemStack ItemStack::peekItem(u32 peekcount) const
 {
 	if(peekcount == 0 || count == 0)
-		return InventoryItem();
+		return ItemStack();
 
-	InventoryItem result = *this;
+	ItemStack result = *this;
 	if(peekcount < count)
 		result.count = peekcount;
 	return result;
@@ -444,7 +444,7 @@ void InventoryList::clearItems()
 
 	for(u32 i=0; i<m_size; i++)
 	{
-		m_items.push_back(InventoryItem());
+		m_items.push_back(ItemStack());
 	}
 
 	//setDirty(true);
@@ -463,7 +463,7 @@ void InventoryList::serialize(std::ostream &os) const
 	
 	for(u32 i=0; i<m_items.size(); i++)
 	{
-		const InventoryItem &item = m_items[i];
+		const ItemStack &item = m_items[i];
 		if(item.empty())
 		{
 			os<<"Empty";
@@ -510,7 +510,7 @@ void InventoryList::deSerialize(std::istream &is)
 		{
 			if(item_i > getSize() - 1)
 				throw SerializationError("too many items");
-			InventoryItem item;
+			ItemStack item;
 			item.deSerialize(iss, m_itemdef);
 			m_items[item_i++] = item;
 		}
@@ -569,24 +569,24 @@ u32 InventoryList::getFreeSlots() const
 	return getSize() - getUsedSlots();
 }
 
-const InventoryItem& InventoryList::getItem(u32 i) const
+const ItemStack& InventoryList::getItem(u32 i) const
 {
 	assert(i < m_size);
 	return m_items[i];
 }
 
-InventoryItem& InventoryList::getItem(u32 i)
+ItemStack& InventoryList::getItem(u32 i)
 {
 	assert(i < m_size);
 	return m_items[i];
 }
 
-InventoryItem InventoryList::changeItem(u32 i, const InventoryItem &newitem)
+ItemStack InventoryList::changeItem(u32 i, const ItemStack &newitem)
 {
 	if(i >= m_items.size())
 		return newitem;
 
-	InventoryItem olditem = m_items[i];
+	ItemStack olditem = m_items[i];
 	m_items[i] = newitem;
 	//setDirty(true);
 	return olditem;
@@ -598,9 +598,9 @@ void InventoryList::deleteItem(u32 i)
 	m_items[i].clear();
 }
 
-InventoryItem InventoryList::addItem(const InventoryItem &newitem_)
+ItemStack InventoryList::addItem(const ItemStack &newitem_)
 {
-	InventoryItem newitem = newitem_;
+	ItemStack newitem = newitem_;
 
 	if(newitem.empty())
 		return newitem;
@@ -637,19 +637,19 @@ InventoryItem InventoryList::addItem(const InventoryItem &newitem_)
 	return newitem;
 }
 
-InventoryItem InventoryList::addItem(u32 i, const InventoryItem &newitem)
+ItemStack InventoryList::addItem(u32 i, const ItemStack &newitem)
 {
 	if(i >= m_items.size())
 		return newitem;
 
-	InventoryItem leftover = m_items[i].addItem(newitem, m_itemdef);
+	ItemStack leftover = m_items[i].addItem(newitem, m_itemdef);
 	//if(leftover != newitem)
 	//	setDirty(true);
 	return leftover;
 }
 
-bool InventoryList::itemFits(const u32 i, const InventoryItem &newitem,
-		InventoryItem *restitem) const
+bool InventoryList::itemFits(const u32 i, const ItemStack &newitem,
+		ItemStack *restitem) const
 {
 	if(i >= m_items.size())
 	{
@@ -661,10 +661,10 @@ bool InventoryList::itemFits(const u32 i, const InventoryItem &newitem,
 	return m_items[i].itemFits(newitem, restitem, m_itemdef);
 }
 
-bool InventoryList::roomForItem(const InventoryItem &item_) const
+bool InventoryList::roomForItem(const ItemStack &item_) const
 {
-	InventoryItem item = item_;
-	InventoryItem leftover;
+	ItemStack item = item_;
+	ItemStack leftover;
 	for(u32 i=0; i<m_items.size(); i++)
 	{
 		if(itemFits(i, item, &leftover))
@@ -674,12 +674,12 @@ bool InventoryList::roomForItem(const InventoryItem &item_) const
 	return false;
 }
 
-bool InventoryList::containsItem(const InventoryItem &item) const
+bool InventoryList::containsItem(const ItemStack &item) const
 {
 	u32 count = item.count;
 	if(count == 0)
 		return true;
-	for(std::vector<InventoryItem>::const_reverse_iterator
+	for(std::vector<ItemStack>::const_reverse_iterator
 			i = m_items.rbegin();
 			i != m_items.rend(); i++)
 	{
@@ -696,10 +696,10 @@ bool InventoryList::containsItem(const InventoryItem &item) const
 	return false;
 }
 
-InventoryItem InventoryList::removeItem(const InventoryItem &item)
+ItemStack InventoryList::removeItem(const ItemStack &item)
 {
-	InventoryItem removed;
-	for(std::vector<InventoryItem>::reverse_iterator
+	ItemStack removed;
+	for(std::vector<ItemStack>::reverse_iterator
 			i = m_items.rbegin();
 			i != m_items.rend(); i++)
 	{
@@ -714,21 +714,21 @@ InventoryItem InventoryList::removeItem(const InventoryItem &item)
 	return removed;
 }
 
-InventoryItem InventoryList::takeItem(u32 i, u32 takecount)
+ItemStack InventoryList::takeItem(u32 i, u32 takecount)
 {
 	if(i >= m_items.size())
-		return InventoryItem();
+		return ItemStack();
 
-	InventoryItem taken = m_items[i].takeItem(takecount);
+	ItemStack taken = m_items[i].takeItem(takecount);
 	//if(!taken.empty())
 	//	setDirty(true);
 	return taken;
 }
 
-InventoryItem InventoryList::peekItem(u32 i, u32 peekcount) const
+ItemStack InventoryList::peekItem(u32 i, u32 peekcount) const
 {
 	if(i >= m_items.size())
-		return InventoryItem();
+		return ItemStack();
 
 	return m_items[i].peekItem(peekcount);
 }

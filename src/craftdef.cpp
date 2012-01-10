@@ -31,7 +31,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 // Deserialize an itemstring then return the name of the item
 static std::string craftGetItemName(const std::string &itemstring, IGameDef *gamedef)
 {
-	InventoryItem item;
+	ItemStack item;
 	item.deSerialize(itemstring, gamedef->idef());
 	return item.name;
 }
@@ -52,10 +52,10 @@ static std::vector<std::string> craftGetItemNames(
 
 // Get name of each item, and return them as a new list.
 static std::vector<std::string> craftGetItemNames(
-		const std::vector<InventoryItem> &items, IGameDef *gamedef)
+		const std::vector<ItemStack> &items, IGameDef *gamedef)
 {
 	std::vector<std::string> result;
-	for(std::vector<InventoryItem>::const_iterator
+	for(std::vector<ItemStack>::const_iterator
 			i = items.begin();
 			i != items.end(); i++)
 	{
@@ -123,7 +123,7 @@ static std::multiset<std::string> craftMakeMultiset(const std::vector<std::strin
 // Removes 1 from each item stack
 static void craftDecrementInput(CraftInput &input, IGameDef *gamedef)
 {
-	for(std::vector<InventoryItem>::iterator
+	for(std::vector<ItemStack>::iterator
 			i = input.items.begin();
 			i != input.items.end(); i++)
 	{
@@ -148,7 +148,7 @@ static void craftDecrementOrReplaceInput(CraftInput &input,
 	// Make a copy of the replacements pair list
 	std::vector<std::pair<std::string, std::string> > pairs = replacements.pairs;
 
-	for(std::vector<InventoryItem>::iterator
+	for(std::vector<ItemStack>::iterator
 			i = input.items.begin();
 			i != input.items.end(); i++)
 	{
@@ -160,7 +160,7 @@ static void craftDecrementOrReplaceInput(CraftInput &input,
 					j = pairs.begin();
 					j != pairs.end(); j++)
 			{
-				InventoryItem from_item;
+				ItemStack from_item;
 				from_item.deSerialize(j->first, gamedef->idef());
 				if(i->name == from_item.name)
 				{
@@ -209,13 +209,13 @@ static std::string craftDumpMatrix(const std::vector<std::string> &items,
 }
 
 // Dump an item matrix
-std::string craftDumpMatrix(const std::vector<InventoryItem> &items,
+std::string craftDumpMatrix(const std::vector<ItemStack> &items,
 		unsigned int width)
 {
 	std::ostringstream os(std::ios::binary);
 	os<<"{ ";
 	unsigned int x = 0;
-	for(std::vector<InventoryItem>::const_iterator
+	for(std::vector<ItemStack>::const_iterator
 			i = items.begin();
 			i != items.end(); i++, x++)
 	{
@@ -528,9 +528,9 @@ void CraftDefinitionShapeless::deSerializeBody(std::istream &is, int version)
 	CraftDefinitionToolRepair
 */
 
-static InventoryItem craftToolRepair(
-		const InventoryItem &item1,
-		const InventoryItem &item2,
+static ItemStack craftToolRepair(
+		const ItemStack &item1,
+		const ItemStack &item2,
 		float additional_wear,
 		IGameDef *gamedef)
 {
@@ -540,7 +540,7 @@ static InventoryItem craftToolRepair(
 			|| idef->get(item2.name).type != ITEM_TOOL)
 	{
 		// Failure
-		return InventoryItem();
+		return ItemStack();
 	}
 
 	s32 item1_uses = 65536 - (u32) item1.wear;
@@ -548,11 +548,11 @@ static InventoryItem craftToolRepair(
 	s32 new_uses = item1_uses + item2_uses;
 	s32 new_wear = 65536 - new_uses + floor(additional_wear * 65536 + 0.5);
 	if(new_wear >= 65536)
-		return InventoryItem();
+		return ItemStack();
 	if(new_wear < 0)
 		new_wear = 0;
 
-	InventoryItem repaired = item1;
+	ItemStack repaired = item1;
 	repaired.wear = new_wear;
 	return repaired;
 }
@@ -567,9 +567,9 @@ bool CraftDefinitionToolRepair::check(const CraftInput &input, IGameDef *gamedef
 	if(input.method != CRAFT_METHOD_NORMAL)
 		return false;
 
-	InventoryItem item1;
-	InventoryItem item2;
-	for(std::vector<InventoryItem>::const_iterator
+	ItemStack item1;
+	ItemStack item2;
+	for(std::vector<ItemStack>::const_iterator
 			i = input.items.begin();
 			i != input.items.end(); i++)
 	{
@@ -583,15 +583,15 @@ bool CraftDefinitionToolRepair::check(const CraftInput &input, IGameDef *gamedef
 				return false;
 		}
 	}
-	InventoryItem repaired = craftToolRepair(item1, item2, additional_wear, gamedef);
+	ItemStack repaired = craftToolRepair(item1, item2, additional_wear, gamedef);
 	return !repaired.empty();
 }
 
 CraftOutput CraftDefinitionToolRepair::getOutput(const CraftInput &input, IGameDef *gamedef) const
 {
-	InventoryItem item1;
-	InventoryItem item2;
-	for(std::vector<InventoryItem>::const_iterator
+	ItemStack item1;
+	ItemStack item2;
+	for(std::vector<ItemStack>::const_iterator
 			i = input.items.begin();
 			i != input.items.end(); i++)
 	{
@@ -603,7 +603,7 @@ CraftOutput CraftDefinitionToolRepair::getOutput(const CraftInput &input, IGameD
 				item2 = *i;
 		}
 	}
-	InventoryItem repaired = craftToolRepair(item1, item2, additional_wear, gamedef);
+	ItemStack repaired = craftToolRepair(item1, item2, additional_wear, gamedef);
 	return CraftOutput(repaired.getItemString(), 0);
 }
 
@@ -769,7 +769,7 @@ public:
 
 		// If all input items are empty, abort.
 		bool all_empty = true;
-		for(std::vector<InventoryItem>::const_iterator
+		for(std::vector<ItemStack>::const_iterator
 				i = input.items.begin();
 				i != input.items.end(); i++)
 		{

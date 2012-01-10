@@ -643,7 +643,7 @@ void ItemCAO::updateInfoText()
 {
 	try{
 		IItemDefManager *idef = m_gamedef->idef();
-		InventoryItem item;
+		ItemStack item;
 		item.deSerialize(m_itemstring, idef);
 		if(item.isKnown(idef))
 			m_infotext = item.getDefinition(idef).description;
@@ -668,7 +668,7 @@ void ItemCAO::updateTexture()
 	video::ITexture *texture = NULL;
 	try{
 		IItemDefManager *idef = m_gamedef->idef();
-		InventoryItem item;
+		ItemStack item;
 		item.deSerialize(is, idef);
 		texture = item.getDefinition(idef).inventory_texture;
 	}

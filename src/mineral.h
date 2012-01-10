@@ -41,7 +41,7 @@ void init_mineral();
 class IGameDef;
 
 std::string mineral_block_texture(u8 mineral);
-InventoryItem getDiggedMineralItem(u8 mineral, IGameDef *gamedef);
+ItemStack getDiggedMineralItem(u8 mineral, IGameDef *gamedef);
 
 #endif
 

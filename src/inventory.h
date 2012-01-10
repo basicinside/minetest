@@ -30,13 +30,13 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 struct ToolDiggingProperties;
 
-struct InventoryItem
+struct ItemStack
 {
-	InventoryItem(): name(""), count(0), wear(0), metadata("") {}
-	InventoryItem(std::string name_, u16 count_,
+	ItemStack(): name(""), count(0), wear(0), metadata("") {}
+	ItemStack(std::string name_, u16 count_,
 			u16 wear, std::string metadata_,
 			IItemDefManager *itemdef);
-	~InventoryItem() {}
+	~ItemStack() {}
 
 	// Serialization
 	void serialize(std::ostream &os) const;
@@ -142,23 +142,23 @@ struct InventoryItem
 	// If cannot be added at all, returns the item back.
 	// If can be added partly, decremented item is returned back.
 	// If can be added fully, empty item is returned.
-	InventoryItem addItem(const InventoryItem &newitem,
+	ItemStack addItem(const ItemStack &newitem,
 			IItemDefManager *itemdef);
 
 	// Checks whether newitem could be added.
 	// If restitem is non-NULL, it receives the part of newitem that
 	// would be left over after adding.
-	bool itemFits(const InventoryItem &newitem,
-			InventoryItem *restitem,  // may be NULL
+	bool itemFits(const ItemStack &newitem,
+			ItemStack *restitem,  // may be NULL
 			IItemDefManager *itemdef) const;
 
 	// Takes some items.
 	// If there are not enough, takes as many as it can.
 	// Returns empty item if couldn't take any.
-	InventoryItem takeItem(u32 takecount);
+	ItemStack takeItem(u32 takecount);
 
-	// Similar to takeItem, but keeps this InventoryItem intact.
-	InventoryItem peekItem(u32 peekcount) const;
+	// Similar to takeItem, but keeps this ItemStack intact.
+	ItemStack peekItem(u32 peekcount) const;
 
 	/*
 		Properties
@@ -189,52 +189,52 @@ public:
 	u32 getFreeSlots() const;
 
 	// Get reference to item
-	const InventoryItem& getItem(u32 i) const;
-	InventoryItem& getItem(u32 i);
+	const ItemStack& getItem(u32 i) const;
+	ItemStack& getItem(u32 i);
 	// Returns old item. Parameter can be an empty item.
-	InventoryItem changeItem(u32 i, const InventoryItem &newitem);
+	ItemStack changeItem(u32 i, const ItemStack &newitem);
 	// Delete item
 	void deleteItem(u32 i);
 
 	// Adds an item to a suitable place. Returns leftover item (possibly empty).
-	InventoryItem addItem(const InventoryItem &newitem);
+	ItemStack addItem(const ItemStack &newitem);
 
 	// If possible, adds item to given slot.
 	// If cannot be added at all, returns the item back.
 	// If can be added partly, decremented item is returned back.
 	// If can be added fully, empty item is returned.
-	InventoryItem addItem(u32 i, const InventoryItem &newitem);
+	ItemStack addItem(u32 i, const ItemStack &newitem);
 
 	// Checks whether the item could be added to the given slot
 	// If restitem is non-NULL, it receives the part of newitem that
 	// would be left over after adding.
-	bool itemFits(const u32 i, const InventoryItem &newitem,
-			InventoryItem *restitem = NULL) const;
+	bool itemFits(const u32 i, const ItemStack &newitem,
+			ItemStack *restitem = NULL) const;
 
 	// Checks whether there is room for a given item
-	bool roomForItem(const InventoryItem &item) const;
+	bool roomForItem(const ItemStack &item) const;
 
 	// Checks whether the given count of the given item name
 	// exists in this inventory list.
-	bool containsItem(const InventoryItem &item) const;
+	bool containsItem(const ItemStack &item) const;
 
 	// Removes the given count of the given item name from
 	// this inventory list. Walks the list in reverse order.
 	// If not as many items exist as requested, removes as
 	// many as possible.
 	// Returns the items that were actually removed.
-	InventoryItem removeItem(const InventoryItem &item);
+	ItemStack removeItem(const ItemStack &item);
 
 	// Takes some items from a slot.
 	// If there are not enough, takes as many as it can.
 	// Returns empty item if couldn't take any.
-	InventoryItem takeItem(u32 i, u32 takecount);
+	ItemStack takeItem(u32 i, u32 takecount);
 
 	// Similar to takeItem, but keeps the slot intact.
-	InventoryItem peekItem(u32 i, u32 peekcount) const;
+	ItemStack peekItem(u32 i, u32 peekcount) const;
 
 private:
-	std::vector<InventoryItem> m_items;
+	std::vector<ItemStack> m_items;
 	u32 m_size;
 	std::string m_name;
 	IItemDefManager *m_itemdef;
@@ -259,7 +259,7 @@ public:
 	const InventoryList * getList(const std::string &name) const;
 	bool deleteList(const std::string &name);
 	// A shorthand for adding items. Returns leftover item (possibly empty).
-	InventoryItem addItem(const std::string &listname, const InventoryItem &newitem)
+	ItemStack addItem(const std::string &listname, const ItemStack &newitem)
 	{
 		InventoryList *list = getList(listname);
 		if(list == NULL)
