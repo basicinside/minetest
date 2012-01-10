@@ -1290,7 +1290,7 @@ public:
 		lua_register(L, className, create_object);
 	}
 };
-const char LuaItemStack::className[] = "LuaItemStack";
+const char LuaItemStack::className[] = "ItemStack";
 const luaL_reg LuaItemStack::methods[] = {
 	method(LuaItemStack, is_empty),
 	method(LuaItemStack, get_name),

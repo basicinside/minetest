@@ -701,13 +701,13 @@ minetest.register_craft({
 minetest.register_craft({
 	output = 'default:torch 4',
 	recipe = {
-		{'default:coal_lump"'},
-		{'default:stick"'},
+		{'default:coal_lump'},
+		{'default:stick'},
 	}
 })
 
 minetest.register_craft({
-	output = 'default:pick_wood"',
+	output = 'default:pick_wood',
 	recipe = {
 		{'default:wood', 'default:wood', 'default:wood'},
 		{'', 'default:stick', ''},
