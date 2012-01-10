@@ -147,8 +147,8 @@ void content_mapnode_get_name_id_mapping(NameIdMapping *nimap)
 	nimap->set(14, "default:sign_wall");
 	nimap->set(15, "default:chest");
 	nimap->set(16, "default:furnace");
-	nimap->set(17, "default:locked_chest");
-	nimap->set(21, "default:wooden_fence");
+	nimap->set(17, "default:chest_locked");
+	nimap->set(21, "default:fence_wood");
 	nimap->set(30, "default:rail");
 	nimap->set(31, "default:ladder");
 	nimap->set(32, "default:lava_flowing");
@@ -164,7 +164,7 @@ void content_mapnode_get_name_id_mapping(NameIdMapping *nimap)
 	nimap->set(0x808, "default:wood");
 	nimap->set(0x809, "default:sand");
 	nimap->set(0x80a, "default:cobble");
-	nimap->set(0x80b, "default:steel");
+	nimap->set(0x80b, "default:steelblock");
 	nimap->set(0x80c, "default:glass");
 	nimap->set(0x80d, "default:mossycobble");
 	nimap->set(0x80e, "default:gravel");
