@@ -332,7 +332,7 @@ function TNT:on_punch(hitter)
 	self.health = self.health - 1
 	if self.health <= 0 then
 		self.object:remove()
-		hitter:get_inventory():add_item("experimental:tnt")
+		hitter:get_inventory():add_item("main", "experimental:tnt")
 		hitter:set_hp(hitter:get_hp() - 1)
 	end
 end

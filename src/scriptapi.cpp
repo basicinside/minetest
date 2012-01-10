@@ -1359,7 +1359,7 @@ static InventoryItem read_item(lua_State *L, int index)
 	}
 	else
 	{
-		throw LuaError(L, "ItemStack: Expecting ItemStack, string, table or nil");
+		throw LuaError(L, "Expecting ItemStack, string, table or nil");
 	}
 }
 

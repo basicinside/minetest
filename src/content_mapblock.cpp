@@ -23,6 +23,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "mapblock_mesh.h" // For MapBlock_LightColor() and MeshCollector
 #include "settings.h"
 #include "nodedef.h"
+#include "tile.h"
 #include "gamedef.h"
 
 // Create a cuboid.
@@ -117,6 +118,7 @@ void mapblock_mesh_generate_special(MeshMakeData *data,
 		MeshCollector &collector, IGameDef *gamedef)
 {
 	INodeDefManager *nodedef = gamedef->ndef();
+	ITextureSource *tsrc = gamedef->getTextureSource();
 
 	// 0ms
 	//TimeTaker timer("mapblock_mesh_generate_special()");
@@ -512,7 +514,9 @@ void mapblock_mesh_generate_special(MeshMakeData *data,
 			material_glass.setFlag(video::EMF_BILINEAR_FILTER, false);
 			material_glass.setFlag(video::EMF_FOG_ENABLE, true);
 			material_glass.MaterialType = video::EMT_TRANSPARENT_ALPHA_CHANNEL_REF;
-			AtlasPointer pa_glass = f.tiles[0].texture;
+			TileSpec tile_glass = getNodeTile(n, p, v3s16(0,0,0),
+					&data->m_temp_mods, tsrc, nodedef);
+			AtlasPointer pa_glass = tile_glass.texture;
 			material_glass.setTexture(0, pa_glass.atlas);
 
 			u8 l = decode_light(undiminish_light(n.getLightBlend(data->m_daynight_ratio, nodedef)));
@@ -576,7 +580,9 @@ void mapblock_mesh_generate_special(MeshMakeData *data,
 			material_leaves1.setFlag(video::EMF_BILINEAR_FILTER, false);
 			material_leaves1.setFlag(video::EMF_FOG_ENABLE, true);
 			material_leaves1.MaterialType = video::EMT_TRANSPARENT_ALPHA_CHANNEL_REF;
-			AtlasPointer pa_leaves1 = f.tiles[0].texture;
+			TileSpec tile_leaves1 = getNodeTile(n, p, v3s16(0,0,0),
+					&data->m_temp_mods, tsrc, nodedef);
+			AtlasPointer pa_leaves1 = tile_leaves1.texture;
 			material_leaves1.setTexture(0, pa_leaves1.atlas);
 
 			u8 l = decode_light(undiminish_light(n.getLightBlend(data->m_daynight_ratio, nodedef)));
@@ -780,8 +786,21 @@ void mapblock_mesh_generate_special(MeshMakeData *data,
 			material_wood.setFlag(video::EMF_BILINEAR_FILTER, false);
 			material_wood.setFlag(video::EMF_FOG_ENABLE, true);
 			material_wood.MaterialType = video::EMT_TRANSPARENT_ALPHA_CHANNEL_REF;
-			AtlasPointer pa_wood = f.tiles[0].texture;
+			TileSpec tile_wood = getNodeTile(n, p, v3s16(0,0,0),
+					&data->m_temp_mods, tsrc, nodedef);
+			AtlasPointer pa_wood = tile_wood.texture;
 			material_wood.setTexture(0, pa_wood.atlas);
+
+			video::SMaterial material_wood_nomod;
+			material_wood_nomod.setFlag(video::EMF_LIGHTING, false);
+			material_wood_nomod.setFlag(video::EMF_BILINEAR_FILTER, false);
+			material_wood_nomod.setFlag(video::EMF_FOG_ENABLE, true);
+			material_wood_nomod.MaterialType = video::EMT_TRANSPARENT_ALPHA_CHANNEL_REF;
+
+			TileSpec tile_wood_nomod = getNodeTile(n, p, v3s16(0,0,0),
+					NULL, tsrc, nodedef);
+			AtlasPointer pa_wood_nomod = tile_wood_nomod.texture;
+			material_wood_nomod.setTexture(0, pa_wood_nomod.atlas);
 
 			u8 l = decode_light(undiminish_light(n.getLightBlend(data->m_daynight_ratio, nodedef)));
 			video::SColor c = MapBlock_LightColor(255, l);
@@ -803,9 +822,8 @@ void mapblock_mesh_generate_special(MeshMakeData *data,
 					0.35,0,0.65,1,
 					0.35,0,0.65,1,
 					0.35,0,0.65,1};
-			makeCuboid(&collector, post,
-					&material_wood, &pa_wood, 1,
-					c, postuv);
+			makeCuboid(&collector, post, &material_wood,
+					&pa_wood, 1, c, postuv);
 
 			// Now a section of fence, +X, if there's a post there
 			v3s16 p2 = p;
@@ -825,14 +843,12 @@ void mapblock_mesh_generate_special(MeshMakeData *data,
 					0,0.4,1,0.6,
 					0,0.4,1,0.6,
 					0,0.4,1,0.6};
-				makeCuboid(&collector, bar,
-						&material_wood, &pa_wood, 1,
-						c, xrailuv);
+				makeCuboid(&collector, bar, &material_wood_nomod,
+						&pa_wood_nomod, 1, c, xrailuv);
 				bar.MinEdge.Y -= BS/2;
 				bar.MaxEdge.Y -= BS/2;
-				makeCuboid(&collector, bar,
-						&material_wood, &pa_wood, 1,
-						c, xrailuv);
+				makeCuboid(&collector, bar, &material_wood_nomod,
+						&pa_wood_nomod, 1, c, xrailuv);
 			}
 
 			// Now a section of fence, +Z, if there's a post there
@@ -854,14 +870,12 @@ void mapblock_mesh_generate_special(MeshMakeData *data,
 					0,0.4,1,0.6,
 					0,0.4,1,0.6};
 
-				makeCuboid(&collector, bar,
-						&material_wood, &pa_wood, 1,
-						c, zrailuv);
+				makeCuboid(&collector, bar, &material_wood_nomod,
+						&pa_wood_nomod, 1, c, zrailuv);
 				bar.MinEdge.Y -= BS/2;
 				bar.MaxEdge.Y -= BS/2;
-				makeCuboid(&collector, bar,
-						&material_wood, &pa_wood, 1,
-						c, zrailuv);
+				makeCuboid(&collector, bar, &material_wood_nomod,
+						&pa_wood_nomod, 1, c, zrailuv);
 			}
 		break;}
 		case NDT_RAILLIKE:
