@@ -3603,12 +3603,14 @@ void Server::SendItemDef(con::Connection &con, u16 peer_id,
 	/*
 		u16 command
 		u32 length of the next item
-		serialized ItemDefManager
+		zlib-compressed serialized ItemDefManager
 	*/
 	writeU16(os, TOCLIENT_ITEMDEF);
 	std::ostringstream tmp_os(std::ios::binary);
 	itemdef->serialize(tmp_os);
-	os<<serializeLongString(tmp_os.str());
+	std::ostringstream tmp_os2(std::ios::binary);
+	compressZlib(tmp_os.str(), tmp_os2);
+	os<<serializeLongString(tmp_os2.str());
 
 	// Make data buffer
 	std::string s = os.str();
@@ -3628,12 +3630,14 @@ void Server::SendNodeDef(con::Connection &con, u16 peer_id,
 	/*
 		u16 command
 		u32 length of the next item
-		serialized NodeDefManager
+		zlib-compressed serialized NodeDefManager
 	*/
 	writeU16(os, TOCLIENT_NODEDEF);
 	std::ostringstream tmp_os(std::ios::binary);
 	nodedef->serialize(tmp_os);
-	os<<serializeLongString(tmp_os.str());
+	std::ostringstream tmp_os2(std::ios::binary);
+	compressZlib(tmp_os.str(), tmp_os2);
+	os<<serializeLongString(tmp_os2.str());
 
 	// Make data buffer
 	std::string s = os.str();

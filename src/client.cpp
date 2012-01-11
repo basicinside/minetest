@@ -1473,15 +1473,20 @@ void Client::ProcessData(u8 *data, u32 datasize, u16 sender_peer_id)
 		infostream<<"Client: Received node definitions: packet size: "
 				<<datasize<<std::endl;
 
-		std::string datastring((char*)&data[2], datasize-2);
-		std::istringstream is(datastring, std::ios_base::binary);
-
 		// Mesh update thread must be stopped while
 		// updating content definitions
 		assert(!m_mesh_update_thread.IsRunning());
 
+		// Decompress node definitions
+		std::string datastring((char*)&data[2], datasize-2);
+		std::istringstream is(datastring, std::ios_base::binary);
 		std::istringstream tmp_is(deSerializeLongString(is), std::ios::binary);
-		m_nodedef->deSerialize(tmp_is);
+		std::ostringstream tmp_os;
+		decompressZlib(tmp_is, tmp_os);
+
+		// Deserialize node definitions
+		std::istringstream tmp_is2(tmp_os.str());
+		m_nodedef->deSerialize(tmp_is2);
 		m_nodedef_received = true;
 	}
 	else if(command == TOCLIENT_CRAFTITEMDEF)
@@ -1493,15 +1498,20 @@ void Client::ProcessData(u8 *data, u32 datasize, u16 sender_peer_id)
 		infostream<<"Client: Received item definitions: packet size: "
 				<<datasize<<std::endl;
 
-		std::string datastring((char*)&data[2], datasize-2);
-		std::istringstream is(datastring, std::ios_base::binary);
-
 		// Mesh update thread must be stopped while
 		// updating content definitions
 		assert(!m_mesh_update_thread.IsRunning());
 
+		// Decompress item definitions
+		std::string datastring((char*)&data[2], datasize-2);
+		std::istringstream is(datastring, std::ios_base::binary);
 		std::istringstream tmp_is(deSerializeLongString(is), std::ios::binary);
-		m_itemdef->deSerialize(tmp_is);
+		std::ostringstream tmp_os;
+		decompressZlib(tmp_is, tmp_os);
+
+		// Deserialize node definitions
+		std::istringstream tmp_is2(tmp_os.str());
+		m_itemdef->deSerialize(tmp_is2);
 		m_itemdef_received = true;
 	}
 	else

@@ -43,6 +43,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 		Add TOCLIENT_ITEMDEF
 		Obsolete TOCLIENT_TOOLDEF
 		Obsolete TOCLIENT_CRAFTITEMDEF
+		Compress the contents of TOCLIENT_ITEMDEF and TOCLIENT_NODEDEF
 */
 
 #define PROTOCOL_VERSION 7
