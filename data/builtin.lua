@@ -215,7 +215,7 @@ minetest.craftitemdef_default = {
 	-- Interaction callbacks
 	on_place = minetest.item_place,
 	on_drop = minetest.item_drop,
-	--on_use = ...,
+	on_use = nil,
 }
 
 minetest.tooldef_default = {
@@ -232,7 +232,7 @@ minetest.tooldef_default = {
 	-- Interaction callbacks
 	on_place = minetest.item_place,
 	on_drop = minetest.item_drop,
-	--on_use = ...,
+	on_use = nil,
 }
 
 minetest.noneitemdef_default = {  -- This is used for the hand and unknown items
@@ -247,9 +247,9 @@ minetest.noneitemdef_default = {  -- This is used for the hand and unknown items
 	tool_digging_properties = nil,
 
 	-- Interaction callbacks
-	--on_place = ...,
-	--on_drop = ...,
-	--on_use = ...,
+	on_place = nil,
+	on_drop = nil,
+	on_use = nil,
 }
 
 --
